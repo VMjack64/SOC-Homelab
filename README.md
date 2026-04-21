@@ -10,20 +10,20 @@ This series proved fantastic for getting the hands-on experience I needed, as it
 [Introduction](/README.md#introduction)
 
 1. [Conceptualizing the Lab](/PART1.md)
-2. Splunk vs. ELK Stack
-3. Beginning the Lab Setup
-4. Creating the Windows Server
-5. Prepare for Log Ingestion
-6. Getting Logs Ingested Into Splunk
-7. The First Step Towards Becoming a Proefficient Splunk User
-8. Taking Things Seriously with Mythic
-9. osTicket & Splunk
-10. A Late Linux Addition
-11. The RDP Investigation Part
-12. What EDR to use?
-13. The Bonus Challenge
+2. [Splunk vs. ELK Stack](/PART2.md)
+3. [Beginning the Lab Setup](/PART3.md)
+4. [Creating the Windows Server](/PART4.md)
+5. [Prepare for Log Ingestion](/PART5.md)
+6. [Getting Logs Ingested Into Splunk](/PART6.md)
+7. [The First Step Towards Becoming a Proefficient Splunk User](/PART7.md)
+8. [Taking Things Seriously with Mythic](/PART8.md)
+9. [osTicket & Splunk](/PART9.md)
+10. [A Late Linux Addition](/PART10.md)
+11. [The RDP Investigation Part](/PART11.md)
+12. [What EDR to Use?](/PART12.md)
+13. [The Bonus Challenge](/PART13.md)
 
-Conclusion
+[Conclusion](/END.md)
 
 Previous Part | Next Part
 ------------- | ---------
