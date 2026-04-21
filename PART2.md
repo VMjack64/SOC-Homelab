@@ -27,6 +27,6 @@ Taking everything discussed into consideration, since my home lab isn’t going 
 
 ![](/screenshots/4.png)
 
-Previous Part                                | Next Part
--------------------------------------------- | ---------
-[Part 1: Conceptualizing the Lab](/PART1.md) | [Part 3: Beginning the Lab Setup](/PART3.md)
+Previous Part                                | Return to Introduction                  | Next Part
+-------------------------------------------- | --------------------------------------- | ---------
+[Part 1: Conceptualizing the Lab](/PART1.md) | [Introduction](/README.md#introduction) | [Part 3: Beginning the Lab Setup](/PART3.md)
