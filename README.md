@@ -24,3 +24,7 @@ This series proved fantastic for getting the hands-on experience I needed, as it
 13. The Bonus Challenge
 
 Conclusion
+
+Previous Part | Next Part
+------------- | ---------
+None          | [Part 1: Conceptualizing the Lab](https://github.com/JJackM/SOC-Homelab/blob/main/PART1.md)
