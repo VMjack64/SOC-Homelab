@@ -1,5 +1,5 @@
 # Part 2: Splunk vs. ELK Stack (Days 2, 6)
-The first part of my diagram that I want to talk about is the Splunk setup at the bottom right:
+Before continuing on with setting up the instances, I want to quickly talk about the Splunk setup on the bottom right:
 
 ![](/screenshots/2.png)
 
