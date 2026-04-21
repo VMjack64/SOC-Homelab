@@ -9,7 +9,7 @@ This series proved fantastic for getting the hands-on experience I needed, as it
 ## Table of Contents
 [Introduction](https://github.com/JJackM/SOC-Homelab/blob/main/README.md#introduction)
 
-1. Conceptualizing the Lab
+1. [Conceptualizing the Lab](https://github.com/JJackM/SOC-Homelab/blob/main/PART1.md)
 2. Splunk vs. ELK Stack
 3. Beginning the Lab Setup
 4. Creating the Windows Server
