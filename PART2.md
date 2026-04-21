@@ -26,3 +26,7 @@ Next, I need to determine Splunk’s fleet server equivalent, which Steven descr
 Taking everything discussed into consideration, since my home lab isn’t going to be very large, I’ve decided to have two Splunk Enterprise servers in my setup, where one combines the search head & indexer functionalities, while the other is the deployment server. The Splunk setup in the first screenshot looks something like this (taken from the same lesson mentioned earlier):
 
 ![](/screenshots/4.png)
+
+Previous Part                                | Next Part
+-------------------------------------------- | ---------
+[Part 1: Conceptualizing the Lab](/PART1.md) | [Part 3: Beginning the Lab Setup](/PART3.md)
