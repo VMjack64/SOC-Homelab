@@ -24,3 +24,7 @@ Thinking about these goals will provide a good idea as to what instances/compone
 
 With that said, I must admit that my original setup was an imitation of Steven’s setup, but with the Mythic C2 & SSH Ubuntu servers excluded. I had done this because of redundancy & for the sake of time. But like some spiritual being watching over with a sense of disappointment, reminders of my learning goals in one form or another led me to include those servers. Coupled with the unique challenges posed from using Splunk and AWS, I made changes to my setup throughout the project, and eventually settled upon this: 
 ![](/screenshots/1.png)
+
+Previous Part                                                             | Next Part
+------------------------------------------------------------------------- | ---------
+[Introduction](https://github.com/JJackM/SOC-Homelab/blob/main/README.md) | [Part 2: Splunk vs. ELK Stack](https://github.com/JJackM/SOC-Homelab/blob/main/PART2.md)
