@@ -1,3 +1,8 @@
+[Part 3](#part-3-beginning-the-lab-setup-days-3-4)
+- [Home Lab Initialization](#home-lab-initialization)
+- [Splunk Server Creation](#splunk-server-creation)
+- [Splunk Server Setup](#splunk-server-setup)
+
 # Part 3: Beginning the Lab Setup (Days 3, 4)
 With my servers mapped out, I began setting them up in AWS. As I don't have any previous familiarity with AWS, I spent some time learning the basics by reading the [AWS documentation](https://docs.aws.amazon.com/), as well as scouring the internet for additional resources, and modifying my diagram to reflect what I've learned.
 
@@ -76,3 +81,7 @@ Once the instance is up & running, I connected to it by navigating to the **Conn
 > Make sure to make a note of the username & password entered!
 
 8. On my host machine, I opened up my browser, and instead of using the link provided in the SSH terminal, I typed into the address bar `<splunk-instance_public-ip-address>:8000` to reach Splunk's web GUI remotely. On the login screen, I entered in the username & password from step 7 to access the main Splunk interface.
+
+Previous Part                                | Return to Introduction                  | Next Part
+-----------------------------------------    | --------------------------------------- | ---------
+[Part 2: Splunk vs. ELK Stack](/PART2.md)    | [Introduction](/README.md#introduction) | [Part 4: Creating the Windows Server](/PART4.md)
