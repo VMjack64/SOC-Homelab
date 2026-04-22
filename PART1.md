@@ -1,3 +1,7 @@
+Previous Part                           | Next Part
+--------------------------------------- | ---------
+[Introduction](/README.md#introduction) | [Part 2: Splunk vs. ELK Stack](/PART2.md)
+
 # Part 1: Conceptualizing the Lab (Day 1)
 Before starting things off, I first needed to conceptualize what my home lab would look like. For this, I watched Day 1 of MyDFIR’s (Steven's) series to get a good idea of what to expect. Steven’s lab for the series consists of 6 cloud servers (created using the VULTR cloud provider), 1 virtual machine (VM; Kali Linux), and his laptop for connecting to the servers. The 6 servers are:
 - Mythic C2 (Command and control) server
