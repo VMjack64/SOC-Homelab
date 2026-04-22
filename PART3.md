@@ -2,7 +2,7 @@
 With my servers mapped out, I began setting them up in AWS. As I don't have any previous familiarity with AWS, I spent some time learning the basics by reading the [AWS documentation](https://docs.aws.amazon.com/), as well as scouring the internet for additional resources, and modifying my diagram to reflect what I've learned.
 
 Some important pointers: 
-- In AWS, when designating a CIDR (Classless Inter-Domain Routing) block for a VPC, in addition to the first & last addresses being used by the CIDR, AWS will also need to use the second, third, and fourth IP addresses in the range (see: https://www.youtube.com/watch?v=HbTfONoekyM). 
+- In AWS, when designating a CIDR (Classless Inter-Domain Routing) block for a VPC (Virtual Private Cloud), in addition to the first & last addresses being used by the CIDR, AWS will also need to use the second, third, and fourth IP addresses in the range (see: https://www.youtube.com/watch?v=HbTfONoekyM). 
   - This process is also applied when designating a CIDR block for a subnet within a VPC, which explains why the IP ranges in my diagram are specified as such. 
 - An “Availability Zone” is just an AWS data center located in a specific region (ex: ‘us-east-2a’ is a data center located in Ohio (‘us-east-2’)).
   - Subnets within a VPC should be situated in an availability zone.
@@ -34,53 +34,45 @@ I’ve also decided on giving all subnets in the VPC internet connectivity for c
 ![](/screenshots/11.png)
 
 ## Splunk Server Creation
-1. With `splunk-subnet` ready to go, I deployed the first server of this lab: The main Splunk server that will be used for log aggregation and analyzing malicious activity. On the EC2 page, I clicked on **Launch instance** to head over to the instance creation page. From there, I gave the server the following specifications:
-    - Name: MYDFIR-Splunk
-    - AMI: Ubuntu, Ubuntu Server 24.04 LTS
-    - Architecture: 64-bit (x86)
-    - Instance type: m7i-flex.large. As this server will be performing two Splunk functions, a lot of performance memory will likely be used, so higher RAM is necessary. This option is the highest I can go on AWS's free tier.
-    - Key pair: RSA type, .pem format. After giving it a name, the key is downloaded onto my computer as a file; I put it in a dedicated folder for easy access.
-    - Network settings:
-      - VPC: MYDFIR-30Day-SOC-Challenge
-      - Subnet: splunk-subnet
-      - Auto-assign public IP: Enabled
-      - Firewall (security groups): Create security group, with the following settings: 
-        ![](/screenshots/14.png)
-    - Configure storage: 1 volume only:
-      - Text box: 30 GiB (highest amount of storage an instance can have on the free tier)
-      - Dropdown box: Left as whatever option is selected
-    - Advanced details: Ignore; all options under here aren’t necessary for this lab.
+With `splunk-subnet` ready to go, I deployed the first server of this lab: The main Splunk server that will be used for log aggregation and analyzing malicious activity. On the EC2 page, I clicked on **Launch instance** to head over to the instance creation page. From there, I gave the server the following specifications:
+  - Name: MYDFIR-Splunk
+  - AMI: Ubuntu, Ubuntu Server 24.04 LTS
+  - Architecture: 64-bit (x86)
+  - Instance type: m7i-flex.large. As this server will be performing two Splunk functions, a lot of performance memory will likely be used, so higher RAM is necessary. This option is the highest I can go on AWS's free tier.
+  - Key pair: RSA type, .pem format. After giving it a name, the key is downloaded onto my computer as a file; I put it in a dedicated folder for easy access.
+  - Network settings:
+    - VPC: MYDFIR-30Day-SOC-Challenge
+    - Subnet: splunk-subnet
+    - Auto-assign public IP: Enabled
+    - Firewall (security groups): Create security group, with the following settings: 
+      ![](/screenshots/14.png)
+  - Configure storage: 1 volume only:
+    - Text box: 30 GiB (highest amount of storage an instance can have on the free tier)
+    - Dropdown box: Left as whatever option is selected
+  - Advanced details: Ignore; all options under here aren’t necessary for this lab.
   
-Under “Summary” on the right, I made sure only one instance is created, then reviewed the specs below to ensure they’re correct. After that’s done, I clicked “Launch instance” to create & start up the AWS Ubuntu virtual machine instance.
-Home Lab Phase: Splunk Server Setup
-With the instance up & running, connect to the instance to begin setting up Splunk on it:
-Click on “Connect to instance” at the bottom of the “Successfully initiated launch of instance” screen, or click on “Instances” at the top to navigate back to the “Instances” screen, click on the instance that was just created, then click the “Connect” button.
-On the “Connect” screen, click the “SSH client” tab, then copy the command under “Example:”
-Open up PowerShell, then navigate to the directory where the instance’s key file is stored using ‘cd <file-path-to-directory>’.
+After reviewing the specifications under **Summary** on the right and ensuring they’re correct, I clicked **Launch instance** to create & start up the AWS virtual machine instance.
+## Splunk Server Setup
+Once the instance is up & running, I connected to it by navigating to the **Connect** screen for the instance, then following the prompts on-screen for connecting via SSH. After connecting to the instance, I updated the Ubuntu repositories first by running the command `sudo apt-get update && sudo apt-get upgrade -y`.
+1. After updating the repositories, I began the process of setting up Splunk on the instance. I opened up the browser on my laptop's taskbar (a.k.a. on my host machine) and went to the [official Splunk website](https://www.splunk.com) to get the free trial for Splunk Enterprise:
+    - On the "Choose Your Download" screen, on the "Linux" tab, click "Copy wget link" next to the `.deb` package. This command will be used in the PowerShell SSH terminal.
+2. In the PowerShell terminal for the current SSH session, I pasted & entered in the wget command from the previous step to download the Debian package for Splunk Enterprise, which will reside in the home (~) directory.
+3. After navigating to the home directory (via the command `cd ~` if not in it already), I entered the command `sudo dpkg -i <splunk_package_name>.deb` to install Splunk Enterprise onto the Ubuntu instance. By default, Splunk is installed into the `/opt/splunk` directory.
+4. I ran the command `sudo chown -R <instance username>:<instance username> /opt/splunk` to change ownership of the Splunk installation to the instance’s username, to which the latter can be found in the SSH command used during the connection process, left of the ‘@’: 
+![](/screenshots/15.png)
+> [!NOTE]
+> The reason for changing the ownership is in regards to running the Splunk software. The owner specified for the software isn’t the instance username upon installation (checkable via the `ls -l` command). Because of this, I won't be able to run Splunk unless I utilize root user (`sudo`) privileges. However, running software as root isn’t considered good security practice, hence the change.
+5. After navigating to the `/opt/splunk/bin` directory, I ran `sudo ./splunk enable boot-start -user <instance username>` to allow Splunk to auto start without root upon booting up the instance.
+> [!NOTE]
+> If a problem arises here, check out the [Installing Linux UF section in Part 10](/PART10.md#installing-linux-uf).
+6. I ran the following `ufw allow` commands to tell the Ubuntu instance's internal firewall to allow connections to/from the following ports:
+    - `sudo ufw allow 9997` (Splunk receiver port)
+    - `sudo ufw allow 8000` (Splunk web GUI access port)
+7. I finally ran Splunk by entering the command `./splunk start`. A terms of agreement pops up; I held down the space bar key until I reached the end. After entering in a username & password to use for the installation, I pressed Enter to get Splunk up & running.
+> [!NOTE]
+> Alternatively, I could've appended ` --accept-license` at the end of the `./splunk start` command to skip the agreement automatically.
 
-Alternatively, open up the folder in File Explorer, then Shift + Right-click on an empty area, then click “Open PowerShell window here”.
-Paste the command copied from step b, then press “Enter”. A warning prompt will appear, saying that “This key is not known by any other names” & if you want to continue connecting. Type “yes”, then press “Enter” to connect to the instance.
-If connecting to the instance failed, try waiting for the initialization process to complete & make sure all status checks passed before connecting again.
-Once connected, update the Ubuntu repositories by running the command: ‘sudo apt-get update && sudo apt-get upgrade -y’
-Get the free trial for Splunk Enterprise from the official Splunk website (splunk.com):
-On the host machine, head to Splunk’s website, then click on “Trials & Downloads”.
-Under the “Splunk Enterprise” option, click “Start trial”.
-If you haven’t already, create an account. Otherwise, login to your Splunk account.
-On the “Choose Your Download” screen for Splunk Enterprise, click the Linux tab, then click “Copy wget link” next to the .deb package.
-In the PowerShell SSH terminal, paste in the wget command, then press Enter to download the Debian package for Splunk Enterprise. This package will reside in the home (~) directory.
-In the home directory (navigate via the command ‘cd ~’ if not in it already), enter the command ‘sudo dpkg -i <splunk_package_name>.deb’ to install Splunk Enterprise. By default, Splunk will be installed in the ‘/opt/splunk’ directory.
-Run the command `sudo chown -R <instance username>:<instance username> /opt/splunk` to change ownership of the Splunk application to the instance’s username.
-The instance’s username can be found in the SSH command from step 1b, to the left of the ‘@’: 
+> [!IMPORTANT]
+> Make sure to make a note of the username & password entered!
 
-The reason for changing the ownership of the Splunk installation is because the owner specified isn’t the instance username upon installation (you can check with the ‘ls -l’ command; you should see 2 back-to-back columns with the name ‘splunk’ in them). Because of this, running Splunk would require root (sudo) privileges, which isn’t considered good security practice, so in order to be able to run it without root, changing the owner of the application is required. If there are any situations where ‘sudo’ was used during the installation process (asides this), it’s because it was explicitly mentioned in the official Splunk documentation to use it (https://help.splunk.com/en/splunk-enterprise/get-started/install-and-upgrade/9.4/install-splunk-enterprise-on-linux-or-macos/install-on-linux).
-Navigate to the ‘/opt/splunk/bin’ directory via the command ‘cd /opt/splunk/bin’, then run `sudo ./splunk enable boot-start -user <instance username>` to enable auto starting of Splunk without root upon booting up the instance.
-(If an error occurs here, check out the auto boot process of Splunk Forwarder on Linux notes)
-Run the following ‘ufw’ commands:
-‘sudo ufw allow 9997’
-‘sudo ufw allow 8000’
-These commands tell the Ubuntu instance’s internal firewalls to allow connections to ports 9997 (Splunk receiver port) & 8000 (Splunk web GUI access port).
-Run Splunk using the ‘./splunk start’ command, then hold down the Space key until the agreement finishes scrolling. Alternatively, append ‘--accept-license’ at the end of the command to skip the agreement entirely. Enter in a username & password to use for the installation, then press Enter to get Splunk up & running.
-Make sure to save the username & password that you entered!
-On the host machine, open up a browser, and instead of using the link provided by the SSH terminal, type in the address bar ‘<splunk_instance_public_ip_address>:8000’ to connect to the Splunk web GUI remotely. Enter in the username & password from step 9 onto the login screen to access Splunk.
-The link provided by the SSH terminal would be used in the instance’s browser itself. However, the Ubuntu server instance doesn’t have a browser, so connecting to it remotely is necessary, hence why the public IP should be used instead.
-
+8. On my host machine, I opened up my browser, and instead of using the link provided in the SSH terminal, I typed into the address bar `<splunk-instance_public-ip-address>:8000` to reach Splunk's web GUI remotely. On the login screen, I entered in the username & password from step 7 to access the main Splunk interface.
