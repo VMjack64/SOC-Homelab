@@ -1,3 +1,7 @@
+Previous Part                                | Return to Introduction                  | Next Part
+-------------------------------------------- | --------------------------------------- | ---------
+[Part 1: Conceptualizing the Lab](/PART1.md) | [Introduction](/README.md#introduction) | [Part 3: Beginning the Lab Setup](/PART3.md)
+
 # Part 2: Splunk vs. ELK Stack (Days 2, 6)
 Before continuing on with setting up the instances, I want to quickly talk about the Splunk setup on the bottom right:
 
