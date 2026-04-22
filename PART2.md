@@ -19,6 +19,7 @@ Before doing this project, I took an introductory lesson on Splunk, called Getti
 
 Where the top row is equivalent to Elasticsearch, the middle row equivalent to Logstash, and the bottom row equivalent to the Elastic agents.
 
+<a name="key-pointers-on-deployment-servers"></a>
 Next, I need to determine Splunk’s fleet server equivalent, which Steven describes in the Day 6 video as a centralized agent management system for Elastic, essentially. After some Googling, I found out that this equivalent is called a Splunk deployment server. Looking more into it in the Splunk documentation, these are some key takeaways I got:
 - Deployment servers, as well as search heads & indexers, amongst others, are each installed as a separate Splunk Enterprise instance configured to perform their intended task
   - Indexer and deployment server functionality is enabled by default for newly installed Splunk Enterprise instances
