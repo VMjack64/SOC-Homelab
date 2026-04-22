@@ -2,7 +2,7 @@ Previous Part                                | Return to Introduction           
 -----------------------------------------    | --------------------------------------- | ---------
 [Part 2: Splunk vs. ELK Stack](/PART2.md)    | [Introduction](/README.md#introduction) | [Part 4: Creating the Windows Server](/PART4.md)
 
-[Part 3](#part-3-beginning-the-lab-setup-days-3-4)
+[Part 3: Beginning the Lab Setup](#part-3-beginning-the-lab-setup-days-3-4)
 - [Home Lab Initialization](#home-lab-initialization)
 - [Splunk Server Creation](#splunk-server-creation)
 - [Splunk Server Setup](#splunk-server-setup)
