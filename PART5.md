@@ -55,20 +55,14 @@ After establishing a connection to the server, I opened up a browser on my host 
 After installing the UF on Windows, I restarted the deployment server (by rebooting through AWS or running the command `./splunk restart` in its SSH terminal session) so that it can receive the connection from the Windows UF. Then, I accessed the Splunk web GUI for the deployment server, and navigated to “Settings” > “Agent management”, where I can see the Windows instance show up if the connection is successful:
 ![](/screenshots/30.png)
 
-With the Windows server connected, I did additional setup work on the server, most notably installing Sysmon. This tool provides enhanced logging capabilities these capabilities make it possible to detect more subtle malicious activity, most notably malware. Such logging capabilities include, but are not limited to:
-Process hashes, which can be run through tools like VirusTotal to determine whether the process is malware or not.
-A unique process GUID assigned to each process, making it easy to correlate other activities that the process is responsible for / uncover parent processes that set up said process.
-Logs loaded drivers / DLLs & the process involved. This can be used to detect DLL injection malware, which is malware that uses the address space of an active process, essentially disguising itself to avoid typical malware detection systems in order to run its malicious code.
-Logs commands executed by processes & parent processes, providing a quick glance into suspicious commands that warrant investigating.
-Network connections (optional; disabled by default), which can track suspicious connections made in the case of a successful breach.
-Changes made to a file’s creation time, which is something that malware likes to do in order to evade detection.
-For installing Sysmon, I just followed MyDFIR’s Sysmon installation video step-by-step (Sysmon Setup Tutorial | Day 9). Olaf’s configuration file should be good enough for beginners, though as Steven noted, there are other Sysmon configuration files that other people prefer to use over Olaf’s. One such is SwiftOnSecurity’s configuration file (GitHub - SwiftOnSecurity/sysmon-config: Sysmon configuration file template with default high-quality event tracing). It’s recommended to research the different configuration files out there, and consider which one fits best with what you want out of Sysmon; you can even create your own configuration file that’s tailored exactly to your needs if you’re very knowledgeable on Sysmon.
+With the Windows server connected, I did additional setup tasks on the server, most notably installing Sysmon. The tool logs additional information not present in the base Windows logs, such as process hashes, process GUIDs, executed commands, DLLs, and source & destination network connections. These make it possible to spot the presence of malware and more subtle malicious activity. For the installation process, I just followed Day 9 of Steven’s series.
+
+> [!NOTE]
+> Other Sysmon configuration files exist outside of Olaf’s config. One such is [SwiftOnSecurity’s configuration file](https://github.com/SwiftOnSecurity/sysmon-config).
+
 ## Creating Indexes & Setting up Sysmon Parsing
-One final thing that I’d like to do before proceeding is to create 3 new indexes for “MYDFIR-Splunk”: "windows-server-events", "windows-sysmon-events", and “windefender-events”. By default, the UF will forward all logs to the “main” index, but it’s best practice to forward the logs that are to be analyzed over to a dedicated index for a few reasons. One in particular, is because it can speed up the search process by not having to filter out logs with a higher appearance rate, and Sysmon does have the potential to generate a significant amount of logs than necessary if not configured properly. To create the indexes for the main Splunk instance via the Splunk web GUI:
-On “MYDFIR-Splunk”’s web GUI, go to “Settings” > “Indexes”.
-On the “Indexes” screen, click “New index” on the top right.
-Next to “Index Name”, name it “windows-server-events”.
-For the purposes of this lab, I’ll leave the other options as is. Click “Save”.
-Repeat steps 2-4 to create the other two indexes.
-With the indexes created, I also need to set up the main Splunk instance to be able to parse Sysmon logs, as Splunk doesn’t automatically parse them by default. To do so, I simply just installed the “Splunk Add-on for Sysmon” from the Splunk add-on store onto the instance. The store can be accessed by clicking on “Apps” on the top left of the web GUI, then selecting “Find More Apps” in the dropdown menu.
+The last additional task I did before proceeding was creating 3 new indexes for MYDFIR-Splunk: `windows-server-events`, `windows-sysmon-events`, and `windefender-events`. By default, the UF will forward all logs to the `main` index, but the Splunk documentation states that it's best practice to forward the logs to a dedicated index for a few reasons. One in particular, is because it can speed up the search process; some unnecessary logs in the `main` index have a significant appearance rate than others, so searching one of the dedicated indexes means Splunk doesn't have to spend time filtering out those logs. I navigated to "Settings" > "Indexes" in MyDFIR-Splunk's web GUI and created the indexes from there.
+  - During the creation process, there were a few additional options available for each index; for the purposes of this lab, I left them as is.
+
+With the indexes made, I also set up MYDFIR-Splunk to be able to parse Sysmon logs. This is something I recalled from doing MyDFIR's [Basic Home Lab series](https://www.youtube.com/watch?v=-8X7Ay4YCoA&pp=ygUVbXlkZmlyIGJhc2ljIGhvbWUgbGFi) prior: Splunk doesn’t automatically parse Sysmon logs by default. To allow this, I need to install the **_Splunk Add-on for Sysmon_** from the Splunk add-on store, accessible by clicking on “Apps” > “Find More Apps”.
 
