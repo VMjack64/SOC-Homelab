@@ -78,8 +78,7 @@ Once the instance is up & running, I connected to it by navigating to the **Conn
     - `sudo ufw allow 9997` (Splunk receiver port)
     - `sudo ufw allow 8000` (Splunk web GUI access port)
 7. I finally ran Splunk by entering the command `./splunk start`. A terms of agreement pops up; I held down the space bar key until I reached the end. After entering in a username & password to use for the installation, I pressed Enter to get Splunk up & running.
-> [!NOTE]
-> Alternatively, I could've appended ` --accept-license` at the end of the `./splunk start` command to skip the agreement automatically.
+    - Alternatively, I could've appended ` --accept-license` at the end of the `./splunk start` command to skip the agreement automatically.
 
 > [!IMPORTANT]
 > Make sure to make a note of the username & password entered!
