@@ -1,3 +1,13 @@
+Previous Part                                    | Return to Introduction                  | Next Part
+------------------------------------------------ | --------------------------------------- | ---------
+[Part 4: Creating the Windows Server](/PART4.md) | [Introduction](/README.md#introduction) | [Part 6: Getting Logs Ingested Into Splunk](/PART6.md)
+
+[Part 5: Prepare for Log Ingestion](#part-5-prepare-for-log-ingestion-days-7-8-9)
+- [Deployment Server Creation & Setup](#deployment-server-creation--setup)
+- [Installing Windows Universal Forwarder (UF)](#installing-windows-universal-forwarder-uf)
+- [Windows Server Setup](#windows-server-setup)
+- [Creating Indexes & Setting up Sysmon Parsing](#creating-indexes--setting-up-sysmon-parsing)
+
 # Part 5: Prepare for Log Ingestion (Days 7, 8, 9)
 Once the Windows server generated enough telemetry, I began the process of prepping the server for ingesting logs into Splunk. My tasks here are to install the universal forwarder onto the Windows server, as well as create the deployment server. Before starting, I turned off the server for a moment to add the `Windows-Server-Firewall` to the instance’s security group list, under **Change security groups**. However, I didn’t remove the `unsecure-firewall` from the list, a decision that I would later find out to be a huge mistake. 
 
@@ -66,3 +76,6 @@ The last additional task I did before proceeding was creating 3 new indexes for 
 
 With the indexes made, I also set up MYDFIR-Splunk to be able to parse Sysmon logs. This is something I recalled from doing MyDFIR's [Basic Home Lab series](https://www.youtube.com/watch?v=-8X7Ay4YCoA&pp=ygUVbXlkZmlyIGJhc2ljIGhvbWUgbGFi) prior: Splunk doesn’t automatically parse Sysmon logs by default. To allow this, I need to install the **_Splunk Add-on for Sysmon_** from the Splunk add-on store, accessible by clicking on “Apps” > “Find More Apps”.
 
+Previous Part                                    | Return to Introduction                  | Next Part
+------------------------------------------------ | --------------------------------------- | ---------
+[Part 4: Creating the Windows Server](/PART4.md) | [Introduction](/README.md#introduction) | [Part 6: Getting Logs Ingested Into Splunk](/PART6.md)
