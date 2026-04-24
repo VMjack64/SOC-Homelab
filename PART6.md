@@ -1,5 +1,17 @@
+Previous Part                                    | Return to Introduction                  | Next Part
+------------------------------------------------ | --------------------------------------- | ---------
+[Part 5: Prepare for Log Ingestion](/PART5.md)   | [Introduction](/README.md#introduction) | [Part 7: The First Step Towards Becoming a Proefficient Splunk User](/PART7.md)
+
+[Part 6: Getting Logs Ingested Into Splunk](#part-6-getting-logs-ingested-into-splunk-day-10)
+- [Stanza Creation](#stanza-creation)
+  - [Index: "windows-server-events"](#index-windows-server-events-direct-route)
+  - [Index: “windows-sysmon-events” & “windefender-events”](#index-windows-sysmon-events--windefender-events-deployment-server-route)
+- [Ingesting Time! What Can Go Wrong?](#ingesting-time-what-can-go-wrong)
+- […Something Did Go Wrong, After All](#something-did-go-wrong-after-all)
+- [One Index Fixed, The Other Still Malfunctioning](#one-index-fixed-the-other-still-malfunctioning)
+
 # Part 6: Getting Logs Ingested Into Splunk (Day 10)
-With everything all set up, it’s finally time for me to get the `windows-server-events`, `windows-sysmon-events`, and `windefender-events` indexes filling up with logs. To accomplish this, I need an `inputs.conf` file in the Windows UF's internal files, which contains the stanzas telling the UF to forward the logs to their corresponding index. I plan on using two different methods to add the file: The direct method for `windows-server-events`, and the deployment server method for `windows-sysmon-events` and `windefender-events`.
+With everything all set up, it’s finally time for me to get the `windows-server-events`, `windows-sysmon-events`, and `windefender-events` indexes filling up with logs. To accomplish this, I need an `inputs.conf` file in the Windows UF's internal directories, which contains the stanzas telling the UF to forward the logs to their corresponding index. I plan on using two different methods to add the file: The direct method for `windows-server-events`, and the deployment server method for `windows-sysmon-events` and `windefender-events`.
 
 ## Stanza Creation
 ### Index: "windows-server-events" (Direct route)
@@ -45,51 +57,69 @@ Then, I did the `windefender-logs` app:
 ![](/screenshots/34.png)
 
 ## Ingesting Time! What Can Go Wrong?
-Before firing up the ingesting process, I need to enable receiving for “MYDFIR-Splunk” real quick. While indexing capabilities are active by default in newly created Splunk Enterprise instances (as mentioned in Part 2), log receiving capabilities aren’t. To enable receiving for “MYDFIR-Splunk” through the Splunk web GUI, I performed the following steps:
-On the Splunk web GUI, I clicked on “Settings” > “Forwarding and receiving”.
-Then, I clicked the “Configure receiving” link.
-On the “Receive data” screen, I made sure there aren’t any existing receiver ports that are enabled, since a duplicate receiver port can’t be created. After confirming there aren’t, I clicked “New Receiving Port”.
-I need to specify a port number next to “Listen on this port” and click “Save”. Conventionally, the receiving port used by indexers is 9997 by default, so I just went with that.
-With the stanzas set up & receiving enabled on the main Splunk instance, it’s now time to get things running for real. After making sure the Windows Server instance is on, I ran the command ‘./splunk reload deploy-server’ in the PowerShell SSH terminal for the deployment server Ubuntu instance. In doing so, the following chain of events gets set off:
-The deployment server is reloaded, and all connected agents (in this case, so far, the Windows UF) poll the server for any changes to get.
-The Windows UF is then told it’s part of a server class with the ‘sysmon-event-logs’ & ‘windefender-logs’ apps, and is expected to have them in its ‘C:\Program Files\SplunkUniversalForwarder\etc\apps’ directory. However, the UF checks this directory, but doesn’t find either of these apps. So the UF grabs a copy of the apps & everything in them from the deployment server and stores them in the UF’s ‘apps’ directory.
-Since each app is configured to restart the agent, the UF is automatically restarted for each app it grabs.
-With the UF restarted, it begins looking through the ‘inputs.conf’ files in its system directories, following the configuration file precedence system. The files, now updated to contain the stanzas from the “Stanza Creation” section of this writeup, tell the UF to forward logs to the main Splunk instance.
-To see if the logs are being ingested into Splunk successfully, I went to the Splunk web GUI for “MYDFIR-Splunk”, navigated to the “Indexes” screen, then scrolled down to my three indexes to see if each one has a log count that’s not 0, which indicates that log ingestion for that index is working as expected. Right away, I do see that’s the case for the “windows-server-events” index:
+Before firing up the ingestion process, I need to enable receiving for MYDFIR-Splunk real quick. While indexing capabilities are active by default (as mentioned back in [Part 2](/PART2.md#key-pointers-on-deployment-servers), log receiving capabilities aren’t. To do so, on MYDFIR-Splunk's web GUI:
+1. I naivgated to “Settings” > “Forwarding and receiving”.
+2. Then, clicked the “Configure receiving” link.
+3. On the “Receive data” screen, if there aren’t any existing receiver ports enabled (since a duplicate receiver port can’t be created), select “New Receiving Port”.
+4. Next to “Listen on this port”, I specified the port number 9997 and clicked “Save”.
 
-I was unsure on how I could check out the logs for myself though, so I turned to my Splunk lesson notes, and from the “Getting Data Into Splunk” lesson, I can do so by running a search query for the index, so I did, and the logs seem to look fine:
+With that out of the way, the stage is all set for things to get running for real. After verifying that the Windows server is turned on, I opened up the PowerShell SSH session for the deployment server, changed directories to `$SPLUNK_HOME/bin`, then ran the command `./splunk reload deploy-server`. In doing so, the following chain of events is set off:
+1. The deployment server is reloaded, and all connected agents poll the server for any changes to get.
+2. The Windows UF is then told it’s part of a server class with the `sysmon-event-logs` & `windefender-logs` apps, and is expected to have them in its `C:\Program Files\SplunkUniversalForwarder\etc\apps` directory. However, when the UF checks this directory, it doesn’t find either of these apps. So the UF grabs a copy of the apps & everything in them from the deployment server and stored in the UF’s `apps` directory.
+3. Since both apps are configured to restart the agent, the UF is automatically restarted for each app it grabs.
+4. With the UF restarted, it begins looking through the `inputs.conf` files in its internal directories, following the global context precedence system. The files, now updated to contain the stanzas from the [`Stanza Creation`](#stanza-creation) section, tell the UF to forward the target logs to their appropriate indexes in MYDFIR-Splunk.
 
-So, that’s that. Nothing went wrong throughout this process, and I can go start analyzing some malicious activity, right?
-Home Lab Phase: …Something Did Go Wrong, After All
-Well, no. While the “windows-server-events” index did work as expected on the first try, the same couldn’t be said for the other two indexes. Just to make sure it wasn’t because I missed something in the documentation stating that Splunk couldn’t handle config files located in app directories grabbed from a deployment server, I copied the stanzas for the "windows-sysmon-events" & “windefender-events” indexes to the ‘inputs.conf’ file in ‘system/local’, then manually restarted the UF and checked “MYDFIR-Splunk”’s indexes to see if logs were being ingested. They were not, which indicates that there might be a problem in regards to the stanza settings.
-After rolling back the changes from the previous paragraph, I spent some time troubleshooting the issue, or rather, running googling searches to find the solution to my problem. Along the way, MyDFIR’s Basic Home Lab series came to mind. One of the things I remembered doing in that lab was setting up Splunk & Sysmon on a Windows VM (virtual machine) and using them to analyze a metasploit attack simulated via Kali Linux. One step in particular entailed modifying the ‘inputs.conf’ file to add a stanza telling Splunk to ingest Sysmon logs, which is where I immediately realized that the answer to my problem could be there, so I opened up Part 3 of the series and skipped to the part where Splunk’s ‘inputs.conf’ file is modified, which is where I see Steven’s settings for the Sysmon stanza, as well as the Windows Defender stanza:
+To see if the logs are being ingested successfully, I opened up MYDFIR-Splunk's web GUI, navigated to the “Indexes” screen, then scrolled down until I could find the three aforementioned indexes. I checked to make sure that each index has a log count that’s not 0, indicating that index is working as expected. Right away, I do see that’s the case for the “windows-server-events” index, showing promise that everything worked out fine:
+![](/screenshots/35.png)
 
-Immediately, the first difference I noticed was that both stanzas have a ‘source’ attribute, with the full path to the logs specified. Another difference I also noticed was that the Sysmon stanza has a ‘renderXml’ attribute, which tells Splunk to convert each Sysmon log into XML format during the ingestion process. From what I read online, the reason for converting Sysmon logs to XML is because of compression; each base Sysmon log takes up more storage than expected, so when there’s a lot of logs being ingested (which can easily happen, depending on how Sysmon is configured), the index can hit the storage cap pretty quick, thus preventing more logs from being ingested. By converting the logs to XML, the amount of storage is reduced for each log, ensuring that the index doesn’t run out of storage quickly.
-After navigating to my apps in the deployment server SSH PowerShell terminal to add these attributes to my Sysmon & Windows Defender stanzas, I reloaded the deployment server to echo these changes to the UF, then checked “MYDFIR-Splunk”’s indexes on the web GUI to see if the additions fixed the problem. Right away, I see that it did work for Windows Defender logs: 
+I further verified the integrity of the logs by running a search query for the index, and the logs look nothing out of the ordinary, as I was expecting:
+![](/screenshots/36.png)
 
-From the looks of it, I think the reason why making the changes fixed the ingestion for Windows Defender logs is because Splunk couldn’t seem to determine the location of the Defender logs just from the stanza declaration alone, unlike with the Windows Application, Security, and System logs. I think that the space between “Windows Defender” may have something to do with it.
-Home Lab Phase: One Problem Fixed, Another One Arises
-While the changes fixed the ingestion of Windows Defender logs, Sysmon logs were still not being ingested, so I had to spend even more time troubleshooting / googling. After countless internet resources & forums, I stumbled upon this post on Reddit that describes my exact situation. A few people responded with potential solutions; I tried the most upvoted solution (as of writing this) first, but it didn’t help, since each step was either not applicable to my setup, or just didn’t work. However, this solution caught my attention:
+## …Something Did Go Wrong, After All
+Unfortunately, that promise didn't last long. While the `windows-server-events` index worked fine, the same couldn’t be said for the other two indexes. Just to make sure I didn't misconstrue the precedence system documentation, specficially on what counts as an app directory, I copied the stanzas for the `windows-sysmon-events` & `windefender-events` indexes to the `inputs.conf` file in the UF's `local` directory, then restarted the UF directly and re-checked MYDFIR-Splunk’s indexes to see if the problem was fixed. It wasn't, which meant to me that the problem might lie within the stanza settings.
 
-I checked the debug logs for the UF in the ‘splunkd’ file under ‘C:\Program Files\SplunkUniversalForwarder\var\log\splunk’ to see if I was getting this type of error, and sure enough, permission issues were indeed the cause of my problem:
+After rolling back the changes from the previous paragraph, I spent some time troubleshooting the issue, or rather, Googling to find the solution to my problem. During this time, MyDFIR’s Basic Home Lab series came back into mind. I recalled an activity in [Part 3](https://www.youtube.com/watch?v=-8X7Ay4YCoA&pp=ygUVbXlkZmlyIGJhc2ljIGhvbWUgbGFi) of that lab where I set up Splunk & Sysmon on a Windows VM (virtual machine) and using them to analyze a Metasploit attack simulated via Kali Linux. One step in particular entailed modifying the `inputs.conf` file to add a stanza telling Splunk to ingest Sysmon logs, which is when I realized that the correct stanza for my situation might be there, so I opened up Part 3 of that series and skipped to where I can see the stanzas for Sysmon and Windows Defender in the `inputs.conf` file:
 
+![](/screenshots/37.png)
 
-Though I’ve finally figured out the reason why Sysmon logs aren’t being ingested, fixing it was another matter. The solution provided by the Reddit user would essentially entail running the UF as the root user, which is bad practice, as previously established, so I did even more searching to figure out how I could solve this problem without needing to do any rooting shenanigans. Which is when I came across this community post on the Splunk forums, most notably this post:
+Right away, the first difference I noticed was that both stanzas have a `source` attribute, with the full path to the logs specified. The other difference was that the Sysmon stanza has a `renderXml` attribute, which tells Splunk to convert each Sysmon log into XML format during the ingestion process. From what I read online, there is a valid reason for doing this: Compression. Each Sysmon log takes up more storage than expected in their base state, so when there’s a lot of logs being ingested (which can happen depending on how Sysmon is configured), the index can hit the storage cap pretty quick, thus preventing more logs from being ingested. By converting the logs to XML, the amount of storage is reduced for each log, ensuring that the index doesn’t run out of space quickly.
 
-The user explains the mechanics behind my Sysmon ingestion issue in a concise manner: Essentially, the UF operates as a “normal user” account by default, but Sysmon logs are considered “high value event logs”, which are logs that can only be accessed by privileged accounts. So, I can access these logs manually since I’m logged into the instance on an Administrator account (which is a privileged account on Windows), but as things currently are, the UF can’t access the Sysmon logs. Alongside the explanation, the user also provided a potential solution: Modify the “channelAccess” settings to grant the UF access to the Sysmon logs without giving the UF account privileged status. Unfortunately, I quickly found out that this solution required knowledge with SDDLs (Security Descriptor Definition Languages), which proved to be too complicated for me to grasp at the moment. So, I continued scrolling down the post, and found this solution just seconds later:
+Going back to the PowerShell SSH terminal for my deployment server, I went to add these attributes to my Sysmon & Windows Defender stanzas, then reloaded the deployment server to echo the changes to the UF. Checking MYDFIR-Splunk’s indexes, I saw that the change fixed the problem for Windows Defender logs: 
+![](/screenshots/38.png)
 
-This one seemed to be much simpler to implement compared to the last solution, so I opened up Group Policy (by searching for it on the Windows instance’s taskbar search), but I couldn’t find the Event Log Readers group in there. I wasn’t gonna give up on this solution, though, so I googled where I could find the “Event Log Reader” group, and Google’s AI Overview pointed me towards Windows Computer Management:
+I'm purely making assumptions here, but I think the reason why the changes fixed the ingestion for Windows Defender logs is because Splunk couldn’t seem to determine the location solely from the stanza declaration, unlike with the Windows Application, Security, and System logs. The space between `Windows Defender` may have something to do with it.
 
-I decided to follow the overview on a whim and opened up Computer Management. Sure enough, I actually found the group that I was looking for:
+## One Index Fixed, The Other Still Malfunctioning
+The changes may have fixed the Windows Defender index, but the Sysmon index was still not working, so I spent even more time troubleshooting. Many internet resources & forums later, I stumbled upon [this Reddit post](https://www.reddit.com/r/Splunk/comments/1jxjkvo/splunk_not_taking_in_sysmon_source/) describing my exact predicament. A few people responded with potential solutions. I tried the most upvoted solution (as of writing this), but it didn't help, since each step was either not applicable to my setup, or just didn’t work. However, this other solution caught my attention:
+![](/screenshots/39.png)
 
-Now to add the UF to the group. I double-clicked on the group, clicked “Add…”, then under “Enter the object names to select”, I entered in the UF’s system name. I found this info by doing the following:
-Navigate to “Services” by searching for it on the taskbar search, then selecting what appears under best match.
-Scroll to the “SplunkForwarder” service. To navigate to it even quicker, click on a service, then press the “S” key.
-After finding the “SplunkForwarder” service, right click on it, then click “Properties”.
-Sidenote: Steps 1-3 can also be imitated to manually restart or stop the UF.
-Click the “Log On” tab
-Copy what appears in the “This account:” field. This is what will be entered under “Enter the object names to select”. In my case: 
+A dive into the debug logs for the UF, located in the `splunkd` file under `C:\Program Files\SplunkUniversalForwarder\var\log\splunk`, verified that permission issues were indeed the cause of my problem:
+![](/screenshots/40.png)
+![](/screenshots/41.png)
 
-After entering in the UF’s system name, I clicked “Check Names” to ensure that the name exists (which should be a given, considering I just searched for it) & the correct name for the UF is given. Then, I clicked OK to exit the “Select Users” window, then OK to exit the “Event Log Reader Properties” window. With all the changes applied, I manually restarted the UF, then checked “MYDFIR-Splunk”’s indexes to see if Sysmon logs are being ingested… and they are, at long last:
+Although I’ve finally figured out the cause of the Sysmon log ingestion problem, fixing it was another matter. The solution provided by the user would essentially entail running the UF as root, which is bad practice, so I did more searching to figure out how I could fix this problem without the need of any rooting shenanigans. That's when I came across [this community post](https://community.splunk.com/t5/Getting-Data-In/Sysmon-events-not-getting-indexed/m-p/655609:) on the Splunk forums, more specifically this post:
+![](/screenshots/42.png)
 
+The user concisely explains why my Sysmon ingestion issue is happening as such: Basically, the UF operates as a “normal user” account by default, but Sysmon logs are considered “high value event logs”, which are logs that can only be accessed by privileged accounts. This means I can access these logs manually since I’m logged into the Windows server as Administrator, a privileged account on Windows, while the UF can’t. Alongside the explanation, the user also provided a viable solution. However, in trying to implement it, I found the underlying knowledge complicated for me to grasp at the moment. So, I continued scrolling down the community post, hoping to find an easier solution, and found this:
+![](/screenshots/43.png)
 
+Using the taskbar search in the Windows server instance, I searched for & opened up **Group Policy**, but I didn’t find the **Event Log Readers** group in there. I wasn’t giving up on this solution, though, so I Googled where I could find the Event Log Reader group, and was pointed towards Windows Computer Management (thanks Google AI Overview). Opening up Computer Management, I actually found the group I'm looking for:
+![](/screenshots/44.png)
+
+Double-clicking on the group, I clicked “Add…”, then under “Enter the object names to select”, I inputted the UF’s system name. I found this info by doing the following:
+1. I navigated to “Services” by searching for it in taskbar search, then selecting what appeared under best match.
+2. I scrolled to the “SplunkForwarder” service. To get to it even quicker, click on a service, then press the “S” key.
+3. After finding the “SplunkForwarder” service, I right clicked on it, then click “Properties”.
+> [!NOTE]
+> Steps 1-3 can also be imitated to manually restart or stop the UF.
+
+4. Click the “Log On” tab.
+5. I copied what appeared in the "This account:" text box, which will be pasted under “Enter the object names to select”. In my case:
+![](/screenshots/45.png)
+
+After entering in the UF’s system name, I clicked “Check Names” to ensure the correct name for the UF is given. Then, I clicked OK out of all windows and applied the changes. Afterwards, I manually restarted the UF, then checked MYDFIR-Splunk’s indexes hoping that Sysmon logs are being ingested… and they are, at long last:
+![](/screenshots/46.png)
+
+Previous Part                                    | Return to Introduction                  | Next Part
+------------------------------------------------ | --------------------------------------- | ---------
+[Part 5: Prepare for Log Ingestion](/PART5.md)   | [Introduction](/README.md#introduction) | [Part 7: The First Step Towards Becoming a Proefficient Splunk User](/PART7.md)
