@@ -31,28 +31,36 @@ So, I searched the `windows-server-events` index for `4624`. On the search resul
 
 In this search, the first (bottom) two events had a logon type of 3, while one event in the middle had a logon type of 10, as I was expecting. The other events either had a logon type of 2 or 5. According to the [Windows Security Log Encyclopedia](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/default.aspx), 2 represents an interactive logon type; a logon at keyboard and screen of system, while 5 represents a service startup logon type. These events all involved critical service processes for Windows, as they all ran during & after establishing the RDP connection. One of those service processes that I found, for example, is `winlogon.exe`, which handles logon activities.
 
-When finding the text file creation event, I tried many searches, but to no avail. Feeling very puzzled, I found myself going into the Windows instance and recreated the text file, but with a new method: Instead of opening Notepad, I right-clicked in the folder where the old file was, then navigated to “New” > “Text Document”. Then I returned to Splunk and continued trying to find the text file. I was eventually able to find both text file events by searching the Sysmon index for events containing the ‘.txt’ file extension:
+Finding the text file creation event took some time. At one point, I recreated the file in the Windows server, but went a different way: Instead of opening Notepad, I right-clicked in the `Downloads` folder, then clicked on “New” > “Text Document”. Eventually, I found both text file events by searching the Sysmon index for events containing the `.txt` file extension:
+![](/screenshots/53.png)
+![](/screenshots/54.png)
+![](/screenshots/55.png)
 
+Looking up the [Sysmon event ID list](https://www.blackhillsinfosec.com/a-sysmon-event-id-breakdown/), I was expecting to find the text file events associated with event ID 11 (file creation). But surprisingly, the two events containing the `hello-world.txt` file had `EventID` 1 (process creation) instead, though I did notice an `EventID` 11 for `New Text Document.txt`, which was the second text file (MyDFIR briefly touches on this in a later video).
 
+Having found the text file event(s) in the Sysmon index, I figured I should also find the successful authentication event in the same index to make the correlation process easier. I ran a search for events containing `EventID=3` (network connections) and `DestinationPort=3389` (default TCP port for RDP connections), then on the timeline bar, I selected the 4-5AM block to further filter the events to around the time (in UTC) I connected to the Windows instance to create the first file:
+![](/screenshots/56.png)
 
-When checking both events that contained the ‘hello-world.txt’ file, I found that the first file creation instance had a Sysmon event ID of 1 (process creation) instead of 11 (file creation), as I was expecting, while the second file creation instance did have the event ID 11. I attributed this to the methods that I used when creating the files; the first two events occurred as a result of using the pre-installed Notepad application, while the last two events occurred from right-clicking to make something brand new.
-Since I found the file creation events in the Sysmon index, I figured I should find the successful authentication activity in the same index to make the correlation process easier. To do that, I first searched for events containing Sysmon event ID 3 (network connections), then checked the list of interesting fields on the left to see which one is for the destination port. After determining it to be ‘DestinationPort’, I added ‘DestinationPort=3389’ (default TCP port for RDP connections) to the search, then on the timeline bar, I selected the 4-5AM block, which was around the time (in UTC) I first connected to the Windows instance to create the file, in order to filter for logs within that timeframe, as shown:
+Thanks to the filters, it didn’t take me long to find the event I was looking for:
+![](/screenshots/57.png)
 
-Thanks to all these filters, it didn’t take long for me to find the event I was looking for:
+### Correlating Text File Creation & Successful Authentication Activity
+Now that I have the successful authentication and text file events on hand, I looked for information in the logs that I could use to correlate the events & get the full picture of what I did in that connected session. I tried looking through the successful authentication event in the Sysmon index, but didn't find anything that seemed useful, so I looked at the event in the `windows-server-events` index, where I found a field of interest:
+![](/screenshots/58.png)
+![](/screenshots/59.png)
 
-Correlating Text File Creation & Successful Authentication Activity
-With the authentication success & text file logs known, I started looking for information in the logs that I could use to correlate the events & get the full picture of the activity I did when I first connected to the Windows instance. I tried looking through the successful authentication log that was in the Sysmon index, but wasn’t able to find anything that seemed useful, so I looked at the version in the "windows-server-events" index. That’s where I found a field of interest:
+I looked at the first text file event to see if it also had a logon ID field with the same value, and it did:
+![](/screenshots/60.png)
 
+Finally, I verified if the `LogonId` field really does provide the full picture for a connected session by searching the Sysmon index for all events containing the logon ID value in question. Judging from the amount of events returned, it's safe to say that it can:
+![](/screenshots/61.png)
 
-I looked at the first text file event to see if it had a field that matched the logon ID field value above. It did; even has the same field name too:
+### Checking Failed Authentication Activity
+Moving on to the failed authentication activity, I peeked into the `windows-server-events` index first. Searching for `EventCode=4625` and setting the time range to around the same time as my first successful authentication session, I found the event right off the bat:
+![](/screenshots/62.png)
 
-To see if the ‘LogonId’ field value really does provide the full picture, I searched the Sysmon index, filtering it with the field value in question:
-
-Judging from the amount of results returned as well as the quick activity I did in the Windows instance, it’s safe to say that the logon ID field can in fact be used to correlate Sysmon events & see everything that happened in a particular successful authentication session, whether legit or suspicious.
-Checking Failed Authentication Activity
-Moving on to checking out the failed authentication activity, I first checked out the “windows-server-events” index:
-
-Then, I checked out the Sysmon index by filtering for Sysmon event ID 3 (similar to finding the successful authentication activity) within a 10-minute timeframe:
+Next, I checked out the Sysmon index by filtering for Sysmon event ID 3, still within the same timeframe:
+![](/screenshots/63.png)
 
 Unfortunately, I wasn’t able to find an event log in there that explicitly mentions an account failing to log in; the closest I could find was the one highlighted above. Looking back, the successful authentication event log that I found in the Sysmon index similarly didn’t explicitly mention something about an account successfully logging on. So in conclusion, Sysmon logs alone don’t seem to be effective in determining whether a failed or successful suspicious login happened, but when utilizing the logon ID from the base Windows authentication event logs, it can determine the activity that happened in a particular login session.
 Home Lab Phase: Checking Successful Authentication Activity (for real)
