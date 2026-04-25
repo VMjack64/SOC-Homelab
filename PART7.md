@@ -99,19 +99,25 @@ Basically, by adding both the secure and unsecure firewalls to the Windows serve
 
 Here, the rules from the unsecure firewall overrides the rules of the secure one, essentially turning this singular firewall into the unsecure firewall, hence how some of these IP addresses managed to reach my instance. To rectify this, I need to navigate to the **Change security groups** screen for the instance and remove the unsecure firewall from there.
 
-As to why I added the secure & unsecure firewalls together in the first place, I assumed that when multiple AWS firewalls are involved, they worked in a layered approach, where certain traffic can pass through one firewall, but gets blocked by the other. This is a concept referred to as defense in depth, which I became familiar with from the Google Cybersecurity course, as well as from studying for my Security+ certification. Under this assumption, I didn't want to touch the unsecure firewall for the sake of removing the hassle of switching firewalls everytime I want to do a telemetry gathering session. Although when looking back at my course notes, specifically the screenshot where I got the layered idea from, it seems I may have gotten the wrong idea about layered firewalls:
+As to why I added the secure & unsecure firewalls together in the first place, I assumed that when multiple AWS firewalls are involved, they worked in a layered approach, where certain traffic can pass through one firewall, but gets blocked by the other. This is a concept referred to as defense in depth, which I became familiar with from the Google Cybersecurity course, as well as from studying for my Security+ certification. Under this assumption, I didn't want to touch the unsecure firewall for the sake of removing the hassle of switching firewalls everytime I want to do a telemetry gathering session. Although when looking back at my course notes, specifically the screenshot where I got the layered idea from, it seems I may have gotten the wrong approach:
 
 ![](/screenshots/72.png)
 
-Here, it appears that I can only use one firewall at a time for managing traffic to a destination. To construct a defense in depth setup with firewalls, there lies a zone between the internet and an organization's internal network called the demilitarized zone (DMZ), which essentially acts like an airport security checkpoint to the organization’s network. One firewall is used for filtering traffic from the internet to the DMZ, while another firewall is used for filtering traffic from the DMZ to the internal network. The latter is used to filter out any disallowed traffic that somehow manages to reach the DMZ, ensuring that only traffic allowed in the internal network can reach it.
+Here, it appears that I can only use one firewall at a time for managing traffic to a destination. To construct a defense in depth setup with firewalls, there lies a zone between the internet and an organization's internal network called the demilitarized zone (DMZ), which essentially acts like an airport security checkpoint for the organization’s network. One firewall is used for filtering traffic from the internet to the DMZ, while another firewall is used for filtering traffic from the DMZ to the internal network. The latter is used to filter out any disallowed traffic that somehow manages to reach the DMZ, ensuring that only traffic allowed in the internal network can reach it.
 
 ### Re-checking Successful Authentication Activity
-Considering the existence of failed suspicious brute-force authentication events outside of the intended timeframe, I immediately thought to check all of the successful authentication events, hoping that no outsider managed to crack into the instance. Thankfully, that didn’t seem to be the case:
+Seeing suspicious failed authentication events outside of the expected timeframe(s) made me think to quickly check all of the successful authentication events throughout the Window server's lifespan, hoping there was no successful attempt. Thankfully, that didn't seem to be the case:
 
+![](/screenshots/73.png)
+![](/screenshots/74.png)
+![](/screenshots/75.png)
+![](/screenshots/76.png)
 
+  - Logon type 4:
 
+    ![](/screenshots/77.png)
 
-Home Lab Phase: Creating Reports, Alerts, & Dashboards
+## Creating Reports, Alerts, & Dashboards
 After checking out the authentication activity that occurred on the Windows instance, I want to create alerts to notify me of any imminent attacks, as well as a dashboard to provide a comprehensive view of where the attacks are coming from. First off though, I saved the queries for both successful & failed authentication activity. In Splunk, the way to save a query is by saving it as a report. To do so, have the query up in a search first. Then, click “Save As” > “Report”.
 Failed Activity Report
 
