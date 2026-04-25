@@ -12,10 +12,10 @@ So, I changed the attribute value to `Windows Server 2022`. After saving the cha
 ![](/screenshots/50.png)
 ![](/screenshots/51.png)
 
-...At least for newly ingested logs. For logs that were already ingested before the change, the old value still remains. As a result, later on in the lab, I plan on re-exposing the Windows server to the internet to generate more telemetry, this time with the host name modification. For now, I still intend on checking the old logs; just keep in mind that any instances of **EC2AMAZ-HP60UKG** is **Windows Server 2022**.
+...At least for newly ingested logs. For logs that were already ingested before the change, the old value still remains. As a result, before continuing, I spent another day having the Windows server exposed to the internet to generate more telemetry, this time with the host name modification. However, I still intend on checking the old logs; just keep in mind that any instances of **EC2AMAZ-HP60UKG** is **Windows Server 2022**.
 
 ## Log Analysis Warmup
-After correcting the host name, I tried to continue on with my primary objective, but one quick peek at the logs in the three indexes, I came to the realization that I had no idea where to start; I forgot much of what I've learned in the Splunk introductory courses I took prior to this lab. To prepare myself for the real deal, I gave myself another task, which was a simple exercise to relearn the basics of Splunk. First, I made a failed connection attempt to the Windows instance, then a successful connection attempt, and in the instance, I created a text file named `hello-world` with text containing, “Hello World!”. My idea here is to create a failed authentication event log, and a successful authentication event log that I could use to correlate with the created text file event log.
+After correcting the host name, I tried to continue on with my primary objective, but one quick peek at the logs in the three indexes, I came to the realization that I had no idea where to start with managing a large set of events; I forgot much of what I've learned in the Splunk introductory courses I took prior to this lab. To prepare myself for the real deal, I gave myself another task, which was a simple exercise to relearn the basics of Splunk. First, I made a failed connection attempt to the Windows instance, then a successful connection attempt, and in the instance, I created a text file named `hello-world` with text containing, “Hello World!”. My idea here is to create a failed authentication event log, and a successful authentication event log that I could use to correlate with the created text file event log.
 
 ### Checking Successful Authentication and Text File Creation Activity
 After creating the logs, I checked them out. First, I took a look at the successful authentication activity. Thanks to the Day 16 video, I learnt that if I’m going to hunt for Windows brute force authentication activity in Splunk, I need to look out for the following:
@@ -62,31 +62,40 @@ Moving on to the failed authentication activity, I peeked into the `windows-serv
 Next, I tried finding the same event in the Sysmon index by filtering for Sysmon event ID 3, still within the same timeframe. Unfortunately, I wasn't able to find an event explicitly mentioning an account failing to log in, with the closest I could find being this:
 ![](/screenshots/63.png)
 
-  - When thinking back on this, I realized that the successful authentication event I found in the Sysmon index wasn't the one I was looking for either. The event didn’t explicitly mention something about an account successfully logging on. Additionally, the `initiated` field in that log was **false**, whereas a successful connection would've had a value of **true**.
+  - When thinking back on this, I realized that the successful authentication event I found in the Sysmon index wasn't the one I was looking for. That event also didn’t explicitly mention something about an account successfully logging on. Additionally, the `initiated` field in that log was **false**, whereas a successful connection would've had a value of **true**.
 
 ## Checking Successful Authentication Activity (for real)
-By doing the warmup, I feel more confident gotten a better understanding on how I should search the logs for brute force activity, as well as an idea of the rudimentary process on log searching with Splunk. With this newfound knowledge, I felt confident enough to begin checking out the events involving the Windows instance from when I left it running for the first time (don’t worry, I do actually analyze the other batch of successful telemetry in the next section; what happens next is something interesting that I want to go into detail about).
-To start things off, I want to determine if any successful authentication events via RDP brute forcing happened during that timeframe. To do so, I first searched the “windows-server-events” index, using filters to narrow the events returned down to the time range in question:
+Overall, thanks to the warmup, I've gotten a better understanding of the rudimentary process on log searching with Splunk, and felt confident on how I should hunt for brute force activity. So, I finally began checking out the RDP brute force telemetry generated by the Windows server. Starting things off, I want to determine if any successful authentication events happened in the time I first exposed the server to the internet. To do so, I searched the `windows-server-events` index, setting the time range to the following:
+![](/screenshots/64.png)
 
-Then, I checked the “EventCode” field in the “Interesting Fields” sidebar to see if the ID number ‘4624’ exists. I was alarmed when I found that not only did it appear, but there was a higher number of events than I was expecting:
+Then, I checked the `EventCode` field for the existence of ID number **4624**. I was alarmed when I saw that not only did it appear, but there were a higher number of events than I was expecting:
+![](/screenshots/65.png)
 
-So, I went to investigate. After clicking the ID number to add the filter to the search, I checked the “Logon_Type” field next. As mentioned in the warmup, in addition to looking for event ID 4624, I also need to look for logon types 3, 10, or in some cases, 7. However, looking at the list of values, neither of these three showed up:
+So, I went to investigate. After clicking the ID number to filter the events for it, I checked the `Logon_Type` field next. As mentioned from the warmup, in addition to event ID 4624, I also need to look for logon types 3, 10, or in some cases, 7. Neither of these three showed up in the list of values shown:
+![](/screenshots/66.png)
 
-Still, I went and checked out each of the values listed, just to be safe. Here were my findings:
-Logon Type 5: All of the events were legitimate critical Windows services that activated upon logging into the instance.
-Logon Type 2: The main processes involved are wininit.exe & winlogon.exe, which were legitimate critical Windows services activated at the login screen. Neither event gave a source IP address.
-Logon Type 0: Seems to be initialization / bootup services. Neither of the events looked to be suspicious.
-Since neither of the events were suspicious after taking a closer look, it’s safe to say that no successful RDP brute-force attack happened in that time.
-Home Lab Phase: Checking Failed Authentication Activity (for real)
-After concluding that no successful brute-force authentication happened, the next question remains: What about the failed activity in the same timeframe? When looking back at the list of event IDs from the previous section, I noticed that the ID number ‘4625’ wasn’t listed. So I manually added the filter to a search of the “windows-server-events” index, using the same timeframe from the previous section:
+Still, I checked out each value listed, just to be safe. Here were my findings:
+  - Logon Type 5: All of the events were legitimate critical Windows services that activated upon logging into the instance.
+  - Logon Type 2: The main processes involved are `wininit.exe` & `winlogon.exe`, which are legitimate critical Windows services activated at the login screen. Neither event gave a source IP address.
+  - Logon Type 0: Seems to be initialization / bootup services. Neither of the events seemed to be suspicious.
+
+Since neither of these events came out as suspicious, it’s safe for me to conclude that no successful RDP brute force attack happened around this time.
+
+## Checking Failed Authentication Activity (for real)
+Having determined that no successful authentication happened, the other question remains: What about the failed activity in the same timeframe? When looking back at the list of event IDs from the previous section, I noticed **4625** wasn’t listed in the top values. So I manually added the filter to a query of the `windows-server-events` index, using the same timeframe from the previous section:
+![](/screenshots/67.png)
 
 Surprisingly, only a handful of events were returned. Even more so, the first two events came from the application logs, and were merely notifications that the system is suppressing duplicate log entries. The last event, on the other hand, does arouse suspicion, since it logs an unfamiliar IP address:
+![](/screenshots/68.png)
 
-Unsatisfied with the results, I expanded the time range of the search to “All Time” so I can check out all the failed authentication activity that occurred throughout the Windows instance’s lifespan. That was when I saw something alarming upon checking the “Source_Network_Address” field:
+Feeling unsatisfied with the results, I expanded the time range to **All Time** so I can check out all the failed authentication activity that occurred throughout the Windows server’s lifespan, including the ones with the new `host` field. That was when I saw something alarming upon checking the `Source_Network_Address` field:
+![](/screenshots/69.png)
 
-I did add the secure firewall back to the Windows Server instance right after that day-long telemetry generation session. Perplexed as to why three more suspicious IP addresses came up outside that time period, I checked the AWS documentation on security groups, which was where I realized I made a big mistake:
+Despite re-adding the secure firewall to the Windows server after each telemetry gathering session, a couple of these new suspicious IP addresses popped up on times outside of these sessions. Perplexed as to why, I checked the AWS documentation on security groups, which was where I realized my big mistake:
+![](/screenshots/70.png)
 
-Basically, by adding both the secure and unsecure firewalls to the Windows Server instance after finishing the telemetry gathering session, what AWS is actually doing is combining the rules of both firewalls into one firewall; in other words, the Windows Instance now has one big firewall with the inbound rules of both individual firewalls:
+Basically, by adding both the secure and unsecure firewalls to the Windows server at the same time, what AWS is actually doing is grabbing the rules from both firewalls and putting them all together into one firewall. In other words, the instance now has a singular firewall with the following inbound rules:
+![](/screenshots/71.png)
 
 Here, the rules of the unsecure firewall overrides the rules of the secure one, and this big firewall essentially just becomes the unsecure firewall, which is how these three IP addresses managed to reach the instance in the first place.
 To rectify this, I needed to remove the unsecure firewall from the Windows Server instance by navigating to the “Change security groups” screen for the instance, then clicking on “Remove” next to “unsecure-firewall”, and saving the changes afterwards. Initially, I assumed AWS firewalls worked in a layered approach, where if multiple firewalls are involved, certain traffic can pass through one firewall, but gets blocked by the other, a concept referred to as defense in depth, which I became familiar with from the Google Cybersecurity course & studying for my Security+ certification. As such, I left the unsecure firewall on in the first place for the sake of removing the tedium from switching firewalls whenever I wanted to generate logs. Though when looking back at my course notes, it seems that I missed a few pointers regarding using firewalls in a defense in depth strategy:
