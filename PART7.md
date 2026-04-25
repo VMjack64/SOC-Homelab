@@ -41,7 +41,7 @@ Looking up the [Sysmon event ID list](https://www.blackhillsinfosec.com/a-sysmon
 Having found the text file event(s) in the Sysmon index, I figured I should also find the successful authentication event in the same index to make the correlation process easier. I ran a search for events containing `EventID=3` (network connections) and `DestinationPort=3389` (default TCP port for RDP connections), then on the timeline bar, I selected the 4-5AM block to further filter the events to around the time (in UTC) I connected to the Windows instance to create the first file:
 ![](/screenshots/56.png)
 
-Thanks to the filters, it didn’t take me long to find the event I was looking for:
+Thanks to the filters, it didn’t take me long to find the event (I thought) I was looking for:
 ![](/screenshots/57.png)
 
 ### Correlating Text File Creation & Successful Authentication Activity
@@ -59,12 +59,13 @@ Finally, I verified if the `LogonId` field really does provide the full picture 
 Moving on to the failed authentication activity, I peeked into the `windows-server-events` index first. Searching for `EventCode=4625` and setting the time range to around the same time as my first successful authentication session, I found the event right off the bat:
 ![](/screenshots/62.png)
 
-Next, I checked out the Sysmon index by filtering for Sysmon event ID 3, still within the same timeframe:
+Next, I tried finding the same event in the Sysmon index by filtering for Sysmon event ID 3, still within the same timeframe. Unfortunately, I wasn't able to find an event explicitly mentioning an account failing to log in, with the closest I could find being this:
 ![](/screenshots/63.png)
 
-Unfortunately, I wasn’t able to find an event log in there that explicitly mentions an account failing to log in; the closest I could find was the one highlighted above. Looking back, the successful authentication event log that I found in the Sysmon index similarly didn’t explicitly mention something about an account successfully logging on. So in conclusion, Sysmon logs alone don’t seem to be effective in determining whether a failed or successful suspicious login happened, but when utilizing the logon ID from the base Windows authentication event logs, it can determine the activity that happened in a particular login session.
-Home Lab Phase: Checking Successful Authentication Activity (for real)
-Thanks to the warmup, I’ve gotten a better understanding on how I should search the logs for brute force activity, as well as an idea on the rudimentary search process. With this newfound knowledge, I felt confident enough to begin checking out the events involving the Windows instance from when I left it running for the first time (don’t worry, I do actually analyze the other batch of successful telemetry in the next section; what happens next is something interesting that I want to go into detail about).
+  - When thinking back on this, I realized that the successful authentication event I found in the Sysmon index wasn't the one I was looking for either. The event didn’t explicitly mention something about an account successfully logging on. Additionally, the `initiated` field in that log was **false**, whereas a successful connection would've had a value of **true**.
+
+## Checking Successful Authentication Activity (for real)
+By doing the warmup, I feel more confident gotten a better understanding on how I should search the logs for brute force activity, as well as an idea of the rudimentary process on log searching with Splunk. With this newfound knowledge, I felt confident enough to begin checking out the events involving the Windows instance from when I left it running for the first time (don’t worry, I do actually analyze the other batch of successful telemetry in the next section; what happens next is something interesting that I want to go into detail about).
 To start things off, I want to determine if any successful authentication events via RDP brute forcing happened during that timeframe. To do so, I first searched the “windows-server-events” index, using filters to narrow the events returned down to the time range in question:
 
 Then, I checked the “EventCode” field in the “Interesting Fields” sidebar to see if the ID number ‘4624’ exists. I was alarmed when I found that not only did it appear, but there was a higher number of events than I was expecting:
