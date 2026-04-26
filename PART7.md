@@ -157,45 +157,61 @@ When creating the alert for failed authentication attempts, I have the query up 
 
 Regarding the error message, I initially wanted the alert to monitor in real time for each incoming failed event, but when looking up the documentation on real-time alerts & throttling, it mentions that real-time alerts might use more computing resources than necessary, and recommends using a scheduled alert instead, which is what I did here. On a side note, I've chosen to set the alert severity as `Low`; with how I've segmented the cloud network, and the NACL & firewall rules in place, there's no reason for me to worry about any critical instances getting compromised in the event of a successful brute force attempt.
 
-In following MyDFIR’s series for this section, I noticed just how limited Splunk’s alert creation system is compared to Elastic’s. When viewing the alert of a failed login attempt I made, Splunk didn’t provide at-a-glance information, such as the IP address of the machine that triggered the alert. I tried searching the internet for any solutions I could try to make  after searching for add-ons & the internet, I couldn’t find anything about implementing this in Splunk. So, I left the alert setup as-is and betted on utilizing the ticketing system to provide this information. Additionally, I didn’t create an alert for successful authentication activity, which, looking back, is a missed opportunity that I should’ve done.
+In following MyDFIR’s series for this section, I noticed how limited Splunk’s alert creation system is compared to Elastic’s. When viewing the alert of a failed login attempt I made, Splunk didn’t provide at-a-glance information, such as the IP address of the machine that triggered the alert. I tried searching the internet for any solutions to get this info to show up, but wasn't able to find anything. Ultimately, I left things as-is.
 
 ### Map of Failed Authentications
-Now for the dashboard. I’m going to first populate it with a couple of maps visualizing where the attacks are coming from. According to the documentation about generating a choropleth map, the following pre-components are required:
-Data that can provide real-world coordinates (such as the IP addresses from the authentication events).
-A lookup table file, which defines regions & its boundaries, such as the boundaries of each U.S. state.
-A geospatial lookup, which matches coordinate data to defined regions from the lookup table file.
-For the last two, Splunk Enterprise thankfully has built-in files for the U.S. (lookup file: ‘geo_us_states’), as well as the U.S. + other countries (lookup file: ‘geo_countries’), which is enough for the job.
-When trying to build the map, Splunk doesn’t automatically grab the geolocation information from the IP addresses in the failed authentication events by default, like Elastic does. To get it, I have to write the following query:
+Next up, the dashboard. I’m going to first populate it with a couple of maps visualizing where the attacks are coming from. When viewing the [documentation about generating a choropleth map](https://help.splunk.com/en/splunk-enterprise/create-dashboards-and-reports/simple-xml-dashboards/10.0/maps/generate-a-choropleth-map#e4ece095_693b_485f_8eba_5dc9fdb5d5e7--en__Generate_a_choropleth_map), the following pre-components are required:
+  - Data that can provide real-world coordinates (ex: IP addresses).
+  - A lookup table file, which defines regions & its boundaries, such as the boundaries of each U.S. state.
+  - A geospatial lookup, which matches coordinate data to defined regions from the lookup table file.
 
-TIP: To format the query in a neat manner as shown, click into the search bar, then press “CTRL + \”.
-To explain how this query works: First, ‘iplocation’ rings up a third-party database to determine the geographic info corresponding to an IP address. The field holding the IP address to get must be specified here; in this case, ‘Source_Network_Address’. By extension, I also need to add ‘Source_Network_Address=*’ as shown to ensure that the query only returns events where the field exists so that no potential errors occur. Next, ‘stats’ aggregates the events returned by the query into a table which shows a count of events that came from a particular country. Lastly, ‘geom’ enables the table to be used in a map; for the two arguments specified, the documentation provides an explanation for their purposes (as I couldn’t figure out how to put this in a more simplified explanatory manner):
+For the last two, Splunk Enterprise conveniently has built-in files for them (lookup files: `geo_us_states` and `geo_countries`, respectively). And with the authentication events providing the real-world coordinate data I need, I'm all set to start building some maps.
 
-After running the query, I navigated to the ‘Visualization’ tab, then clicked the ‘Chart’ dropdown box (the one to the left of the ‘Format’ dropdown box). Out of the list of options, I selected ‘Choropleth Map’ (under “Splunk Visualizations”; hover the cursor over each option to get a name preview), which will show a map of the aggregated results:
+When trying to build the map, Splunk doesn’t grab the geolocation info from the IP addresses automatically by default, like Elastic does. To get it, I have to write the following query:
 
-Right away, I see a problem: I remembered seeing a couple of events coming from Russia while I was playing around with the query mentioned earlier, yet Russia appears blank in this map alongside the countries with no associated events. Thankfully, the documentation references a solution to this problem:
-With the map still open, click the ‘Format’ dropdown box, then navigate to the “Colors” tab in the popup that appears.
-Change the “Number of Bins” to 9.
-After doing these steps, I notice the map update automatically to echo these changes; the new map better reflects my needs more. With the popup still up, I also changed the shade color to pure red from there:
+![](/screenshots/80.png)
 
-With the map refined, I made a new dashboard to save the map to by clicking “Save As” on the top right, then “New Dashboard”. On the “Save Panel to New Dashboard” screen, I entered the following details below before clicking “Save to Dashboard”:
-Dashboard Title: Failed Authentication Activity
-Description: Left blank
-Permissions: Left as Private
-Build as “Classic Dashboard”
-Panel Title: RDP Failed Authentication Activity Map
-Visualization Type: Map (not “Statistics Table)
-Advanced Panel Settings:
-Panel Powered By: Inline Search
-Drilldown: No action
-Table of Failed Authentications
-While the updated map does show every country with events from the batch of failed authentication logs used, that doesn’t mean that it will in other contexts; depending on the amount of events returned by the query & from what country they originated from, it might be possible that not all countries with events will be highlighted on the map, even with the max number of bins selected. For that, I want to compliment the map with a table that provides a quick glance at the names of all the countries & cities involved, plus the number of events that originated from there, in addition to the offending IP addresses & the target usernames.
-To create the table, I simply wrote the following query:
+Where `iplocation` rings up a third-party database to determine the geographic info corresponding to an IP address under `Source_Network_Address`, `stats` aggregates the events returned into a table showing the number of events that came from a particular `Country`, and `geom` enables the table to be used in a map.
 
-In this query, the values() function used under the ‘stats’ command grabs all unique values for the field specified in parentheses from the events returned, and are then aggregated accordingly, based on the field specified after the ‘count by’ function (in this case, ‘Country’) with the ‘as’ keyword renaming the default column names to the ones seen in the screenshot above. Then the ‘sort’ command, as the name suggests, orders the table based on a specified column, in this case “# of Attempts”. The ‘-’ symbol prepended to the column name tells the command to rearrange the table from highest to lowest number of login attempts, letting me quickly see if there’s a country with so many login attempts that it warrants an investigation.
-After running the query, I saved the table to the “Failed Authentication Activity” dashboard created previously by clicking on “Save As” > “Existing Dashboard”:
+> [!TIP]
+> To tidy up a search query instantly, click into the search bar, then press `CTRL + \`.
 
-Adding a Time Input to Dashboard
-After saving the table, this is what the dashboard looks like now:
+After running the query, I navigated to "Visualization" > "Chart" > "Splunk Visualizations", and selected `Choropleth Map` to display a map of the aggregated results:
+
+![](/screenshots/81.png)
+
+Immediately, I saw a problem: In the table generated by the query, I remembered seeing a couple of events originating from Russia. Yet, Russia appears white in this map alongside the countries with no associated events. Thankfully, the documentation references a solution to my problem - navigating to "Format" > "Colors", I changed the **Number of Bins** to `9`. Additionally, I also changed the shade color to pure red. The resulting map better reflected my needs more:
+
+![](/screenshots/82.png)
+
+With the map refined, I made a new dashboard to save the map to by clicking “Save As” > “New Dashboard”, then inputted the following details before saving:
+  - Dashboard Title: Failed Authentication Activity
+  - Description: Left blank
+  - Permissions: Left as Private
+  - Build as “Classic Dashboard”
+  - Panel Title: RDP Failed Authentication Activity Map
+  - Visualization Type: Map (not “Statistics" Table)
+  - Advanced Panel Settings:
+    - Panel Powered By: Inline Search
+    - Drilldown: No action
+
+### Table of Failed Authentications
+Even with the updated settings to the map, depending on the events returned by the query, it's not guaranteed that all countries will receive the appropriate shading, despite having events. Because of that, I want to compliment the map with a table that provides a quick glance of all the countries & cities involved plus the number of events originating from there, the offending IP addresses, and the target usernames.
+
+To create the table, I wrote the following query:
+
+![](/screenshots/83.png)
+
+Where the `values()` function grabs all unique values for the field specified in parentheses and are then aggregated based on the `Country` field (`count as "# of Attempts" by Country`). The ‘-’ symbol prepended to `# of Attempts` re-sorts the table from highest to lowest number of login attempts, letting me quickly spot if there’s a country with so many originating login attempts that it warrants an investigation.
+
+After running the query, I saved the table to the **Failed Authentication Activity** dashboard by clicking on “Save As” > “Existing Dashboard”:
+
+![](/screenshots/84.png)
+
+### Adding a Time Input to Dashboard
+The current state of my dashboard after saving the table:
+
+![](/screenshots/85.png)
 
 One thing that I want to add to the dashboard is a time input. By default, the panels will use the same time range specified back when I first ran their queries for returning results. These time ranges are pretty much hard coded into place, and would necessitate editing each panel manually if I want to change the range, which can quickly get tedious.
 On the dashboard screen, I clicked “Edit” on the top right to enter Edit mode.
