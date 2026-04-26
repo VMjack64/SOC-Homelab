@@ -1,36 +1,45 @@
 # Part 8: Taking Things Seriously with Mythic (Days 18, 19, 20, 21, 22, 28)
-After spending a good arduous amount of time searching the logs with Splunk & creating the dashboard, I feel much more confident that I’ve gotten a grasp on the basics of using the software. So, it’s time to take things up a notch and start analyzing some malware. Specifically, I’m going to run a Mythic executable on the Windows instance and try to capture its activity with Splunk. Now, to be real here, I was originally planning to skip doing this part for the sake of time. I had a couple of reasons for wanting to do so that I felt were valid at the time:
-A few concepts in this part are more about red-teaming stuff, not blue team, which is what I’m trying to study about in the first place.
-I have similar, more ambitious plans in mind for the bonus challenge.
-However, I soon realized my imprudence; doing this part can generate some C2 telemetry that could serve as good practice for the bonus challenge as well as a fundamental basis on how I could analyze C2 traffic, so I had the thought that I should do this anyway, even if this analysis isn’t going to be in the grand scheme of things.
-Home Lab Phase: Attack Preparations
-While I’ve decided on doing this simulated exercise with Mythic, I still see little to no reason as to why I should try to learn more about red-teaming concepts such as attack planning & attack simulation as a blue team learner, so I won’t bother going into too much detail about them here. The important thing right now is to construct the brute force attack diagram:
+Having spent a good amount of time searching logs & creating dashboard panels with Splunk, I definitely have gotten to the point where I have a grasp on the software fundamentals. With that, I took things to the next step and began analyzing some malware. Specifically, I’m going to run an Apollo executable on the Windows instance and try to analyze its activity with Splunk.
 
+## Attack Preparations
+Before running the exectuable, I need to do some preparation work. The first task on the list is to construct a brute force attack diagram outlining how the attack is going to play out:
 
+![](/screenshots/94.png)
 
-Next, I need to create the instance that I will install Mythic in. But before doing that, I need to create the subnet that will house the instance. This subnet will have the following specs:
+![](/screenshots/95.png)
 
+![](/screenshots/96.png)
 
+Next, I need to create the instance that I will be installing Mythic in. But first, I need to create the subnet that will house the instance. I gave this subnet the following specifications:
 
+![](/screenshots/97.png)
 
+![](/screenshots/98.png)
 
-After creating the subnet, I proceeded with creating the instance, giving it the following specs:
-Name: MYDFIR-Mythic
-AMI: Ubuntu, Ubuntu Server 24.04 LTS
-Architecture: 64-bit (x86)
-Instance type: c7i-flex.large. It’s recommended to run Mythic on a machine with 2 CPUs & 4GB of RAM, which this option has exactly.
-Key pair: RSA type, .pem format.
-Network settings:
-VPC: MYDFIR-30Day-SOC-Challenge
-Subnet: mythic-subnet
-Auto-assign public IP: Enabled
-Firewall (security groups): Create security group, with the following settings:
+![](/screenshots/99.png)
 
+![](/screenshots/100.png)
 
-Configure storage: 1 volume only:
-Text box: 30 GiB.
-Dropdown box: Leave as whatever option is selected.
-With the Mythic instance created, I also want a Kali Linux VM to use for running the Mythic activity. Thankfully, I already have a VirtualBox one ready to go from doing the Basic Home Lab series mentioned back in the “...Something Did Go Wrong, After All” section. Part 2 of that series provides summaries on the various types of virtual machine network connections; I want the Kali VM connection to be set to NAT (Network Address Translation) in this case to give it internet access.
+![](/screenshots/101.png)
+
+After creating the subnet, I built the instance, giving it the following:
+  - Name: MYDFIR-Mythic
+  - AMI: Ubuntu, Ubuntu Server 24.04 LTS
+  - Architecture: 64-bit (x86)
+  - Instance type: c7i-flex.large. Recommended to run Mythic on a machine with 2 CPUs & 4GB of RAM, which this option has exactly.
+  - Key pair: RSA type, .pem format
+  - Network settings:
+    - VPC: MYDFIR-30Day-SOC-Challenge
+	- Subnet: mythic-subnet
+	- Auto-assign public IP: Enabled
+	- Firewall (security groups): Create security group, with the following settings:
+	  ![](/screenshots/102.png)
+	  ![](/screenshots/103.png)
+  - Configure storage: 1 volume only:
+	- Text box: 30 GiB
+	- Dropdown box: Left as whatever option is selected
+
+Lastly, I want a Kali Linux VM (virtual machine) to use for running the Mythic activity. Thankfully, I already have a VirtualBox one ready to go from doing the Basic Home Lab series mentioned back in the “...Something Did Go Wrong, After All” section. Part 2 of that series provides summaries on the various types of virtual machine network connections; I want the Kali VM connection to be set to NAT (Network Address Translation) in this case to give it internet access.
 Home Lab Phase: Attack Simulation
 After connecting to the Mythic instance via SSH & updating its repositories, I proceeded to install Mythic on the instance by following the instructions outlined in the Day 20 video without any problems (NOTE: I ran as root in some cases, but for this situation this is fine). Then, I followed along with the Day 21 video to execute the attack diagram outlined in the previous section, but with a couple of alterations:
 I’ve opted to stick to the default Windows instance password provided at the instance’s creation instead of changing it. This is because I thought AWS might automatically reset it back to the default should I try to change it.
