@@ -213,28 +213,40 @@ The current state of my dashboard after saving the table:
 
 ![](/screenshots/85.png)
 
-One thing that I want to add to the dashboard is a time input. By default, the panels will use the same time range specified back when I first ran their queries for returning results. These time ranges are pretty much hard coded into place, and would necessitate editing each panel manually if I want to change the range, which can quickly get tedious.
-On the dashboard screen, I clicked “Edit” on the top right to enter Edit mode.
-Click “Add input”, then select “Time”.
-Click the pencil icon above the newly created time input to edit its settings.
-After putting in a name for the label and token, I left “Search on Change” unchecked (for performance reasons) and “Default” as “Last 24 Hours”.
-Click “Apply”.
-With the time input set up, I need to adjust the panels to have them use the input for the time range. To do so for each panel:
-In Edit mode, I clicked on its magnifying glass icon to enter its “Edit search” settings.
-Under the “Time Range” dropdown, I selected the time input, which is named based on the input’s ‘Token’ setting I provided in step #4 above.
-I left the other options as is. Click “Apply”.
-Now with the panels adjusted to utilize the time input, I realized that I need a “Submit” button to echo any time changes I make to the time input. While still in Edit mode, I clicked “Add input”, then selected “Submit”. After moving the panel around a bit, I clicked “Save” on the top right to save all the changes made. Now, my dashboard looks a lot better:
+By default, the panels are hard coded into using the same time range from when I ran their queries. Rather than go through the hassle of manually editing each panel to change the time, I want to streamline the process by adding a time input to the dashboard.
+1. After clicking on "Edit" to enter Edit mode, I clicked "Add input" > "Time".
+2. By clicking the pencil icon above the time input, I can access its settings. 
+3. After entering a name for the label and token, I left “Search on Change” unchecked (for performance reasons) and “Default” as `Last 24 Hours`.
 
+After applying these settings to the time input, I now need to adjust the panels to have them use the input for their time range. For each panel:
+1. In Edit mode, I clicked on its magnifying glass icon to enter its “Edit search” settings.
+2. Under the “Time Range” dropdown, I selected the time input, named based on what I provided in the input’s `Token` setting.
+3. I left the other options as is and applied the changes.
 
-Adding Successful Authentication Activity Dashboard Panels
-With the dashboard panels for failed authentication activity now created, it makes sense to create panels for successful authentication activity as well:
+With the panels adjusted, I realized that I needed a “Submit” button to echo any changes I make to the time input. While still in Edit mode, I clicked “Add input” > “Submit” to add this button. After moving the button and time input around, I saved all the changes made. Now, my dashboard looks a lot better:
 
+![](/screenshots/86.png)
 
-Me setting the time range input for the successful authentication dashboards:
+![](/screenshots/87.png)
 
-Because of the addition of the successful RDP authentication activity dashboard panels, it also made sense to rename the dashboard by simply going into Edit mode and clicking on the dashboard name’s text box. After doing so, this is what my dashboard looks like now:
+### Adding Successful Authentication Activity Dashboard Panels
+Having finished creating the dashboard panels for failed authentication activity, it made sense to also create panels for successful authentication activity:
 
-I even set the dashboard as my home dashboard for quicker access:
+![](/screenshots/88.png)
 
+![](/screenshots/89.png)
 
+Setting the time range input:
+
+![](/screenshots/90.png)
+
+With the addition of the successful authentication activity panels, it was wise for me to rename the dashboard. After doing so, this is the state of my dashboard at the moment:
+
+![](/screenshots/91.png)
+
+For quicker access, I've also set it as my home dashboard:
+
+![](/screenshots/92.png)
+
+![](/screenshots/93.png)
 
