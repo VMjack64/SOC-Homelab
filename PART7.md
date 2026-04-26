@@ -23,7 +23,7 @@ So, I changed the attribute value to `Windows Server 2022`. After saving the cha
 After correcting the host name, I tried to continue on with my primary objective, but one quick peek at the logs in the three indexes, I came to the realization that I had no idea where to start with managing a large set of events; I forgot much of what I've learned in the Splunk introductory courses I took prior to this lab. To prepare myself for the real deal, I gave myself another task, which was a simple exercise to relearn the basics of Splunk. First, I made a failed connection attempt to the Windows instance, then a successful connection attempt, and in the instance, I created a text file named `hello-world` with text containing, “Hello World!”. My idea here is to create a failed authentication event log, and a successful authentication event log that I could use to correlate with the created text file event log.
 
 ### Checking Successful Authentication and Text File Creation Activity
-After creating the logs, I checked them out. First, I took a look at the successful authentication activity. Thanks to the Day 16 video, I learnt that if I’m going to hunt for Windows brute force authentication activity in Splunk, I need to look out for the following:
+After creating the logs, I checked them out. First, I took a look at the successful authentication activity. In the Day 16 video, I learnt that if I’m going to hunt for Windows brute force authentication activity in Splunk, I need to look out for the following:
 - Event ID: 4625 - for failed authentication activity
   - Logon Type: 3 - network-based logon; likely indicative of an attempted RDP connection (This can also be used by SMB (Server Message Block) in some cases)
 - Event ID: 4624 - for successful authentication activity
@@ -31,7 +31,7 @@ After creating the logs, I checked them out. First, I took a look at the success
   - Logon Type: 3
   - Logon Type: 7 - Unlock-based logon, though this is less likely
 
-So, I searched the `windows-server-events` index for `4624`. On the search results screen, I looked at some of the top logs as well as the **Interesting Fields** column to figure out what fields correlate to “Logon Type” & “Event ID”, which I determined to be `Logon_Type` & `EventCode`, respectively. Adjusting my search query to prepend `EventCode=` to `4624`, I also set a time filter narrowing the results to around the time I connected & made the text file, which returns two handfuls of events that I can easily work with:
+So, after referring to my introductory notes on Splunk, I began by searching the `windows-server-events` index for `4624`. On the search results screen, I looked at some of the top logs as well as the **Interesting Fields** column to figure out what fields correlate to “Logon Type” & “Event ID”, which I determined to be `Logon_Type` & `EventCode`, respectively. Adjusting my search query to prepend `EventCode=` to `4624`, I also set a time filter narrowing the results to around the time I connected & made the text file, which returns two handfuls of events that I can easily work with:
 
 ![](/screenshots/52.png)
 
@@ -146,21 +146,20 @@ Seeing suspicious failed authentication events outside of the expected timeframe
     ![](/screenshots/77.png)
 
 ## Creating Reports, Alerts, & Dashboards
-After checking out the authentication activity that occurred on the Windows instance, I want to create alerts to notify me of any imminent attacks, as well as a dashboard to provide a comprehensive view of where the attacks are coming from. First off though, I saved the queries for both successful & failed authentication activity. In Splunk, the way to save a query is by saving it as a report. To do so, have the query up in a search first. Then, click “Save As” > “Report”.
-Failed Activity Report
+After viewing all the brute force telemetry generated, the next thing I want to do is create an alert to notify me of any failed authentication attempts and a dashboard that provides a comprehensive view of where the attacks are sourcing from. Before making these two, I saved the queries for successful and failed authentication activity by having them up in a search first, then clicking “Save As” > “Report” for each query to save them as a Splunk report.
 
+### Alert
+When creating the alert for failed authentication attempts, I have the query up in a search, then clicked on “Save As” > “Alert”. I configured the alert as such:
 
-Successful Activity Report
+![](/screenshots/78.png)
 
+![](/screenshots/79.png)
 
+Regarding the error message, I initially wanted the alert to monitor in real time for each incoming failed event, but when looking up the documentation on real-time alerts & throttling, it mentions that real-time alerts might use more computing resources than necessary, and recommends using a scheduled alert instead, which is what I did here. On a side note, I've chosen to set the alert severity as `Low`; with how I've segmented the cloud network, and the NACL & firewall rules in place, there's no reason for me to worry about any critical instances getting compromised in the event of a successful brute force attempt.
 
-Alerts
-When creating an alert, the first couple of steps are very similar to creating a report, but instead of clicking on “Save As” > “Report”, click on “Save As” > “Alert”. Alerts have more settings to configure. For failed authentication alerts, this is the setup I used:
+In following MyDFIR’s series for this section, I noticed just how limited Splunk’s alert creation system is compared to Elastic’s. When viewing the alert of a failed login attempt I made, Splunk didn’t provide at-a-glance information, such as the IP address of the machine that triggered the alert. I tried searching the internet for any solutions I could try to make  after searching for add-ons & the internet, I couldn’t find anything about implementing this in Splunk. So, I left the alert setup as-is and betted on utilizing the ticketing system to provide this information. Additionally, I didn’t create an alert for successful authentication activity, which, looking back, is a missed opportunity that I should’ve done.
 
-
-Regarding the error message, I initially wanted the alert to monitor in real time for each failed event that comes, but doing so would require the “Throttle” option to be enabled as a way to reduce the high frequency of alerts. When looking at the Splunk documentation (Create real-time alerts | Splunk Docs), it mentions that real-time alerts might use more computing resources than necessary, and recommends using a scheduled alert instead, so that’s what I ended up doing. On an unrelated note, I also set the alert severity to “Low” due to the segmented nature of the cloud network plus ACL & firewall rules making sure that critical instances aren’t compromised in the event of a breach.
-In following MyDFIR’s series for this section, I found out that Splunk’s alert creation system is limited compared to Elastic’s. After triggering the alert myself by making a failed login attempt on purpose, I viewed the information by navigating to “Activity” > “Triggered Alerts”. There, I saw that Splunk alerts don’t provide in-depth at-a-glance information, such as the IP address of the machine that triggered the alert. Even after searching for add-ons & the internet, I couldn’t find anything about implementing this in Splunk. So, I left the alert setup as-is and betted on utilizing the ticketing system to provide this information. Additionally, I didn’t create an alert for successful authentication activity, which, looking back, is a missed opportunity that I should’ve done.
-Map of Failed Authentications
+### Map of Failed Authentications
 Now for the dashboard. I’m going to first populate it with a couple of maps visualizing where the attacks are coming from. According to the documentation about generating a choropleth map, the following pre-components are required:
 Data that can provide real-world coordinates (such as the IP addresses from the authentication events).
 A lookup table file, which defines regions & its boundaries, such as the boundaries of each U.S. state.
