@@ -47,13 +47,13 @@ In trying to follow along with the video, I ran into a problem with Crowbar. Whe
 
 A straightforward issue at first glance, I went and tried to install xfreerdp onto Kali, but was having a difficult time finding the package. I eventually found out that the package is obsolete and replaced by xfreerdp3 in the Kali repositories. Yet, Crowbar still needed the old xfreerdp executable for RDP to work (at the time of writing this). To fix this conundrum, I installed the xfreerdp3 package, then created a symlink to the executable named `xfreerdp` and moved the symlink file to the `/usr/bin/` directory.
 
-Afterwards, I reran the Crowbar command, and this time it successfully executed. Unfortunately, I immediately ran into another problem: Crowbar was not able to find the password in the file. I double checked a few things:
+Afterwards, I reran the Crowbar command, and this time it successfully executed. Unfortunately, I ran into another problem: Crowbar was not able to find the password in the file. I double checked a few things:
   - The file to confirm it’s saved with the Windows instance password already inputted.
   - The terminal to make sure I’m running the command in the same directory location as the file.
   - The public IP address of the Windows instance on AWS to make sure it’s the correct one.
   - The username on AWS (in this case, ‘Administrator’) to make sure it’s correct.
 
-Even after verifying all of these, Crowbar still couldn’t find the password after running the command again. When I tried debugging the command, I noticed that Crowbar seemed to be stuck in a loop. So at that point, I just abandoned Crowbar and checked out other similar tools. Eventually, I tried out Hydra, which was mentioned in the Day 11 video, and ran the following command in the same directory as the `.txt` file specified:
+Even after verifying all of these, Crowbar still couldn’t find the password after running the command again. When I tried debugging the command, I noticed that Crowbar seemed to get stuck in a loop. So at that point, I just abandoned Crowbar and checked out other similar tools. Eventually, I tried out Hydra, which was mentioned in the Day 11 video, and ran the following command in the same directory as the `.txt` file specified:
 
 `hydra -l Administrator -P mydfir-wordlist.txt rdp://[<public-ip-of-windows-server>/32]:3389`
 
@@ -70,14 +70,14 @@ After connecting to the Windows server, I executed the next couple of phases of 
 After generating the payload, I ran the `wget` command in the Mythic SSH terminal to grab the payload, making sure to replace the IP address in the link with the private IP address of the Mythic instance. I repeated this replacement scheme with the `Invoke-WebRequest` command in Windows, since I have the attacker and target instances in the same VPC. After downloading & running the payload, I checked its status and saw a `SYN_SENT` reading, indicating the connection wasn’t established. Right away, I saw the problem:
 ![](/screenshots/105.png)
 
-During the payload building process, I specified the callback host as the localhost IP address (127.0.0.1), which is a loopback IP address to the machine itself. So in this context, the payload is trying to connect to a Mythic C2 server on the Windows instance, not the Mythic one. Therefore, I had to repeat the process of generating the payload, this time using the private IP address of the Mythic instance as the callback host. When trying to download the new payload onto the Windows instance, I got the following error:
+During the payload building process, I specified the callback host as the localhost IP address (127.0.0.1), which is a loopback IP address to the machine itself. So in this context, the payload is trying to connect to a Mythic C2 server on the Windows instance, not the one on the Mythic instance. Therefore, I had to repeat the process of generating the payload, this time using the private IP address of the Mythic instance as the callback host. When trying to download the new payload onto the Windows instance, I got the following error:
 ![](/screenshots/106.png)
 
-Considering I downloaded the old payload perfectly fine, it didn't take me long to figure out the solution: I needed to run the Mythic instance's Python server in the same directory as the payload.
+Considering I downloaded the old payload perfectly fine, it didn't take me long to figure out the problem: I needed to run the Mythic instance's Python server in the same directory as the payload.
 
 After downloading & running the new payload, I checked its status and saw an `ESTABLISHED` reading, indicating the connection was successful. I didn’t even have to specify `ufw allow 80` on the Mythic SSH terminal.
 
-With the Mythic C2 established, I ran a couple of discovery commands, then tried to download the `hello-world.txt` file using the `download` command in Mythic's web interface. Despite specifying the absolute path to the file, Mythic was somehow having a hard time finding it. After a few more failed attempts, I tried a detour using `ls`, and through it, I was finally able to get the file:
+With the C2 established, I ran a couple of discovery commands, then tried to download the `hello-world.txt` file. Despite specifying the absolute path to the file, Mythic was somehow having a hard time finding it. After a few more failed attempts, I tried a detour using `ls`, and through it, I was finally able to get the file:
 ![](/screenshots/107.png)
 ![](/screenshots/108.png)
 ![](/screenshots/109.png)
