@@ -3,23 +3,15 @@ Having spent a good amount of time searching logs & creating dashboard panels wi
 
 ## Attack Preparations
 Before running the exectuable, I need to do some preparation work. The first task on the list is to construct a brute force attack diagram outlining how the attack is going to play out:
-
 ![](/screenshots/94.png)
-
 ![](/screenshots/95.png)
-
 ![](/screenshots/96.png)
 
 Next, I need to create the instance that I will be installing Mythic in. But first, I need to create the subnet that will house the instance. I gave this subnet the following specifications:
-
 ![](/screenshots/97.png)
-
 ![](/screenshots/98.png)
-
 ![](/screenshots/99.png)
-
 ![](/screenshots/100.png)
-
 ![](/screenshots/101.png)
 
 After creating the subnet, I built the instance, giving it the following:
@@ -39,30 +31,48 @@ After creating the subnet, I built the instance, giving it the following:
 	- Text box: 30 GiB
 	- Dropdown box: Left as whatever option is selected
 
-Lastly, I want a Kali Linux VM (virtual machine) to use for running the Mythic activity. Thankfully, I already have a VirtualBox one ready to go from doing the Basic Home Lab series mentioned back in the “...Something Did Go Wrong, After All” section. Part 2 of that series provides summaries on the various types of virtual machine network connections; I want the Kali VM connection to be set to NAT (Network Address Translation) in this case to give it internet access.
-Home Lab Phase: Attack Simulation
-After connecting to the Mythic instance via SSH & updating its repositories, I proceeded to install Mythic on the instance by following the instructions outlined in the Day 20 video without any problems (NOTE: I ran as root in some cases, but for this situation this is fine). Then, I followed along with the Day 21 video to execute the attack diagram outlined in the previous section, but with a couple of alterations:
-I’ve opted to stick to the default Windows instance password provided at the instance’s creation instead of changing it. This is because I thought AWS might automatically reset it back to the default should I try to change it.
-I’ll be using the “hello-world.txt” file I created back in the Log Analysis Warmup section, instead of creating a “passwords.txt” file.
-In trying to follow along with the video, I actually ran into a problem with Crowbar. When running the tool, I get the following error:
-	xfreerdp: /usr/bin/xfreerdp path doesn't exists on the system
-A straightforward issue at first glance, I went and tried to install xfreerdp onto Kali, but was having a difficult time finding the package. While digging around the internet, I found out that the xfreerdp package is rendered obsolete & replaced by xfreerdp3 in the Kali repositories. Yet, Crowbar still needed the old xfreerdp executable for the RDP option to work. To fix this conundrum, I installed the xfreerdp3 package, then created a symlink to the executable named ‘xfreerdp’ and moved the symlink file to the ‘/usr/bin/’ directory.
-After making the fixes above, I reran the Crowbar command, and this time it successfully executed. Unfortunately, I immediately ran into another problem: Crowbar was not able to find the password in the file. I double checked a few things:
-The file to confirm it’s saved with the Windows instance password already inputted.
-The terminal to make sure I’m running the command in the same directory location as the file.
-The public IP address of the Windows instance on AWS to make sure it’s the correct one.
-The username on AWS (in this case, ‘Administrator’) to make sure it’s correct.
-Even after verifying all of these, the Crowbar command still couldn’t find the password in the file when rerunning it. I tried debugging the command, but from what I saw, Crowbar seemed to be stuck in some sort of loop. So at that point, I just abandoned Crowbar and checked out other similar tools. Eventually, I tried out Hydra, which was mentioned in Day 11 of the series, and ran the following command in the same directory as the .txt file specified:
-	hydra -l Administrator -P mydfir-wordlist.txt rdp://[<public-ip-of-windows-server>/32]:3389
-First time running the command, Hydra didn’t find the password, just like with Crowbar. However, I thought to immediately run it again, due to time asynchronization issues during runtime, and this time it actually worked:
+Lastly, I want a Kali Linux VM (virtual machine) for operating Mythic safely. Conveniently, I have one in VirtualBox ready to go from doing the Basic Home Lab series mentioned previously. In terms of internet access, for the best case scenario, I want the Kali VM connection set to NAT (Network Address Translation); [Part 2](https://www.youtube.com/watch?v=5iafC6vj7kM&pp=ygUVbXlkZmlyIGJhc2ljIGhvbWUgbGFi) of the Basic Home Lab series provides concise summaries on the various types of VM network connections.
 
-With the “brute force” attack successful, now is the time to connect to the instance from Kali via xfreerdp(3). When specifying the password in the ‘xfreerdp’ command, it’s recommended to enclose it in parentheses, since the password might contain certain special characters that can mess with the command formatting.
-After connecting to the Windows Server instance, next up is to perform host & network discovery. For this, I referred to this site I found on Google search for the types of discovery commands that attackers typically use. Then, after disabling Windows Defender, I navigated to the Mythic web GUI in Kali to proceed with building the payload that will be implanted into the instance. During payload building, I specified the callback host as the localhost address (127.0.0.1), which is a mistake that I quickly realized later.
-After generating the payload, I made sure to replace the IP address in the link with the private IP address of the Mythic instance, before using it in the ‘wget’ command to get the payload. Then, when downloading the payload onto the Windows instance, I specified the private IP address of the Mythic instance instead of the public one in the ‘Invoke-WebRequest’ command, given that the attacker and target instances are in the same VPC. After running the payload, I checked its status with the ‘netstat -anob’ command, and saw a SYN_SENT status, indicating that the connection wasn’t established:
+## Attack Simulation
+> [!CAUTION]
+> To avoid any legal ramifications, only perform these attacks on machines that YOU own.
 
-Right away, I instantly saw a problem: The localhost IP address. The localhost is essentially a loopback IP address for the host itself. Meaning, in this case, the payload is trying to connect to a C2 server on the Windows instance, not the Mythic one. So, I had to regenerate the payload, this time using the private IP address of the Mythic instance as the callback host. Afterwards, I repeated the rest of the steps and downloaded the new payload onto the Windows instance; along the way I found out that the Mythic instance’s Python server should be ran in the same directory as the payload, otherwise I get the following error when attempting to download:
+With all the necessary preparations done, I began the process of simulating the attack in the diagram from the previous section. After connecting to the Mythic instance via SSH & updating its repositories, I was able to install Mythic onto the instance by following the Day 20 video without any caveats. Then, I followed along with the Day 21 video to execute the attack, but with a couple of alterations:
+1. I’ve opted to stick with the default Windows server password provided upon instance creation time instead of changing it, since I thought AWS will automatically roll back the changes.
+2. I’ll be using the `hello-world.txt` file I created back in the Log Analysis Warmup section, instead of creating a `passwords.txt` file.
 
-After running the new payload, I checked its status and saw an ESTABLISHED status, indicating the connection was successful. I didn’t even have to specify ‘ufw allow 80’ on the Mythic PowerShell CLI.
+In trying to follow along with the video, I ran into a problem with Crowbar. When running the tool, I get the following error:
+
+`xfreerdp: /usr/bin/xfreerdp path doesn't exists on the system`
+
+A straightforward issue at first glance, I went and tried to install xfreerdp onto Kali, but was having a difficult time finding the package. I eventually found out that the package is obsolete and replaced by xfreerdp3 in the Kali repositories. Yet, Crowbar still needed the old xfreerdp executable for RDP to work (at the time of writing this). To fix this conundrum, I installed the xfreerdp3 package, then created a symlink to the executable named `xfreerdp` and moved the symlink file to the `/usr/bin/` directory.
+
+Afterwards, I reran the Crowbar command, and this time it successfully executed. Unfortunately, I immediately ran into another problem: Crowbar was not able to find the password in the file. I double checked a few things:
+  - The file to confirm it’s saved with the Windows instance password already inputted.
+  - The terminal to make sure I’m running the command in the same directory location as the file.
+  - The public IP address of the Windows instance on AWS to make sure it’s the correct one.
+  - The username on AWS (in this case, ‘Administrator’) to make sure it’s correct.
+
+Even after verifying all of these, Crowbar still couldn’t find the password after running the command again. When I tried debugging the command, I noticed that Crowbar seemed to be stuck in a loop. So at that point, I just abandoned Crowbar and checked out other similar tools. Eventually, I tried out Hydra, which was mentioned in the Day 11 video, and ran the following command in the same directory as the `.txt` file specified:
+
+`hydra -l Administrator -P mydfir-wordlist.txt rdp://[<public-ip-of-windows-server>/32]:3389`
+
+When running the command the first time around, Hydra didn’t find the password, just like with Crowbar. However, I immediately ran it again (as I assumed the failure was due to improper asynchronization), and this time it actually worked:
+![](/screenshots/104.png)
+
+With the “brute force” attack successful, I connected to the instance from Kali via xfreerdp(3) to complete the first phase.
+
+> [!NOTE]
+> When specifying the password in the `xfreerdp` command, it’s recommended to enclose it in parentheses, since the password might contain special characters that can mess with the command formatting.
+
+After connecting to the Windows server, I executed the next couple of phases of the attack. First, I performed host & network discovery by referring to [this site](https://car.mitre.org/analytics/CAR-2016-03-001/) for the types of discovery commands that attackers typically use. Then, after disabling Windows Defender, I navigated to the Mythic web GUI in Kali to build the payload that will be implanted into the server.
+
+After generating the payload, I ran the `wget` command in the Mythic SSH terminal to grab the payload, making sure to replace the IP address in the link with the private IP address of the Mythic instance. I repeated this replacement scheme when running the `Invoke-WebRequest` command in Windows, since I have the attacker and target instances in the same VPC. After downloading & running the payload, I checked its status and saw a `SYN_SENT` reading, indicating the connection wasn’t established. Right away, I saw the problem:
+![](/screenshots/105.png)
+
+During payload building, I specified the callback host as the localhost IP address (127.0.0.1). The localhost is a loopback IP address to the machine itself. In this context, the payload is trying to connect to a Mythic C2 server on the Windows instance, not the Mythic one. Therefore, I had to repeat the steps of generating the payload, this time using the private IP address of the Mythic instance as the callback host.  downloaded the new payload onto the Windows instance; along the way I found out that the Mythic instance’s Python server should be ran in the same directory as the payload, otherwise I get the following error when attempting to download:
+
+After downloading & running the new payload, I checked its status and saw an ESTABLISHED status, indicating the connection was successful. I didn’t even have to specify ‘ufw allow 80’ on the Mythic PowerShell CLI.
 With the Mythic C2 established, I ran a couple of discovery commands, then tried to download the “hello-world.txt” file using the ‘download’ command in the C2 web interface. Despite specifying the absolute path to the file, Mythic was somehow having a hard time finding the file. Eventually, after a few more failed attempts, I decided to try a detoured strategy using ‘ls’, and through it, I was finally able to get the file:
 
 
