@@ -20,6 +20,7 @@ Some important pointers:
   - By contrast, even if outbound traffic to an IP address goes through a NACL and is allowed, inbound traffic from that same IP won’t necessarily be allowed, depending on the NACL’s inbound rules. Same goes for inbound to outbound traffic.
 - To establish internet connectivity for a VPC and its subnet(s) (which would convert it from a private subnet to a public subnet), the VPC and subnet(s) must allow outbound & inbound connections to/from the internet (0.0.0.0/0). Additionally, a route table must be associated with the VPC and subnet(s), which contains a route that directs outbound connections to 0.0.0.0/0 over to an internet gateway.
   - This is a perfect way to see the difference between AWS firewalls and NACLs in action.
+- Only EC2 instances created in the currently selected region are shown. To see instances in all other regions, navigate to "EC2 Global View".
 
 ## Home Lab Initialization
 Once I learned how to work with AWS, I began the building process:
