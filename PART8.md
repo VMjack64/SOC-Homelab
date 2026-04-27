@@ -35,7 +35,7 @@ Lastly, I want a Kali Linux VM (virtual machine) for operating Mythic safely. Co
 
 ## Attack Simulation
 > [!CAUTION]
-> To avoid any legal ramifications, only perform these attacks on machines that YOU own.
+> Only perform these attacks on machines that YOU own, otherwise you could face some legal ramifications.
 
 With all the necessary preparations done, I began the process of simulating the attack in the diagram from the previous section. After connecting to the Mythic instance via SSH & updating its repositories, I was able to install Mythic onto the instance by following the Day 20 video without any caveats. Then, I followed along with the Day 21 video to execute the attack, but with a couple of alterations:
 1. I’ve opted to stick with the default Windows server password provided upon instance creation time instead of changing it, since I thought AWS will automatically roll back the changes.
