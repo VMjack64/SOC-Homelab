@@ -128,24 +128,31 @@ The discovery commands the attacker ran include, but are not limited to:
 I continued digging deeper for any additional suspicious events. After a while, I determined that there weren’t any more for the first batch of activity, so I moved on to the next batch (Timeframe: 6PM-12AM). Right away, I noticed high activity around the 6PM mark:
 ![](/screenshots/124.png)
 
-Checking the logs in the 6PM mark, I realized that a lot of them were just critical Windows services booting up, so I reexpanded the 6PM-12AM timeframe and searched for Sysmon event ID 3 to find any suspicious connections. Which is when I checked the destination ports and saw a few suspicious ones:
+However, when looking at the events generated around that mark, I realized that much of them were just critical Windows services booting up, so I reexpanded the 6PM-12AM timeframe and searched for Sysmon event ID 3 to find any suspicious connections. I saw a few in the destination ports:
+![](/screenshots/125.png)
 
-Checking the event log with port 3389, I see that the attacker has returned:
+I viewed the event with port 3389 first. Skimming through the information, I see that the attacker has returned:
+![](/screenshots/126.png)
 
-Checking the event logs with port 9999, I checked out the first event:
+Then, I filtered for the port 9999 events. I looked at the first event:
+![](/screenshots/127.png)
 
-Looking at the log, I notice something very alarming: A PowerShell process was created and used to establish a connection to an unknown IP address (172.20.0.92). With no other events of interest that I could find from this search, I referred to an idea proposed in the Day 28 video of the series regarding malware event correlation: Grab the process GUID from the log above, use it in a search on the Sysmon index, and then checked the Sysmon event IDs, which is where I find an event ID of interest:
+In the log, I noticed something highly alarming: A PowerShell process was created and used to establish a connection to an unknown IP address (172.20.0.92). I want to see what was done in this PowerShell session; in other words, I want to find all other events that are related to this one. To do so, I need to use the process GUID from the event above in a search of the Sysmon index to correlate events involving this PowerShell session. After detouring for a bit to look at all other events in the Sysmon ID 3 search and not finding anything noteworthy, that's exactly what I did. When checking the list of Sysmon IDs, I find an ID of interest - Sysmon ID 29 (file executable detected), generated when Sysmon detects the presence of a new executable file:
+![](/screenshots/128.png)
 
-Here, I see a Sysmon event ID of 29 (file executable detected). Looking it up, this event is generated when Sysmon detects the presence of a new executable file, whether it’s from downloading, copying, or renaming the file. Coupled with the suspicious connection, I had to take a look at the log associated with this event ID. This is where I discover a suspicious executable file:
+Taking a look at the log associated with this ID, I discovered a suspicious executable file:
+![](/screenshots/129.png)
 
+A key element that immediately renders this executable suspicious to me is that it’s located in the `Public\Downloads` folder, whereas legitimate critical executables would typically be located in a `System` folder. Despite that, it's still possible that this could’ve been a legitimate software download, so to verify further, I grabbed the file’s SHA1 hash & ran it through VirusTotal; no results were yielded, further arousing suspicion about the file.
 
-A pointer I got from the Day 28 video: A key element that immediately renders this executable suspicious is that it’s located in the “Public Downloads” folder, whereas legitimate critical executables typically would be located in a “System” folder. Even then, this logic might be wrong; it could’ve been a legitimate software download, so to verify further, I grabbed the file’s SHA1 hash & ran it through VirusTotal; no results were yielded, further arousing suspicion about the file.
-With the file deemed highly suspicious, I ran it in a Splunk search and checked the Sysmon event IDs to see if ID 1 exists, indicating the process had been executed. Sure enough, it did:
+With the file deemed highly suspicious, I ran its name in a Splunk search and checked the Sysmon event IDs for the existence of ID 1, which indicates the process had been executed. Sure enough, it did exist:
+![](/screenshots/130.png)
 
-Clicking on ID 1, I checked the first (bottom) event associated with it. From there, I was able to get more info about the file, most notably its original name:
+Filtering for the two events, I checked the oldest one first, where I was able to get more info about the file, most notably its original name:
+![](/screenshots/131.png)
+![](/screenshots/132.png)
 
-
-Searching up the original filename on Google however, returns results that are irrelevant in this situation. So I continued digging deeper; I grabbed the process GUID of the suspicious executable from the event above and ran it in a Splunk search where the ‘ProcessGuid’ field is equal to the suspicious executable’s process GUID. By using the executable’s process GUID in a search, this allows me to trace the entire action lifespan of the executable, which turned out to be only a few minutes before it terminated:
+I tried searching up the original filename on Google, but much of the results returned were irrelevant in this context. So I continued digging deeper; I grabbed the process GUID of the suspicious executable from the event above and ran it in a Splunk search where the ‘ProcessGuid’ field is equal to the suspicious executable’s process GUID. By using the executable’s process GUID in a search, this allows me to trace the entire action lifespan of the executable, which turned out to be only a few minutes before it terminated:
 
 With this being a dead end, I went back to the search with Sysmon event ID 1 and the suspicious executable name. There, I checked out the second (top) event, grabbed its process GUID, and ran it in a Splunk search to view its action lifespan. This time, I actually do get some logged activity:
 
@@ -159,7 +166,8 @@ Here, the suspicious (now malicious) executable makes a connection to the same u
 
 
 One final note: Sysmon didn’t do a good job at detecting if Windows Defender was disabled. Though considering it did detect the malware running, it’s safe to say that Defender was tampered with in some capacity.
-Home Lab Phase: Report, Alert, & Dashboard Creation
+
+## Home Lab Phase: Report, Alert, & Dashboard Creation
 With the investigation finished, I proceeded to build a report, alert, and dashboard for future malware detections. For the alert, I want it to trigger when an Apollo.exe process is executed. To do so, I first created a report named “Apollo.exe Executes” with the following query:
 
 Then, while still in “Edit report” mode, I clicked “Save As” at the top right and selected “Alert”, with the following configuration (I also made sure to change the time range for the report to “All time” in order for the alert to work):
