@@ -90,13 +90,13 @@ _“There has been reported suspicious activity on the Windows server around Sep
 At first, I had no clue where to start, so I checked out a few videos for some ideas, including the Days 22 & 28 videos, plus [this one](https://youtu.be/OAuVYbn1m3A?t=1474). The last video provided a good tip for starting out: Look for network connection events (Sysmon event ID 3), as malware usually makes a network connection of some sort to function, such as interacting with a C2 server to execute attacks remotely. Doing so for the date of September 10, the first thing I noticed is unusually high activity around the 4AM mark on the timeline:
 ![](/screenshots/110.png)
 
-Clicking into that timeframe, I looked at the fields present under **Interesting Fields**, starting from the smallest number of unique values to the largest. When I checked the `dest_port` field, I immediately spotted a large number of events involving port 3389, an indicator that a brute force attack via RDP occurred:
+Clicking into that timeframe, I looked at the fields present under **Interesting Fields**, starting from the smallest number of unique values to the largest. When I checked the `dest_port` field, I immediately spotted a large number of events involving port 3389, an indicator of attack (IoA) via RDP brute forcing:
 ![](/screenshots/111.png)
 
 I switched over to the `windows-server-events` index, checking the Windows event IDs for a successful authentication attempt, and found 5 successes, sparking some concern:
 ![](/screenshots/112.png)
 
-Filtering for these events, I looked at the `Logon_Type` field, and saw a logon type 3, which makes the situation highly alarming as it indicates that the brute force attack was successful:
+Filtering for these events, I looked at the `Logon_Type` field, and spotted the presence of 3, an indicator of compromise (IoC) via the brute force attack succeeding, which makes the situation highly alarming:
 ![](/screenshots/113.png)
 
 I filtered for this event, then looked at the log:
@@ -104,7 +104,7 @@ I filtered for this event, then looked at the log:
 ![](/screenshots/115.png)
 ![](/screenshots/116.png)
 
-Using the IP address from the log, I searched the Sysmon index for any additional activity involving the IP. Focusing my search within the 4-8AM timeframe (first batch of activity), I didn't find anything else suspicious other than the successful authentication event. Returning to the Sysmon event ID 3 search, I wasn’t able to find any more events of interest outside of the destination ports. With all leads seemingly exhausted on this front, I checked out the other Sysmon IDs. Referring back to the videos from earlier, 1 is another Sysmon ID I'm told to look into; processes do need to be booted up in order to execute its activities, malware included.
+Using the IP address from the log, I searched the Sysmon index for any additional activity involving the IP. Focusing my search within the 4-8AM timeframe (first batch of activity), I didn't find anything else suspicious other than the successful authentication event. Returning to the Sysmon ID 3 search, I wasn’t able to find any more events of interest outside of the destination ports. With all leads seemingly exhausted on this front, I checked out the other Sysmon IDs. Referring back to the videos from earlier, 1 is another Sysmon ID I'm told to look into; processes do need to be booted up in order to execute its activities, malware included.
 
 Searching the Sysmon index for this event ID within the 4-8AM timeframe, I peeked into the `CommandLine` field, and noticed a few suspicious commands:
 
@@ -117,7 +117,7 @@ It's unlikely that anyone at the company would have a reason to be running multi
 ![](/screenshots/121.png)
 ![](/screenshots/122.png)
 
-I noticed the `process_current_directory` field is `C:\Users\Administrator\`, meaning this command was executed by the user. Under normal circumstances, a regular user _really_ doesn't need to know information about a root user. Factoring that alongside the RDP activity and other network commands around the same time, it’s become all but certain that the Windows server has been accessed by a threat actor via a successful brute force attack to conduct network discovery tactics. Thus, I ran a search for the `Administrator` user (attacker at this point) to uncover the full list of discovery commands ran:
+I noticed the `process_current_directory` field is `C:\Users\Administrator\`, meaning this command was executed by the user. Under normal circumstances, a regular user _really_ doesn't need to know information about a root user. Factoring that alongside the RDP activity and other network commands around the same time, it’s become all but certain that the Windows server has been compromised by a threat actor via a successful brute force attack to conduct network discovery tactics. Thus, I ran a search for the `Administrator` user (attacker at this point) to uncover the full list of discovery commands ran:
 ![](/screenshots/123.png)
 
 The discovery commands the attacker ran include, but are not limited to:
@@ -173,69 +173,86 @@ Here, the executable makes a connection to the same IP address from earlier (172
   - Also, I've glossed over much of the red teaming concepts discussed in this part so far, as I honestly still see little to no reason why I should bother understanding them more as a blue team learner. Despite that, I've come to the realization that the intent behind the simulation was probably the fact that some aspects of the attack are listed in the [MITRE ATT&CK](https://attack.mitre.org/) framework, and that doing the simulation gives me a better understanding as to how the framework is echoed in the Sysmon logs.
   - Lastly, I realized that in the log for the successful brute force attempt, I could've grabbed the logon ID and searched the Sysmon index for it.
 
-## Home Lab Phase: Report, Alert, & Dashboard Creation
-With the investigation finished, I proceeded to build a report, alert, and dashboard for future malware detections. For the alert, I want it to trigger when an Apollo.exe process is executed. To do so, I first created a report named “Apollo.exe Executes” with the following query:
+## Malware Report, Alert, & Dashboard Creation
+Now that my investigation is finished, I proceeded to build a report, alert, and dashboard for future malware detections. For the alert, I want it to trigger when an `Apollo.exe` process is executed. To do so, I first created a report named **Apollo.exe Executes** with the following query:
+![](/screenshots/142.png)
 
-Then, while still in “Edit report” mode, I clicked “Save As” at the top right and selected “Alert”, with the following configuration (I also made sure to change the time range for the report to “All time” in order for the alert to work):
+Then, I saved the query as an alert with the following configurations (making sure to change the time range to “All time” in order for the alert to work):
+![](/screenshots/143.png)
+![](/screenshots/144.png)
 
+Considering how easy it is to change the SHA256 hash of an Apollo executable, searching the hash wouldn't be helpful, so I've opted to exclude it from the query.
 
-I excluded the SHA256 hash in the query because due to the various setups of newly generated Apollo agents, a different SHA256 hash would be generated for each new agent, thus rendering the field not helpful to use in a Splunk search.
-Dashboard Panel #1
-For the dashboard, instead of using the authentication dashboard, I created a new one that will house three panels. The first panel will be a table showing all executed malicious processes. This table uses the following fields:
-index=”sysmon-events”
-EventID=1
-ParentImage
-Image (specifically, processes running PowerShell, cmd, or rundll32 (which many malware tend to utilize, according to the Day 28 video))
-CommandLine
-OriginalFileName
-ParentCommandLine
-User
-UtcTime (timestamp)
-ProcessGuid
-Building the query for the panel:
+### Dashboard Panel #1
+For the dashboard, instead of using the authentication dashboard from before, I created a new one for malware detections. The dashboard will house three panels. The first panel is a table showing all executed processes, with the following fields present:
+  - index=”sysmon-events”
+  - EventID=1
+  - ParentImage
+  - Image
+  - CommandLine
+  - OriginalFileName
+  - ParentCommandLine
+  - User
+  - UtcTime (timestamp)
+  - ProcessGuid
 
-Then, saving it to a new dashboard with the following configuration:
-Dashboard Title: Malware Activity
-Description: Left blank
-Permissions: Left as Private
-Build as “Classic Dashboard”
-Panel Title: Malware Executed Events
-Visualization Type: Statistics Table
-Advanced Panel Settings:
-Panel Powered By: Inline Search
-Drilldown: No action
+Query:
+![](/screenshots/145.png)
 
+Saving the panel to a new dashboard, I gave the dashboard the following configurations:
+  - Dashboard Title: Malware Activity
+  - Description: Left blank
+  - Permissions: Left as Private
+  - Build as “Classic Dashboard”
+  - Panel Title: Malware Executed Events
+  - Visualization Type: Statistics Table
+  - Advanced Panel Settings:
+    - Panel Powered By: Inline Search
+    - Drilldown: No action
 
-Dashboard Panel #2
-For the second panel, it will be a table showing all malicious connections. This table will have the following fields:
-index=”sysmon-events”
-EventID=3
-SourceIp
-DestinationIp
-DestinationPort
-Image
-UtcTime (timestamp)
-Initiated=true
-Panel query:
+![](/screenshots/146.png)
+![](/screenshots/147.png)
 
-Saving it to the existing Malware Activity dashboard with the panel title “Malware Initiated Network Connection Events”, I then entered dashboard Edit mode. In Edit mode, I clicked on the brush icon on the top right of the panel, then selected “Row” under “Click Selection” to make the data interactable, letting me see more information on a particular row simply by clicking on it:
+### Dashboard Panel #2
+The second panel will be another table, this time showing all malicious connections. The following fields are present:
+  - index=”sysmon-events”
+  - EventID=3
+  - SourceIp
+  - DestinationIp
+  - DestinationPort
+  - Image
+  - UtcTime (timestamp)
+  - Initiated=true
 
-I also did the same thing for the first panel (hence why the text is blue). When looking at the data in this panel, I noticed a lot of unnecessary excess logs coming from MpDefenderCoreService.exe & svchost.exe, so I figured that while I’m still in Edit mode, I would edit the panel’s query to exclude these two processes:
+Query:
+![](/screenshots/148.png)
 
-After applying the changes, this is what things look like now:
+After saving the panel to the **Malware Activity** dashboard with the title **Malware Initiated Network Connection Events**, I wanted to make the panel data interactable so that I could bring up more information on a particular event quickly. To do so, I entered dashboard edit mode, clicked the brush icon on the top right of the panel, then under “Click Selection”, I selected “Row”. By making the data interactable, the text turned blue:
+![](/screenshots/149.png)
 
-Dashboard Panel #3
-For the third panel, this will be a table that simply shows which Windows hosts had their Windows Defender disabled. This table has the following fields:
-index=”windefender-events”
-EventCode=5001 (Windows Defender disabled code)
-_time (timestamp)
-host
-Panel query:
+With the second panel's data interactable, I've also made the first panel's data interactable.
 
-After saving it to the existing Malware Activity dashboard with the panel title “Windows Defender Disabled Events”, I entered dashboard Edit mode. In Edit mode, I added a description for the panel by clicking on the text box directly below the panel title; I also did this for the first panel earlier. For this panel’s description, I inputted the Windows Defender disabled event message (since I couldn’t use it in a table field), then applied the changes:
+When looking at the data in the second panel, I noticed an excess of unnecessary logs coming from `MpDefenderCoreService.exe` and `svchost.exe`, so I figured I'd also edit the panel’s query to exclude these two processes:
+![](/screenshots/150.png)
+![](/screenshots/151.png)
 
-Converting to Splunk Dashboard Studio
-After adding in a time picker & submit button and modifying the panels to use the time picker, the dashboard is now complete. However, due to the high number of fields for the first two panels, they’re so wide that I’d have to use the horizontal scroll bar to see the other fields. I could see a couple of potential problems with doing this when trying to conduct event analysis, one being the tedium from constantly scrolling back & forth to get all event information for a particular row. I tried going into Edit mode to see if I could shrink some of the columns, but Classic dashboard wouldn’t allow me to. I then tried setting “Wrap Results” for these panels to off, but that still didn’t fix the problem.
+### Dashboard Panel #3
+The third panel is yet another table. This one simply shows which Windows hosts had their Windows Defender disabled. The following fields are present:
+  - index=”windefender-events”
+  - EventCode=5001 (Windows Defender disabled code)
+  - _time (timestamp)
+  - host
+
+Query:
+![](/screenshots/152.png)
+
+After saving the panel to the **Malware Activity** dashboard with the title **Windows Defender Disabled Events**, I made its data interactable, and then added the Windows Defender disabled message to the panel's description box, since I couldn't use the message as a field:
+![](/screenshots/153.png)
+
+I also added a description for the first panel earlier.
+
+### Converting to Splunk Dashboard Studio
+With the panels created, I added in the time picker & submit button as the finishing touches to the dashboard. However, due to the high number of fields for the first two panels, protrudes past the browser dimensions, they’re so wide that I’d have to use the horizontal scroll bar to see the other fields. I could see a couple of potential problems with doing this when trying to conduct event analysis, one being the tedium from constantly scrolling back & forth to get all event information for a particular row. I tried going into Edit mode to see if I could shrink some of the columns, but Classic dashboard wouldn’t allow me to. I then tried setting “Wrap Results” for these panels to off, but that still didn’t fix the problem.
 With no other options that I could think of, I looked up on Splunk’s Dashboard Studio to see if it would enable me to adjust the column sizes. When I found out that it can, I didn’t hesitate to convert the Classic dashboard to Dashboard Studio. Doing so was easy: Click on the three dots button at the top right of the dashboard, then select “Clone to Dashboard Studio”:
 
 
