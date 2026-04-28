@@ -2,7 +2,7 @@
 Having spent a good amount of time searching logs & creating dashboard panels with Splunk, I definitely have gotten to the point where I have a grasp on the software fundamentals. With that, I took things to the next step and began analyzing some malware. Specifically, I’m going to run an Apollo executable on the Windows instance and try to analyze its activity with Splunk.
 
 ## Attack Preparations
-Before running the exectuable, I need to do some preparation work. The first task on the list is to construct a brute force attack diagram outlining how the attack is going to play out:
+Before running the executable, I need to do some preparation work. The first task on the list is to construct a brute force attack diagram outlining how the attack is going to play out:
 ![](/screenshots/94.png)
 ![](/screenshots/95.png)
 ![](/screenshots/96.png)
@@ -83,37 +83,50 @@ With the C2 established, I ran a couple of discovery commands, then tried to dow
 ![](/screenshots/109.png)
 
 ## Investigating Mythic C2 Activity in Splunk
-With the attack outlined in the diagram successfully carried out, I went and checked out the telemetry generated in Splunk so I can begin investigating it. For this analysis, I wanted it to be as close to a real-life scenario as possible; this assumes absolutely no knowledge on things like what malicious activity was performed, the malicious process(es) involved, or connection method to the Windows instance. To facilitate this, I assume that I’m in the role of a L1 SOC analyst for a company. I boot up my computer & see a message from my boss / coworker:
-“There has been reported suspicious activity on the Windows Server around September 10. Please look into it.”
-At first, I had no clue where to start, so I watched a few videos on malware log analysis, including the Day 22 & Day 28 videos of the series and this video for some ideas. The last video, in particular, gave me a good starting tip for finding potential malware activity: Look for network connection events (Sysmon event ID 3). Usually, in the case of malware, a network connection would be involved in some capacity, whether it’s initiating a download of the malware from the internet or the malware executing attacks remotely, such as the case in a C2. would make some sort of network connection in order to be able to execute its malicious attacks. Additionally, malware is typically downloaded from the internet as a result of social engineering tactics; a network connection to a server IP address would be involved in the download request initiation.
-Running a search for Sysmon event ID 3 on the date specified above, the first I noticed right away is unusually high activity around the 4AM mark on the timeline:
+With the simulated attack carried out, I viewed the telemetry generated in Splunk to begin analyzing it. For this analysis, I wanted it to be as close to a real-life scenario as possible; this assumes absolutely no knowledge on things like what malicious activity was performed, the malicious process(es) involved, or the method used to access the Windows instance. To facilitate this, I assumed the role of a L1 SOC analyst for a company. I boot up my computer & see the following message:
 
-After selecting the 4AM mark to narrow the events down to that timeframe, I checked out the fields present on the left sidebar next, starting from smallest to largest number of unique values. When I checked the dest_port field, I right away noticed a large number of events involving port 3389, an indicator that a brute force attack via RDP occured:
+_“There has been reported suspicious activity on the Windows server around September 10. Please look into it.”_
 
-Switching over to the base Windows event logs index, I check the Windows Event IDs and see something that’s cause for concern - event ID 4624 exists:
+At first, I had no clue where to start, so I checked out a few videos for some ideas, including the Days 22 & 28 videos, plus [this one](https://youtu.be/OAuVYbn1m3A?t=1474). The last video provided a good tip for starting out: Look for network connection events (Sysmon event ID 3), as malware usually makes a network connection of some sort to function, such as interacting with a C2 server to execute attacks remotely. Doing so for the date of September 10, the first thing I noticed is unusually high activity around the 4AM mark on the timeline:
+![](/screenshots/110.png)
 
-Narrowing down the event logs to those with Windows Event ID 4624, I looked at the Logon_Type field, and see that a logon type ID of 3 (network, which RDP connections can use) exists, which is very alarming since it indicates that the brute force attack was successful:
+Clicking into that timeframe, I looked at the fields present under **Interesting Fields**, starting from the smallest number of unique values to the largest. When I checked the `dest_port` field, I immediately spotted a large number of events involving port 3389, an indicator that a brute force attack via RDP occurred:
+![](/screenshots/111.png)
 
-Clicking on the ID, I took a look at the event log:
+I switched over to the `windows-server-events` index, checking the Windows event IDs for a successful authentication attempt, and found 5 successes, sparking some concern:
+![](/screenshots/112.png)
 
+Filtering for these events, I looked at the `Logon_Type` field, and saw a logon type 3, which makes the situation highly alarming as it indicates that the brute force attack was successful:
+![](/screenshots/113.png)
 
+I filtered for this event, then looked at the log:
+![](/screenshots/114.png)
+![](/screenshots/115.png)
+![](/screenshots/116.png)
 
-Using this information, I searched the Sysmon index to try and find any additional activity involving the IP address above. Filtering down the events to the same timeframe (4-8AM), nothing else popped up other than the successful connection activity. Returning to the Sysmon event ID 3 search, I also wasn’t able to find anything else noteworthy other than the destination ports. With no more leads on that front, I began checking out the other Sysmon event IDs. Going back to the videos mentioned earlier, I find that another Sysmon ID worth searching for is 1, since processes do need to be started up in order to execute its activities, malware included.
-After running a search on the Sysmon index for Sysmon event ID 1 & narrowing the timeframe down to 4-8AM, I checked the CommandLine field, and immediately noticed a few suspicious commands:
+Using the IP address from the log, I searched the Sysmon index for any additional activity involving the IP. Focusing my search within the 4-8AM timeframe (first batch of activity), I didn't find anything else suspicious other than the successful authentication event. Returning to the Sysmon event ID 3 search, I wasn’t able to find any more events of interest outside of the destination ports. With all leads seemingly exhausted on this front, I checked out the other Sysmon IDs. Referring back to the videos from earlier, 1 is another Sysmon ID I'm told to look into; processes do need to be booted up in order to execute its activities, malware included.
 
-Suspecting network discovery tactics in play here, I checked out the ‘C:\Windows\system32\net1 user Administrator’ event log for any information that I could use to uncover the full list of discovery commands used:
+Searching the Sysmon index for this event ID within the 4-8AM timeframe, I peeked into the `CommandLine` field, and noticed a few suspicious commands:
 
+![](/screenshots/117.png)
 
+It's unlikely that anyone at the company would have a reason to be running multiple network information commands such as these, so I suspected a potential threat actor performing network discovery here. However, I needed more info for further validation, so I checked out the `C:\Windows\system32\net1 user Administrator` event:
+![](/screenshots/118.png)
+![](/screenshots/119.png)
+![](/screenshots/120.png)
+![](/screenshots/121.png)
+![](/screenshots/122.png)
 
+I noticed the `process_current_directory` field is `C:\Users\Administrator\`, meaning this command was executed by the user. Under normal circumstances, a regular user _really_ doesn't need to know information about a root user. Factoring that alongside the RDP activity and other network commands around the same time, it’s become all but certain that the Windows server has been accessed by a threat actor via a successful brute force attack to conduct network discovery tactics. Thus, I ran a search for the `Administrator` user (attacker at this point) to uncover the full list of discovery commands ran:
+![](/screenshots/123.png)
 
+The discovery commands the attacker ran include, but are not limited to:
+  - whoami
+  - quser
+  - tasklist
 
-I noticed that the process_current_directory field is ‘C:\Users\Administrator\’, and the User field is ‘EC2AMAZ-HP60UKG’, meaning that the command was executed by the Administrator user, which is one of the users (and the root/only user) on the Windows instance. Under normal circumstances, a user shouldn’t be using net commands to uncover information about the root user, let alone a normal one, meaning that it’s very likely the instance has been accessed by an unknown outside entity, in which the culprit most certainly has to be the one who successfully brute forced the instance. With this info, I ran a search for the Administrator user (attacker at this point):
-
-Through this search, I was able to uncover all of the discovery commands the attacker ran, including, but not limited to:
-whoami
-quser
-tasklist
-I continued searching deeper to see if I could find any more suspicious activity. After a while, I determined that there weren’t any more events of interest for this timeframe, so I moved on to the next timeframe with activity, 6PM-12AM. Right away, I noticed high activity around the 6PM mark:
+I continued digging deeper for any additional suspicious events. After a while, I determined that there weren’t any more for the first batch of activity, so I moved on to the next batch (Timeframe: 6PM-12AM). Right away, I noticed high activity around the 6PM mark:
+![](/screenshots/124.png)
 
 Checking the logs in the 6PM mark, I realized that a lot of them were just critical Windows services booting up, so I reexpanded the 6PM-12AM timeframe and searched for Sysmon event ID 3 to find any suspicious connections. Which is when I checked the destination ports and saw a few suspicious ones:
 
