@@ -147,6 +147,8 @@ Regarding the error message, I initially wanted the alert to monitor in real tim
 
 In following MyDFIR’s series for this section, I noticed how limited Splunk’s alert creation system is compared to Elastic’s. When viewing the alert of a failed login attempt I made, Splunk didn’t provide at-a-glance information, such as the IP address of the machine that triggered the alert. I tried searching the internet for any solutions to get this info to show up, but wasn't able to find anything. Ultimately, I left things as-is.
 
+I didn't create an alert for successful authentication attempts, which is definitely a missed opportunity when looking back.
+
 ### Map of Failed Authentications
 Next up, the dashboard. I’m going to first populate it with a couple of maps visualizing where the attacks are coming from. When viewing the [documentation about generating a choropleth map](https://help.splunk.com/en/splunk-enterprise/create-dashboards-and-reports/simple-xml-dashboards/10.0/maps/generate-a-choropleth-map#e4ece095_693b_485f_8eba_5dc9fdb5d5e7--en__Generate_a_choropleth_map), the following pre-components are required:
   - Data that can provide real-world coordinates (ex: IP addresses).
