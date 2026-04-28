@@ -143,7 +143,7 @@ In the log, I noticed something highly alarming: A PowerShell process was create
 Taking a look at the log associated with this ID, I discovered a suspicious executable file:
 ![](/screenshots/129.png)
 
-A key element that immediately renders this executable suspicious to me is that it’s located in the `Public\Downloads` folder, whereas legitimate critical executables would typically be located in a `System` folder. Despite that, it's still possible that this could’ve been a legitimate software download, so to verify further, I grabbed the file’s SHA1 hash & ran it through VirusTotal; no results were yielded, further arousing suspicion about the file.
+A key element that immediately renders this executable suspicious to me is that it’s located in the `Public\Downloads` folder, whereas legitimate critical executables would typically be located in a `System` folder. Despite that, it's still possible that this could’ve been a legitimate software download, so to verify further, I grabbed the file’s SHA1 hash & ran it through VirusTotal. No results were yielded, further arousing suspicion about the file.
 
 With the file deemed highly suspicious, I ran its name in a Splunk search and checked the Sysmon event IDs for the existence of ID 1, which indicates the process had been executed. Sure enough, it did exist:
 ![](/screenshots/130.png)
@@ -152,20 +152,26 @@ Filtering for the two events, I checked the oldest one first, where I was able t
 ![](/screenshots/131.png)
 ![](/screenshots/132.png)
 
-I tried searching up the original filename on Google, but much of the results returned were irrelevant in this context. So I continued digging deeper; I grabbed the process GUID of the suspicious executable from the event above and ran it in a Splunk search where the ‘ProcessGuid’ field is equal to the suspicious executable’s process GUID. By using the executable’s process GUID in a search, this allows me to trace the entire action lifespan of the executable, which turned out to be only a few minutes before it terminated:
+I tried searching up the original filename on Google, but much of the results returned were irrelevant in this context. So I continued digging deeper; I grabbed the suspicious executable's process GUID from the event above and ran it in a Splunk search where the `ProcessGuid` field matches it exactly. This lets me trace the entire action lifespan of the executable, which turned out to be only a few minutes before it terminated, with nothing interesting inbetween:
+![](/screenshots/133.png)
 
-With this being a dead end, I went back to the search with Sysmon event ID 1 and the suspicious executable name. There, I checked out the second (top) event, grabbed its process GUID, and ran it in a Splunk search to view its action lifespan. This time, I actually do get some logged activity:
-
+Returning to the two events, I grabbed the process GUID of the latest event and ran it in a search to view its action lifespan. This time, I actually got some interesting activity:
+![](/screenshots/134.png)
+![](/screenshots/135.png)
 
 Skimming through all 13 events, this one in particular caught my attention:
+![](/screenshots/136.png)
+![](/screenshots/137.png)
+![](/screenshots/138.png)
+![](/screenshots/139.png)
 
+Here, the executable makes a connection to the same IP address from earlier (172.20.0.92). Plus, this executable terminated at 8\:54\:01.000 PM UTC, about an hour after it made the connection. Putting two and two together, this likely indicates that the Apollo executable is a C2 malware and malicious C2 activity has occurred, with the suspicious IP address acting as the C2 server. Unfortunately, given the nature of C2 traffic, these actions are generally only capturable on the network layer, via network packet capturing tools such as Wireshark or tcpdump. As I don't have such a tool installed on the Windows server, there’s no way for me to see (on the target's end) exactly what C2 actions were executed. Regardless, I’m still satisfied with my investigation, and finalized my report:
+![](/screenshots/140.png)
+![](/screenshots/141.png)
 
-
-
-Here, the suspicious (now malicious) executable makes a connection to the same unknown IP address mentioned earlier. And, unlike with the first Sysmon ID 1 event, this process doesn’t terminate until 8:54:01.000 PM UTC, about an hour after the process made the connection. Along with everything else that’s been mentioned throughout this section, this likely means that the Apollo executable is a C2 malware and malicious C2 activity has occurred with the suspicious IP address as the culprit. Unfortunately, given the nature of C2 activity, C2 actions are generally only capturable on the network layer via network packet tools such as Wireshark or tcpdump. However, in this case, no such tool was installed on the Windows instance, meaning there’s no way to capture exactly what C2 actions were done. Regardless, I’m still satisfied with the discovery, and finalized my investigative report:
-
-
-One final note: Sysmon didn’t do a good job at detecting if Windows Defender was disabled. Though considering it did detect the malware running, it’s safe to say that Defender was tampered with in some capacity.
+  - Reviewing my investigation, I've noticed that Sysmon didn’t detect whether Windows Defender was disabled. Although since Sysmon did detect the malware running, it’s safe to say that by extension, Defender was tampered with in some capacity.
+  - Also, I've glossed over much of the red teaming concepts discussed in this part so far, as I honestly still see little to no reason why I should bother understanding them more as a blue team learner. Despite that, I've come to the realization that the intent behind the simulation was probably the fact that some aspects of the attack are listed in the [MITRE ATT&CK](https://attack.mitre.org/) framework, and that doing the simulation gives me a better understanding as to how the framework is echoed in the Sysmon logs.
+  - Lastly, I realized that in the log for the successful brute force attempt, I could've grabbed the logon ID and searched the Sysmon index for it.
 
 ## Home Lab Phase: Report, Alert, & Dashboard Creation
 With the investigation finished, I proceeded to build a report, alert, and dashboard for future malware detections. For the alert, I want it to trigger when an Apollo.exe process is executed. To do so, I first created a report named “Apollo.exe Executes” with the following query:
