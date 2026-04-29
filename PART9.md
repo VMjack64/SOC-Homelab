@@ -1,26 +1,34 @@
 # Part 9: osTicket & Splunk (Days 23, 24, 25)
-To add to the SOC analysis experience, I’ve opted to try and integrate a ticketing system with Splunk. The system I will be using is osTicket, a free, open-source ticketing system that MyDFIR also used in his series. For the setup process, I largely followed the Day 24 video, starting off with creating the instance that will house osTicket, with the following specs:
-Name: MYDFIR-osTicket
-AMI: Windows, Microsoft Windows Server 2022 Base
-Architecture: 64-bit (x86)
-Instance type: t3.micro (though looking back, this should've been t3.small)
-Key pair: RSA type, .pem format
-Network settings:
-VPC: MYDFIR-30Day-SOC-Challenge
-Subnet: splunk-subnet
-Auto-assign public IP: Enabled
-Firewall (security groups): Create security group, with the following settings:
+Wanting more of the SOC analyst experience, I’ve decided that I was going to try and integrate a ticketing system with Splunk. I will be using osTicket for this, since MyDFIR also used it in his series (and because it's free). For the setup process, I largely followed the Day 24 video, starting off with creating the instance where osTicket will be installed in, giving it the following specifications:
+  - Name: MYDFIR-osTicket
+  - AMI: Windows, Microsoft Windows Server 2022 Base
+  - Architecture: 64-bit (x86)
+  - Instance type: t3.micro
+  - Key pair: RSA type, .pem format
+  - Network settings:
+    - VPC: MYDFIR-30Day-SOC-Challenge
+    - Subnet: splunk-subnet
+    - Auto-assign public IP: Enabled
+    - Firewall (security groups): Create security group, with the following settings:
+      ![](/screenshots/163.png)
+      ![](/screenshots/164.png)
+  - Configure storage: 1 volume only:
+    - Text box: 30 GiB
+    - Dropdown box: Left as whatever option is selected
 
+After creating the instance, I modified the `30-Day-MYDFIR-SOC-Challenge` firewall to add an inbound rule allowing all traffic from the osTicket instance:
+![](/screenshots/165.png)
 
-Configure storage: 1 volume only:
-Text box: 30 GiB
-Dropdown box: Leave as whatever option is selected.
-I also made sure to modify the “30-Day-MYDFIR-SOC-Challenge” firewall to add an inbound rule allowing all traffic from the osTicket instance:
+Once connected to the instance via remote desktop, I continued following along with the video, installing XAMPP onto the instance. This is where I made a few changes of my own: For all instances where I’m supposed to use the public IP address of the osTicket instance, I instead used the localhost address (127.0.0.1). Since the public IP address of the instance changes everytime I turn it off and then turn it back on, it wouldn't be feasible for me to use the public IP, as that would necessitate navigating through a lot of settings to make changes per every shut down I do. Because of this difference, I didn’t make any adjustments to the XAMPP properties configuration file, and I didn’t have to do the IP address authorization step (although I did provide a password for the root account).
 
-After creating the instance & connecting to it via remote desktop, I continued following along with the video, installing XAMPP onto the instance. This is where I had to make a few changes of my own: After installing XAMPP, I’m supposed to open the XAMPP properties configuration file in a text document and edit the ‘apache_domainname’ field to use the public IP address of the osTicket instance, which is equivalent to a localhost loopback address setup. However, due to the public IP address constantly changing whenever I turn off the instance, this isn’t feasible; I must use the localhost address instead. I’ll need to repeat this process for any more instances where I’m supposed to change an IP address to the public IP address of the osTicket instance. As a result, I didn’t have to make any adjustments to the properties config file, and I didn’t have to do the IP address authorization step (though I did give a password for the root account).
-With XAMPP all setup, I proceeded with following the video to install osTicket. Again, all instances where I must change an IP address to the osTicket instance’s public IP address should be left as the localhost address instead. Under MySQL hostname, I specified the localhost IP address (127.0.0.1) just to be safe. After successfully installing osTicket, I get two URLs: The osTicket URL (http://127.0.0.1/osticket/upload/) & the staff control panel URL (http://127.0.0.1/osticket/upload/scp). Here, I must replace the localhost address with the current public IP address of the osTicket instance in order to use these URLs. With that in mind, I copied the staff control panel URL into my host computer’s browser and I was able to access osTicket after logging in with the credentials I provided in the “Admin User” section during the osTicket installation process.
-Home Lab Phase: Setting up osTicket Auto Startup
-With osTicket now successfully installed, I did a quick test to see if XAMPP will automatically start up by default. It doesn’t, but I wanted to set up XAMPP to make that happen so it’d remove the hassle of having to manually turn on the Apache and MySQL servers via the XAMPP Control Panel every time I boot up the osTicket instance in order to access osTicket. I looked up the internet for ways I could achieve this, and I found this YouTube video to be of help:
+With this in mind, I got XAMPP all set up and followed the rest of the video to install osTicket. With osTicket installed, I get two URLs:
+  - The osTicket URL (http://127.0.0.1/osticket/upload/)
+  - The staff control panel URL (http://127.0.0.1/osticket/upload/scp)
+
+If I want to access osTicket from my host computer, I must replace the localhost address in these URLs with the public IP address that's currently listed in AWS for the osTicket instance. Doing so for the staff control panel URL and pasting it into my host computer’s browser, I was able to access osTicket after logging in with the credentials I provided in the **Admin User** section during the osTicket installation process.
+
+## Setting up osTicket Auto Startup
+Now that I can access osTicket, I did a quick test to see if XAMPP will automatically start up by default. It doesn’t, but I wanted to set up XAMPP to make that happen so it’d remove the hassle of having to manually turn on the Apache and MySQL servers via the XAMPP Control Panel every time I boot up the osTicket instance in order to access osTicket. I looked up the internet for ways I could achieve this, and I found this YouTube video to be of help:
 Opening up the XAMPP Control Panel, I clicked the “Config” button:
 
 Under the “Autostart of modules” section, I checked “Apache”, “MySQL”, & “Start Control Panel Minimized”:
@@ -41,7 +49,8 @@ Restart the instance
 Upon logging into the instance, I see the xampp-control app icon pop up in the “^” menu automatically, indicating the process was successful:
 
 With XAMPP now able to start on its own, I wanted to see if I can access osTicket after booting up the instance without having to log into it. So I turned off the instance, then turned it back on. After waiting a few minutes, I then tried to access osTicket, but was unable to, meaning I do have to log into the instance first in order to trigger the auto start for XAMPP. Nonetheless, this should at least minimize some of the tedious work in the future.
-Home Lab Phase: A Blind Shot at Integrating osTicket with Splunk
+
+## A Blind Shot at Integrating osTicket with Splunk
 With XAMPP and osTicket now properly set up, it’s time to try integrating osTicket with Splunk. Booting up & connecting to the main Splunk instance, my idea is to modify my existing Splunk alerts to create tickets based on what event went off. While working with Splunk’s alert system to create the alerts for authentication activity and malware, I saw there was a built-in webhook alert action, and initially had the idea of using it to pull this off, but when it came time to use it, I find that it’s very limited in terms of functionality; it only allows me to specify the site to make the POST request to. According to the osTicket API documentation, an osTicket API key is required in order to make the integration work, so the native webhook action isn’t going to be of use here.
 With my one viable option rendered inviable, I turned to the internet to try and find any more leads on completing this task. Along the way, I found this pretty good YouTube tutorial on integrating a 3rd party ticketing system with Splunk. According to the video, the general idea on how to perform the integration is through a Splunk extension based on the 3rd party ticketing system used and making sure the ticketing system allows API access, which osTicket does. So, after following the first 2 minutes of the Day 25 video to generate my osTicket API key, I went into Splunk and searched the Splunk add-on store for osTicket-Splunk add-ons and found a couple of interest: “osTicket Addon - Support Ticket System” and “HTTP Alert Action”.
 Add-on #1: “osTicket Addon - Support Ticket System” (failed)
