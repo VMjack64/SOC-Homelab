@@ -28,27 +28,25 @@ With this in mind, I got XAMPP all set up and followed the rest of the video to 
 If I want to access osTicket from my host computer, I must replace the localhost address in these URLs with the public IP address that's currently listed in AWS for the osTicket instance. Doing so for the staff control panel URL and pasting it into my host computer’s browser, I was able to access osTicket after logging in with the credentials I provided in the **Admin User** section during the osTicket installation process.
 
 ## Setting up osTicket Auto Startup
-Now that I can access osTicket, I did a quick test to see if XAMPP will automatically start up by default. It doesn’t, but I wanted to set up XAMPP to make that happen so it’d remove the hassle of having to manually turn on the Apache and MySQL servers via the XAMPP Control Panel every time I boot up the osTicket instance in order to access osTicket. I looked up the internet for ways I could achieve this, and I found this YouTube video to be of help:
-Opening up the XAMPP Control Panel, I clicked the “Config” button:
+Now that osTicket is accessible, I wanted to set up XAMPP to automatically start upon booting up the instance. By default, it doesn't, but doing this would eliminate the hassle of navigating to the XAMPP Control Panel and manually turning on the Apache and MySQL servers whenever I want to access osTicket. Searching the internet for solutions, I found [this YouTube video](https://www.youtube.com/watch?v=-y2YWq7wvPA:) to be of help:
+1. Opening up the XAMPP Control Panel, I clicked Config, then under the **Autostart of modules** section, I checked “Apache”, “MySQL”, & “Start Control Panel Minimized”:
 
-Under the “Autostart of modules” section, I checked “Apache”, “MySQL”, & “Start Control Panel Minimized”:
+![](/screenshots/166.png)
 
-Click Save, then close the XAMPP Control Panel
-Navigate to the xampp directory (typically installed under C:\)
-Under the xampp directory, I located the xampp-control application, then right-clicked on it and selected “Create shortcut”. Then I temporarily moved the new shortcut icon to the desktop:
+2. After saving, I closed the XAMPP Control Panel, then navigated to the `xampp` directory (typically under `C:\`).
+3. Under the `xampp` directory, I located the `xampp-control` application, right-clicked on it, and selected “Create shortcut”. I temporarily moved the new shortcut to the desktop:
+![](/screenshots/167.png)
+4. Right-clicking the Windows button on the taskbar, I selected “Run” to open the Run application.
+5. With the Run application up, I typed `shell:startup` in the text box, then clicked OK to open the Startup folder. I moved the shortcut created in step 3 to the Startup folder.
+6. I repeated step 3 to create another `xampp-control` shortcut, which will be moved to the desktop.
+7. Right-clicking on the shortcut created in the previous step, I clicked on Properties to open the Properties menu.
+8. In the Properties menu, I opened the dropdown box next to “Run:”, then selected “Minimized”.
+9. I clicked OK to apply the changes and close the Properties menu. Afterwards, I restarted the instance.
 
-Open the “Run” application by right-clicking on the Windows button on the taskbar, then clicking “Run”
-With the “Run” application up, I typed in shell:startup in the text box, then clicked OK. This opens the Startup folder 
-I moved the shortcut created in step 5 to the Startup folder:
+Upon logging into the instance, I saw the `xampp-control` app icon pop up automatically, indicating the process was successful:
+![](/screenshots/168.png)
 
-Repeat step 5 to create another xampp-control shortcut that will be moved into the desktop
-Right-clicking on the shortcut created in the previous step, I clicked on Properties to open the Properties menu
-In the Properties menu, open the dropdown box next to “Run:”, then click “Minimized”
-Click OK to apply the changes and close the Properties menu
-Restart the instance
-Upon logging into the instance, I see the xampp-control app icon pop up in the “^” menu automatically, indicating the process was successful:
-
-With XAMPP now able to start on its own, I wanted to see if I can access osTicket after booting up the instance without having to log into it. So I turned off the instance, then turned it back on. After waiting a few minutes, I then tried to access osTicket, but was unable to, meaning I do have to log into the instance first in order to trigger the auto start for XAMPP. Nonetheless, this should at least minimize some of the tedious work in the future.
+But, when rebooting the instance and testing to see if I could access osTicket without having to log into the instance, the test failed, meaning I do need to log into the instance at the very least if I want the auto start to trigger. Nonetheless, this should minimize some of the hassle, so I'm still satisfied with how this turned out.
 
 ## A Blind Shot at Integrating osTicket with Splunk
 With XAMPP and osTicket now properly set up, it’s time to try integrating osTicket with Splunk. Booting up & connecting to the main Splunk instance, my idea is to modify my existing Splunk alerts to create tickets based on what event went off. While working with Splunk’s alert system to create the alerts for authentication activity and malware, I saw there was a built-in webhook alert action, and initially had the idea of using it to pull this off, but when it came time to use it, I find that it’s very limited in terms of functionality; it only allows me to specify the site to make the POST request to. According to the osTicket API documentation, an osTicket API key is required in order to make the integration work, so the native webhook action isn’t going to be of use here.
