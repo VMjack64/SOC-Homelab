@@ -252,16 +252,22 @@ After saving the panel to the **Malware Activity** dashboard with the title **Wi
 I also added a description for the first panel earlier.
 
 ### Converting to Splunk Dashboard Studio
-With the panels created, I added in the time picker & submit button as the finishing touches to the dashboard. However, due to the high number of fields for the first two panels, protrudes past the browser dimensions, they’re so wide that I’d have to use the horizontal scroll bar to see the other fields. I could see a couple of potential problems with doing this when trying to conduct event analysis, one being the tedium from constantly scrolling back & forth to get all event information for a particular row. I tried going into Edit mode to see if I could shrink some of the columns, but Classic dashboard wouldn’t allow me to. I then tried setting “Wrap Results” for these panels to off, but that still didn’t fix the problem.
-With no other options that I could think of, I looked up on Splunk’s Dashboard Studio to see if it would enable me to adjust the column sizes. When I found out that it can, I didn’t hesitate to convert the Classic dashboard to Dashboard Studio. Doing so was easy: Click on the three dots button at the top right of the dashboard, then select “Clone to Dashboard Studio”:
+With the panels created, I put the finishing touches to the dashboard by adding in the time picker & submit buttons and linking the panels to the picker. However, the width of the first two panels plus the lack of wrapping means that I have to scroll horizontally if I want to see all the fields. In doing so, I might lose track of what event I'm currently looking at, amongst other potential issues, so I wanted the panels wrapped within the browser's viewport. In Edit mode, one method I tried included shrinking the size of some columns, but classic dashboard wouldn’t allow me to. Then I tried tweaking the “Wrap Results” setting for the panels, but that still didn’t fix the problem.
 
+With no other solutions I could think of here, I decided to look into Splunk's Dashboard Studio, which was an option that came up while constructing the dashboards. Reading up on Dashboard Studio, one feature that it allows me to do is adjust the column sizes, which is exactly the kind of thing I was looking for. So, I went and converted the Malware dashboard:
+![](/screenshots/154.png)
+![](/screenshots/155.png)
+![](/screenshots/156.png)
 
+While the classic dashboard’s wrap settings didn't migrate over to Dashboard Studio, the conversion process went exactly as I hoped, with nothing broken. Now that the dashboard is converted, I created three new tabs, one for each panel, then moved the panels to their respective tabs:
+![](/screenshots/157.png)
+![](/screenshots/158.png)
+![](/screenshots/159.png)
 
-Overall, the conversion went exactly as I expected. With the dashboard now converted, I created three new tabs in the new dashboard, one for each panel, then proceeded to move the panels to their respective tabs:
-
-
-
-Classic dashboard’s Wrap functionality was the only thing not converted over to Dashboard Studio, but it doesn't matter since Dashboard Studio lets me perform drag resizing for each of the panel columns. After adjusting the column widths, this is my final dashboard for malware activity:
+Afterwards, I adjusted the column widths, finalizing my dashboard for malware activity:
+![](/screenshots/160.png)
+![](/screenshots/161.png)
+![](/screenshots/162.png)
 
 
 
