@@ -1,3 +1,17 @@
+Previous Part                                                                   | Return to Introduction                  | Next Part
+------------------------------------------------------------------------------- | --------------------------------------- | ---------
+[Part 7: The First Step Towards Becoming a Proefficient Splunk User](/PART7.md) | [Introduction](/README.md#introduction) | [Part 9: osTicket & Splunk](/PART9.md)
+
+[Part 8: Taking Things Seriously with Mythic](#part-8-taking-things-seriously-with-mythic-days-18-19-20-21-22-28)
+- [Attack Preparations](#attack-preparations)
+- [Attack Simulation](#attack-simulation)
+- [Investigating Mythic C2 Activity in Splunk](#investigating-mythic-c2-activity-in-splunk)
+- [Malware Report, Alert, & Dashboard Creation](#malware-report-alert--dashboard-creation)
+  - [Dashboard Panel #1](#dashboard-panel-1)
+  - [Dashboard Panel #2](#dashboard-panel-2)
+  - [Dashboard Panel #3](#dashboard-panel-3)
+  - [Converting to Splunk Dashboard Studio](#converting-to-splunk-dashboard-studio)
+
 # Part 8: Taking Things Seriously with Mythic (Days 18, 19, 20, 21, 22, 28)
 Having spent a good amount of time searching logs & creating dashboard panels with Splunk, I definitely have gotten to the point where I have a grasp on the software fundamentals. With that, I took things to the next step and began analyzing some malware. Specifically, I’m going to run an Apollo executable on the Windows instance and try to analyze its activity with Splunk.
 
@@ -269,5 +283,6 @@ Afterwards, I adjusted the column widths, finalizing my dashboard for malware ac
 ![](/screenshots/161.png)
 ![](/screenshots/162.png)
 
-
-
+Previous Part                                                                   | Return to Introduction                  | Next Part
+------------------------------------------------------------------------------- | --------------------------------------- | ---------
+[Part 7: The First Step Towards Becoming a Proefficient Splunk User](/PART7.md) | [Introduction](/README.md#introduction) | [Part 9: osTicket & Splunk](/PART9.md)
