@@ -1,3 +1,17 @@
+Previous Part                                            | Return to Introduction                  | Next Part
+-------------------------------------------------------- | --------------------------------------- | ---------
+[Part 8: Taking Things Seriously with Mythic](/PART8.md) | [Introduction](/README.md#introduction) | [Part 10: A Late Linux Addition](/PART10.md)
+
+[Part 9: osTicket & Splunk](#part-8-taking-things-seriously-with-mythic-days-18-19-20-21-22-28)
+- [Attack Preparations](#attack-preparations)
+- [Attack Simulation](#attack-simulation)
+- [Investigating Mythic C2 Activity in Splunk](#investigating-mythic-c2-activity-in-splunk)
+- [Malware Report, Alert, & Dashboard Creation](#malware-report-alert--dashboard-creation)
+  - [Dashboard Panel #1](#dashboard-panel-1)
+  - [Dashboard Panel #2](#dashboard-panel-2)
+  - [Dashboard Panel #3](#dashboard-panel-3)
+  - [Converting to Splunk Dashboard Studio](#converting-to-splunk-dashboard-studio)
+
 # Part 9: osTicket & Splunk (Days 23, 24, 25)
 Wanting more of the SOC analyst experience, I’ve decided that I was going to try and integrate a ticketing system with Splunk. I will be using osTicket for this, since MyDFIR also used it in his series (and because it's free). For the setup process, I largely followed the Day 24 video, starting off with creating the instance where osTicket will be installed in, giving it the following specifications:
   - Name: MYDFIR-osTicket
