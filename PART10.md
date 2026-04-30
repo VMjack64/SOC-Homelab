@@ -1,5 +1,5 @@
 # Part 10: A Late Linux Addition (Days 12, 13, 14, 26)
-Despite not implementing a mass alert editing system in the end, the important thing is that osTicket is now successfully integrated with Splunk, and I can finally start doing some in-depth analysis… almost. Admittedly, I originally also planned to skip out on doing Linux logs since I thought doing the RDP brute force logs would be enough of a learning experience for me, but after being reminded of my goals for this home lab project, I changed my mind and proceeded to create a Linux instance with the following specs:
+Having accomplished integrating osTicket with Splunk, I can finally start doing some in-depth analysis of all the brute force telemetry… almost. Admittedly, I originally also planned to skip out on doing Linux logs since I thought doing the RDP brute force logs would be enough of a learning experience for me, but after being reminded of my goals for this home lab project, I changed my mind and proceeded to create a Linux instance with the following specs:
 Name: MYDFIR-Linux-SSH
 AMI: Ubuntu, Ubuntu Server 24.04 LTS
 Architecture: 64-bit (x86)
