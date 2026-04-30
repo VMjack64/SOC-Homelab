@@ -2,15 +2,11 @@ Previous Part                                            | Return to Introductio
 -------------------------------------------------------- | --------------------------------------- | ---------
 [Part 8: Taking Things Seriously with Mythic](/PART8.md) | [Introduction](/README.md#introduction) | [Part 10: A Late Linux Addition](/PART10.md)
 
-[Part 9: osTicket & Splunk](#part-8-taking-things-seriously-with-mythic-days-18-19-20-21-22-28)
-- [Attack Preparations](#attack-preparations)
-- [Attack Simulation](#attack-simulation)
-- [Investigating Mythic C2 Activity in Splunk](#investigating-mythic-c2-activity-in-splunk)
-- [Malware Report, Alert, & Dashboard Creation](#malware-report-alert--dashboard-creation)
-  - [Dashboard Panel #1](#dashboard-panel-1)
-  - [Dashboard Panel #2](#dashboard-panel-2)
-  - [Dashboard Panel #3](#dashboard-panel-3)
-  - [Converting to Splunk Dashboard Studio](#converting-to-splunk-dashboard-studio)
+[Part 9: osTicket & Splunk](#part-9-osticket--splunk-days-23-24-25)
+- [Setting up osTicket Auto Startup](#setting-up-osticket-auto-startup)
+- [A Blind Shot at Integrating osTicket with Splunk](#a-blind-shot-at-integrating-osticket-with-splunk)
+  - [Add-on #1](#add-on-1-osticket-addon---support-ticket-system-failed)
+  - [Add-on #2](#add-on-2-http-alert-action-success)
 
 # Part 9: osTicket & Splunk (Days 23, 24, 25)
 Wanting more of the SOC analyst experience, I’ve decided that I was going to try and integrate a ticketing system with Splunk. I will be using osTicket for this, since MyDFIR also used it in his series (and because it's free). For the setup process, I largely followed the Day 24 video, starting off with creating the instance where osTicket will be installed in, giving it the following specifications:
@@ -102,3 +98,7 @@ After changing the endpoint, I retriggered the alert and checked osTicket to see
 Now that the authentication alert is sending tickets, I also modified the malware alert to use the action, completing the osTicket-Splunk integration process. 
 
 At this point, I wanted to implement a system that would enable me to bulk edit a lot of alerts. Considering how the integration process works for osTicket, the setup may be fine for a handful of alerts, but in the case of hundreds, manually editing each alert to use the alert action would be an incredibly tedious task. Searching the internet, I came across [this post](https://www.reddit.com/r/Splunk/comments/xhw42m/is_there_a_way_to_mass_edit_alerts/) on Reddit that asked what I was seeking, where the top poster (as of writing this) provided some potential solutions. The last two seemed to be the most viable for my case, however it required knowledge on the REST API, which looked to be too advanced for my current skill level, from what I've read. Additionally, a couple of other people in the same post pointed out some consequences of having a ton of alerts running at once, from the absurd amount of random noise to the overloading of the search head, causing lag. Ultimately, I've decided to drop the idea for this lab and move on.
+
+Previous Part                                            | Return to Introduction                  | Next Part
+-------------------------------------------------------- | --------------------------------------- | ---------
+[Part 8: Taking Things Seriously with Mythic](/PART8.md) | [Introduction](/README.md#introduction) | [Part 10: A Late Linux Addition](/PART10.md)
