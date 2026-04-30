@@ -1,23 +1,24 @@
 # Part 10: A Late Linux Addition (Days 12, 13, 14, 26)
-Having accomplished integrating osTicket with Splunk, I can finally start doing some in-depth analysis of all the brute force telemetry… almost. Due to the reminder of my goals for this home lab project, I decided at the last moment to create a Linux instance with the following specs:
-Name: MYDFIR-Linux-SSH
-AMI: Ubuntu, Ubuntu Server 24.04 LTS
-Architecture: 64-bit (x86)
-Instance type: t3.micro. Like the Windows RDP server, this server doesn’t need much processing power for its tasks.
-Key pair: RSA type, .pem format
-Network settings:
-VPC: MYDFIR-30Day-SOC-Challenge
-Subnet: unsecure-subnet
-Auto-assign public IP: Enabled
-Firewall (security groups): Select existing security group; choose “unsecure-firewall” in the dropdown under “Common security groups”
-Configure storage: 1 volume only:
-Text box: 30 GiB
-Dropdown box: Leave as whatever option is selected.
-I created the instance and let it run while I was doing the osTicket part, generating a day’s worth of SSH authentication logs in advance. After letting the instance run its course, I modified the “30-Day-MYDFIR-SOC-Challenge” firewall to add inbound rules allowing traffic from the Linux SSH server, similar to the Windows server:
+Having accomplished integrating osTicket with Splunk, I can finally start doing some in-depth analysis of all the brute force telemetry generated… almost. A reminder of my learning goals for this lab made me decide at the last moment to create a Linux server with the following specifications:
+  - Name: MYDFIR-Linux-SSH
+  - AMI: Ubuntu, Ubuntu Server 24.04 LTS
+  - Architecture: 64-bit (x86)
+  - Instance type: t3.micro. Like the Windows RDP server, this one doesn’t need much processing power for its tasks.
+  - Key pair: RSA type, .pem format
+  - Network settings:
+    - VPC: MYDFIR-30Day-SOC-Challenge
+    - Subnet: unsecure-subnet
+    - Auto-assign public IP: Enabled
+    - Firewall (security groups): Select existing security group; choose `unsecure-firewall` in the dropdown under **Common security groups**
+  - Configure storage: 1 volume only:
+    - Text box: 30 GiB
+    - Dropdown box: Left as whatever option is selected
 
-Then, I changed the Linux SSH instance’s firewall to “Windows-Server-Firewall” to secure the instance.
-Home Lab Phase: Installing Linux UF
-After wrapping up the osTicket stuff, I got to work on installing the UF onto the Linux instance. The installation process is similar to the step-by-step process of installing Splunk Enterprise onto an Ubuntu instance from the “Splunk Server Setup” subsection, but with a few changes:
+I constructed the instance and left it running exposed to the internet while doing the osTicket part, generating a day’s worth of SSH authentication logs in advance. Afterwards, I swapped the Linux SSH server’s firewall for `Windows-Server-Firewall` to secure the instance, then modified the `30-Day-MYDFIR-SOC-Challenge` firewall to add inbound rules allowing traffic from the Linux server, similar to how I did things for the Windows server:
+![](/screenshots/174.png)
+
+## Installing Linux UF
+I got to work on installing the UF onto the Linux instance. The installation process is similar to the step-by-step process of installing Splunk Enterprise onto an Ubuntu instance from the “Splunk Server Setup” subsection, but with a few changes:
 3b) Click under “Universal Forwarder” instead of “Splunk Enterprise”.
 3d) Under the “Linux” tab, use the 64-bit .deb wget link.
 5) The Linux forwarder will be installed under ‘/opt/splunkforwarder’ by default.
