@@ -18,30 +18,40 @@ I constructed the instance and left it running exposed to the internet while doi
 ![](/screenshots/174.png)
 
 ## Installing Linux UF
-I got to work on installing the UF onto the Linux instance. The installation process is similar to the step-by-step process of installing Splunk Enterprise onto an Ubuntu instance from the “Splunk Server Setup” subsection, but with a few changes:
-3b) Click under “Universal Forwarder” instead of “Splunk Enterprise”.
-3d) Under the “Linux” tab, use the 64-bit .deb wget link.
-5) The Linux forwarder will be installed under ‘/opt/splunkforwarder’ by default.
-7) I ran into a problem here where the Splunk forwarder wouldn’t automatically run under systemd without root privileges. Looking up the Splunk documentation, a solution is provided requiring Polkit rules:
+Starting off the list of tasks for the Linux server, I worked on installing the UF onto it. The installation process is similar to the one from the [Splunk Server Setup](/PART3.md#splunk-server-setup) section, but with a few steps changed:
+  - 1: Navigate to the "Choose your Download" screen for the universal forwarder instead of Splunk Enterprise. Get the 64-bit `.deb` wget link under the "Linux" tab.
+  - 3: The Linux forwarder is installed under `/opt/splunkforwarder` by default.
+  - 5: I ran into a problem here, where the forwarder wouldn’t automatically run under `systemd` without root privileges. The Splunk documentation provides a solution for this, which requires Polkit rules:
+    ![](/screenshots/175.png)
+    Conveniently, the Polkit library came pre-installed on the instance:
+    ![](/screenshots/176.png)
+    So, I followed this section of the documentation closely, and the problem was remedied.
+  - 6: Allow port 8089 instead of 8000.
+  - 8: Ignore; Splunk forwarders have no web GUI.
 
-Conveniently, the Polkit library happened to be pre-installed onto the Linux instance:
-
-After following the documentation closely, the problem was successfully remedied.
-8b) Allow port 8089 instead of 8000.
-10) Ignore; Splunk forwarders have no web GUI.
-Home Lab Phase: Adding Linux UF to the Deployment Server and Connecting to the Splunk Indexer
-With the UF installed & running, I want to add the UF to the deployment server, as well as point it to the indexer in Splunk to begin forwarding logs:
-In the CLI for the Linux SSH instance, I created a deploymentclient.conf file under /opt/splunkforwarder/etc/system/local.
-Under the deploymentclient.conf file, I added the following stanza:
-	[deployment-client]
+## Adding Linux UF to the Deployment Server and Connecting to the Splunk Indexer
+With the UF installed & running, I added it to the deployment server:
+1. In the PowerShell session for the Linux instance, I created a `deploymentclient.conf` file under `/opt/splunkforwarder/etc/system/local`, and added the following stanza to the file:
+```
+[deployment-client]
 
 [target-broker:deploymentServer]
 # Specify the deployment server; for example, "10.1.2.4:8089".
 targetUri= <URI:port>
-	Where <URI:port> = <private-ip-address-of-deployment-server-instance>:8089.
-Restart the forwarder. If successful, the Linux server should appear in the deployment server’s agent management screen.
-After successfully adding the Linux UF to the deployment server, now I need to connect the UF to the Splunk indexer. To do so for a Linux UF, I created (or edited) the outputs.conf file under /opt/splunkforwarder/etc/system/local to add the following stanzas:
+```
+Where `<URI:port>` = \<private ip address of deployment server instance\>:8089.
 
+2. Then, I restarted the forwarder by running the command `./splunk restart` in the `/opt/splunkforwarder/bin` directory. If successful, the Linux server should appear in the deployment server’s agent management screen.
+
+Once the Linux UF is added to the deployment server, I connected the UF to the Splunk indexer next:
+1. I created (or edited) the `outputs.conf` file under `/opt/splunkforwarder/etc/system/local`, adding the following stanzas:
+```
+[tcpout]
+defaultGroup=index1
+
+[tcpout:index1]
+server=<private ip address of MYDFIR-Splunk (instance housing the splunk indexer component)>
+```
 Based on what I’ve read in the documentation, the defaultGroup attribute here is used for grouping a set of log types to forward to a specific indexer (though this might be wrong, so don’t quote me on this). But in this case, I’ll just have everything routed to the one indexer over at “MYDFIR-Splunk”.
 Given the setup above, the Linux server logs will be forwarded to the indexer’s “main” index upon restarting the forwarder, but just like with the Windows server logs, I want to organize the logs & send them to a custom index instead. To do that, a inputs.conf file with the following stanza is needed:
 	[monitor://<absolute_path_to_auth_logs>]
