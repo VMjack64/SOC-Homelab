@@ -44,7 +44,7 @@ Where `<URI:port>` = \<private ip address of deployment server instance\>:8089.
 2. Then, I restarted the forwarder by running the command `./splunk restart` in the `/opt/splunkforwarder/bin` directory. If successful, the Linux server should appear in the deployment server’s agent management screen.
 
 Once the Linux UF is added to the deployment server, I connected the UF to the Splunk indexer next:
-1. I created (or edited) the `outputs.conf` file under `/opt/splunkforwarder/etc/system/local`, adding the following stanzas:
+1. I created (or edited) the `outputs.conf` file under `/opt/splunkforwarder/etc/system/local`, adding the following stanzas to the file:
 ```
 [tcpout]
 defaultGroup=index1
@@ -52,12 +52,15 @@ defaultGroup=index1
 [tcpout:index1]
 server=<private ip address of MYDFIR-Splunk (instance housing the splunk indexer component)>
 ```
-Based on what I’ve read in the documentation, the defaultGroup attribute here is used for grouping a set of log types to forward to a specific indexer (though this might be wrong, so don’t quote me on this). But in this case, I’ll just have everything routed to the one indexer over at “MYDFIR-Splunk”.
-Given the setup above, the Linux server logs will be forwarded to the indexer’s “main” index upon restarting the forwarder, but just like with the Windows server logs, I want to organize the logs & send them to a custom index instead. To do that, a inputs.conf file with the following stanza is needed:
-	[monitor://<absolute_path_to_auth_logs>]
+These stanzas tell the UF to forward all of the Linux server's logs to the `main` index over at MYDFIR-Splunk. However, I want to send the authentication logs over to its own index by adding an `inputs.conf` file with the following stanza:
+```
+[monitor://<absolute_path_to_auth_logs>]
 disabled = 0
 index = <name_of_custom_index>
-Where <absolute_path_to_auth_logs> is /var/log/auth.log (but could be /var/log/secure instead, depending on the type of Linux installation) and <name_of_custom_index> = “linux-ssh-events” (I’ve also made sure to create this index in the main Splunk instance). While I could manually add the stanza into the inputs.conf file under the Linux UF’s etc/system/local directory, I instead used my deployment server to push this configuration (I could’ve done the same for the outputs.conf file, but chose not to in that case). To do so, I pretty much followed the same steps as how I set up the “windows-sysmon-events” (& “windefender-events”) index from the “Stanza Creation” section, creating an app directory called linuxssh-event-logs and configuring a new server class to associate the Linux UF & the app with. With the stanza inputted, I reloaded the deployment server to echo the changes to the Linux UF and begin ingesting Linux server logs to Splunk.
+```
+Where `<absolute_path_to_auth_logs>` is `/var/log/auth.log` (or `/var/log/secure`, depending on the Linux operating system) and `<name_of_custom_index>` = “linux-ssh-events”.
+
+2. I've chosen to use my deployment server to add this file. I pretty much followed [the same process for setting up the `windows-sysmon-events` & `windefender-events` indexes from the Stanza Creation](/PART6.md#index-windows-sysmon-events--windefender-events-deployment-server-route) section, creating an app directory called linuxssh-event-logs and configuring a new server class to associate the Linux UF & the app with. With the stanza inputted, (I’ve also made sure to create this index in the main Splunk instance). I reloaded the deployment server to echo the changes to the Linux UF and begin ingesting Linux server logs to Splunk.
 Home Lab Phase: A Deja Vu Moment
 After the Linux server’s logs are successfully being ingested into Splunk, I checked out the logs… only to spot a problem almost immediately:
 
