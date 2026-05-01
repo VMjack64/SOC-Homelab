@@ -30,8 +30,7 @@ Starting off the list of tasks for the Linux server, I worked on installing the 
   - 8: Ignore; Splunk forwarders have no web GUI.
 
 ## Adding Linux UF to the Deployment Server and Connecting to the Splunk Indexer
-With the UF installed & running, I added it to the deployment server:
-1. In the PowerShell session for the Linux instance, I created a `deploymentclient.conf` file under `/opt/splunkforwarder/etc/system/local`, and added the following stanza to the file:
+With the UF installed & running, I added it to the deployment server. In the PowerShell session for the Linux instance, I created a `deploymentclient.conf` file under `/opt/splunkforwarder/etc/system/local`, and added the following stanza to the file:
 ```
 [deployment-client]
 
@@ -41,10 +40,9 @@ targetUri= <URI:port>
 ```
 Where `<URI:port>` = \<private ip address of deployment server instance\>:8089.
 
-2. Then, I restarted the forwarder by running the command `./splunk restart` in the `/opt/splunkforwarder/bin` directory. If successful, the Linux server should appear in the deployment server’s agent management screen.
+Then, I restarted the forwarder by running the command `./splunk restart` in the `/opt/splunkforwarder/bin` directory. If successful, the Linux server should appear in the deployment server’s agent management screen.
 
-Once the Linux UF is added to the deployment server, I connected the UF to the Splunk indexer next:
-1. I created (or edited) the `outputs.conf` file under `/opt/splunkforwarder/etc/system/local`, adding the following stanzas to the file:
+Once the Linux UF is added to the deployment server, I connected the UF to the Splunk indexer next. I created (or edited) the `outputs.conf` file under `/opt/splunkforwarder/etc/system/local`, adding the following stanzas to the file:
 ```
 [tcpout]
 defaultGroup=index1
@@ -52,37 +50,47 @@ defaultGroup=index1
 [tcpout:index1]
 server=<private ip address of MYDFIR-Splunk (instance housing the splunk indexer component)>
 ```
-These stanzas tell the UF to forward all of the Linux server's logs to the `main` index over at MYDFIR-Splunk. However, I want to send the authentication logs over to its own index by adding an `inputs.conf` file with the following stanza:
+These stanzas tell the UF to forward all of the Linux server's event logs to the `main` index over at MYDFIR-Splunk. However, I want to send the authentication logs over to its own index by adding an `inputs.conf` file with the following stanza:
 ```
 [monitor://<absolute_path_to_auth_logs>]
 disabled = 0
 index = <name_of_custom_index>
 ```
-Where `<absolute_path_to_auth_logs>` is `/var/log/auth.log` (or `/var/log/secure`, depending on the Linux operating system) and `<name_of_custom_index>` = “linux-ssh-events”.
+Where `<absolute_path_to_auth_logs>` is `/var/log/auth.log` (or `/var/log/secure`, depending on the Linux operating system) and `<name_of_custom_index>` = `linux-ssh-events`.
 
-2. I've chosen to use my deployment server to add this file. I pretty much followed [the same process for setting up the `windows-sysmon-events` & `windefender-events` indexes from the Stanza Creation](/PART6.md#index-windows-sysmon-events--windefender-events-deployment-server-route) section, creating an app directory called linuxssh-event-logs and configuring a new server class to associate the Linux UF & the app with. With the stanza inputted, (I’ve also made sure to create this index in the main Splunk instance). I reloaded the deployment server to echo the changes to the Linux UF and begin ingesting Linux server logs to Splunk.
-Home Lab Phase: A Deja Vu Moment
-After the Linux server’s logs are successfully being ingested into Splunk, I checked out the logs… only to spot a problem almost immediately:
+I've opted to use my deployment server to add this file. I was able to follow [the same process for setting up the `windows-sysmon-events` index from the Stanza Creation](/PART6.md#index-windows-sysmon-events--windefender-events-deployment-server-route) section here, creating an app directory called `linuxssh-event-logs` and configuring a new server class to associate the app & Linux UF with. After inputting the stanza, I’ve made sure to establish the `linux-ssh-events` index over at MYDFIR-Splunk first before reloading the deployment server to echo the changes to the Linux UF and begin ingesting Linux server events to Splunk.
 
+## A New Problem
+With the Linux server’s event logs successfully being ingested, I viewed the authentication events… only to spot a problem almost instantly:
+![](/screenshots/177.png)
+![](/screenshots/178.png)
+![](/screenshots/179.png)
 
+The problem here doesn’t lie within the logs, but rather in the **Interesting Fields** column: There’s no username or IP address field. For some reason, Splunk has an issue extracting these fields from the Linux events naturally. To resolve this, the first solution that came to mind was using Splunk’s field extractor utility by clicking on “Extract New Fields”. After going through the events and looking for patterns, I used the RegEx (regular expression) operation to perform the extractions for source IP address:
+![](/screenshots/180.png)
 
-The problem here doesn’t lie within the logs, but in the “Interesting Fields” column: There’s no username or IP address field. For some reason, Splunk has a problem with extracting these fields from the events naturally. To resolve this problem, the first thing that came to mind was using Splunk’s Field Extractor utility, under “Extract New Fields”. After going through the events & looking for patterns, I used the RegEx operation to perform the extraction. Initially, things were going fine, having made 100% accurate extractions for source IP address:
+Connection events (invalid or accepted):
+![](/screenshots/181.png)
+(Tried using `\b` initially, but Splunk had a problem parsing that, so I used `\s` instead)
 
-And connection events (invalid or accepted; tried using \b initially, but Splunk has a problem parsing that, so I used \s instead):
+And usernames:
+![](/screenshots/182.png)
 
-But then I got to the usernames. The extraction looked like this:
+The first two produced 100% accurate extractions, but not the third. This could potentially pose a threat to an organization, where an event may be missed during searching, and if this event actually turned out to be a real threat & they successfully got into the internal network, it’d cause havoc for the organization. Hence, I wanted _every_ event parsed correctly.
 
-Unfortunately, it was producing inaccurate results; missing a few events / grabbing a non-username. This could potentially pose a problem with “shadow attacks” in an actual environment, where a suspicious event may be missed during log searching, and if this suspicious event is actually a real threat that successfully gets into the company’s internal network, it’d make things worse. Therefore, this is why I want every event parsed correctly.
-To rectify the username issue, I turned to another solution: Installing the “Splunk Add-on for Unix and Linux”. As a prerequisite, I edited the inputs.conf file in the linuxssh-event-logs app directory in the deployment server CLI to add sourcetype = linux_secure (the alternate name for Linux logs) under the stanza.
-After completing the prerequisites and reloading the deployment server to echo the changes, I went to Splunk’s web GUI to install the add-on from the add-on store.
-Though the add-on is installed, it doesn’t parse the authentication logs located under /var/log by default. I’ll need to activate it by navigating to “Apps” > “Manage Apps”, locating the add-on, then clicking “Set Up”. From there, enable /var/log, then “Save”.
-For best practice, I need to disable app visibility for the add-on by clicking “Edit properties” next to the add-on, then set “Visible” to “No”. This essentially makes the add-on invisible to other Splunk apps.
-After saving the changes, I re-checked the logs, and see that not only has the sourcetype changed, but I also get some new fields, indicating the solution is a success:
+In an effort to get the usernames parsing properly, I turned to another solution: Installing the **Splunk Add-on for Unix and Linux**. As a prerequisite, I edited the `inputs.conf` file under the `linuxssh-event-logs` app directory to add `sourcetype = linux_secure` (alternate name for Linux logs) under the `[monitor://<absolute_path_to_auth_logs>]` stanza. After saving, then reloading the deployment server to echo the changes, I went to MYDFIR-Splunk’s web GUI to install the add-on from the store.
 
+Although I've installed the add-on, it doesn’t parse the authentication logs from the Linux server's `/var/log` directory by default. I’ll need to enable this parsing by navigating to “Apps” > “Manage Apps”, locating the add-on, clicking “Set Up”, then enabling `/var/log`. For best practice, I also want to disable app visibility by clicking “Edit properties” for the add-on, then setting "Visible" to `No`, making the add-on invisible to other Splunk apps.
 
+After saving the changes, I re-checked the logs, and noticed that not only has the sourcetype changed, but I also get some new fields, indicating the solution is a success:
+![](/screenshots/183.png)
+![](/screenshots/184.png)
+![](/screenshots/185.png)
 
-Note that any changes made to the sourcetype only apply to newly ingested logs, not post-ingested ones, just like what happened when changing the hostname of the Windows server that appears in Splunk. I could leave these logs as-is, but in doing so, the Splunk Linux add-on won’t be able to parse the post-ingested logs. Therefore, it’s necessary for the sourcetype of the post-ingested logs to be up-to-date in this case. Looking up on how to accomplish this, my objective here is to re-index these logs, with the updated inputs.conf stanza configurations already in place. I did a couple of preparations beforehand: First, I went to the inputs.conf file and added a [default] stanza to change the hostname of the Linux server that will appear in Splunk, similar to how I did it for the Windows server. Then, I want to backup the “linux-ssh-events” index, just in case something went wrong during the re-indexing process. With help from this community forum, I pulled this off by simply copying the index’s database folder, /opt/splunk/var/lib/splunk/linux-ssh-events, to the home directory.
-With preparations complete, I began the re-indexing process. For my first move, after navigating to the “MYDFIR-Splunk” instance CLI to stop Splunk, I ran the command ./splunk clean eventdata -index linux-ssh-events to remove all data from the index. Afterwards, I started up Splunk again. Then, following the guidance of the top post from this community forum, I removed the fishbucket index from the Linux UF via the CLI and restarted the UF to try to tell it to re-ingest the logs. I had assumed the removed logs from the “linux-ssh-events” index still existed in the Linux server’s auth.log file, so I was caught off guard when I checked the Linux index in Splunk and only saw a handful of events. When I went to search the auth.log file for the old logs, I realized that they were erased from the file. I don’t know how this could’ve happened, but my theory is that it’s probably either an automatic system process from turning off the Linux instance or a side effect from executing the command above.
+### Event Re-Indexing
+Of course, just like what occurred when changing the hostname of the Windows server, the change to the sourcetype field doesn't apply to events that have been ingested already. But in this case, I actually do need to update the field for these logs, otherwise the add-on won’t be able to parse them. Looking up on how to accomplish this, my objective here is to re-index these logs. I did a couple of preparations beforehand: First, I again modified the `inputs.conf` in `linuxssh-event-logs` to change the hostname of the Linux server that will appear in Splunk; I've added the `[default]` stanza to the file, with the `host` attribute specified beneath it. Next, I made a backup of the `linux-ssh-events` index in case something went wrong during the re-indexing process by simply copying the index’s database folder, `/opt/splunk/var/lib/splunk/linux-ssh-events`, to the home directory.
+
+Once I've done the preparations, I began the re-indexing process. For my first move, after stopping Splunk in MYDFIR-Splunk's PowerShell session, I ran the command `./splunk clean eventdata -index linux-ssh-events` to remove all data from the index. Then, I started up Splunk again. Next, following the guidance of the top post (as of writing) from this community forum, I removed the fishbucket index from the Linux UF via the CLI and restarted the UF to try to tell it to re-ingest the logs. I had assumed the removed logs from the “linux-ssh-events” index still existed in the Linux server’s auth.log file, so I was caught off guard when I checked the Linux index in Splunk and only saw a handful of events. When I went to search the auth.log file for the old logs, I realized that they were erased from the file. I don’t know how this could’ve happened, but my theory is that it’s probably either an automatic system process from turning off the Linux instance or a side effect from executing the command above.
 Although the first solution failed & the old logs were erased from the .log file, I still have the backup for the index to fall back on, so I pressed on and searched the internet for a solution that utilizes this backup. Not long after, I found a promising one, in the form of this AI Overview from the following Google search query:
 
 I want the old logs to be re-indexed into the “linux-ssh-events” index, but at the same time, I don’t want to delete any newly ingested data from the index. The solution here is pretty simple; I first copied the index backup into a new index called “messed-up-linux-events”. Then, I performed step 1, running the command ./splunk search "index=messed-up-linux-events sourcetype=auth" -output csv -maxout 0 > ~/source-type-auth.csv in “MYDFIR-Splunk”’s CLI to export the old logs into a .csv file. By default, the “Time range” for the .csv file is “All Time”, according to the Splunk documentation. Once the export is finished, I performed step 3 by running the command ./splunk add oneshot ~/source-type-auth.csv -sourcetype linux_secure -index linux-ssh-events -host "Ubuntu Server 24.04", still in “MYDFIR-Splunk”’s CLI. After following through the overview, I re-checked the Linux index in Splunk to see if the process is a success, which for the most part, yes:
