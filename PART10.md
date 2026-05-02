@@ -169,18 +169,19 @@ The current state of my **Authentication Activity** dashboard after adding the p
 ![](/screenshots/212.png)
 
 ## It’s Investigating Time!
-Now that my **Authentication Activity** dashboard has gotten some upgrades and I have event logs on hand, it’s finally time to start the real show of this lab: Actually doing investigative log analysis! Starting things out, I'd like to investigate the SSH authentication activity. Before getting things rolling, I did a couple things. First, I exposed the Linux server to the internet throughout September 22 to generate additional telemetry. Next, after removing the test tickets in osTicket, I generated two tickets for the software manually by running two curl commands in MYDFIR-Splunk’s CLI:
+With the Linux server all set up and my **Authentication Activity** dashboard updated, I can finally begin the real show of this lab: Actually doing investigative log analysis! I'd like to start things off with investigating the SSH authentication activity. Before getting things rolling, I did a couple things. First, I exposed the Linux server to the internet throughout September 22 to generate additional telemetry. Next, after removing the test tickets in osTicket, I generated two tickets manually by running two `curl` commands in MYDFIR-Splunk’s PowerShell terminal:
+![](/screenshots/213.png)
+![](/screenshots/214.png)
+![](/screenshots/215.png)
+![](/screenshots/216.png)
 
+These tickets are where I’ll report the results of my analyses on each type of brute force authentication activity. Lastly, I made some failed SSH connections to the Linux server to generate some extra events, all of which I've never seen before from my telemetry gathering sessions:
+![](/screenshots/217.png)
+![](/screenshots/218.png)
+![](/screenshots/219.png)
+![](/screenshots/220.png)
 
-
-
-These tickets are where I’ll report the results of my analyses on each type of brute force authentication activity: One for SSH, the other for RDP.
-I ran some failed SSH connection commands to spawn some telemetry that has never been generated before by the attackers:
-
-
-
-
-With those out of the way, I began the investigation process by admitting that I had no idea where to start off, so I turned to the Day 26 video for advice. From there, I got some good starting questions, including:
+With those out of the way, I began the investigation process by admitting that I had no idea where to begin with performing a proper investigative process, so I turned to the Day 26 video for advice. From there, I got some good starting questions, including:
 Any successful attempts? If so, what did the attacker do?
 Is the IP address known to perform brute force attacks?
 What usernames did the suspicious IP address target?
