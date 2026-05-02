@@ -109,55 +109,66 @@ Afterwards, I checked the `linux-ssh-events` index if the process was a success,
 > Theoretically, I could’ve skipped the entire re-indexing process by specifying a new sourcetype under “Settings” > “Source Types” named `auth` with the `linux_secure` typing. By the time I realized this however, I was already too neck deep into the re-indexing task.
 
 ## Creating Reports, Alerts, and Dashboards
-After going through the hassle of setting up the Splunk Linux add-on, all the Linux server logs are now being parsed and providing additional fields with more detailed information. With this, I can finally start building reports, an alert, and a dashboard for Linux SSH authentication events. After familiarizing myself with the available fields for the “linux-ssh-events” index logs, these are the fields/queries that I used to fulfill the following:
-Username: user
-Source IP address: src
-Successful authentication: vendor_action=Accepted
-Failed authentication: tag=start action!=started. The most optimal field for this would’ve been action=blocked, but attempting to search this yields no results:
+Now that all the Linux server logs are parsed & providing additional fields, I can finally begin building reports, an alert, and a dashboard for SSH authentication events. After spending a good amount of time checking all the available fields and figuring out which ones map to what, these are the fields/queries that I used to fulfill the following:
+  - Username: `user`
+  - Source IP address: `src`
+  - Successful authentication: `vendor_action=Accepted`
+  - Failed authentication: `tag=start action!=started`. The most optimal query for this would’ve been `action=blocked`, but attempting to search this yields no results:
+    ![](/screenshots/191.png)
+    Referring back to this diagram from Part 2:  
+    ![](/screenshots/3.png)  
+    The problem very likely lies within the search-time process (the part between the indexing and searching phases), not within the parsing/indexing phase, otherwise all of the events wouldn't have an `action` field to begin with. Additionally, some searches, such as the one I ran when checking the results of the re-indexing process after ingesting the `.csv` file, did return events with the `action=blocked` label.
+      - Looking back, having read through the add-on installation instructions closely, I think that the cause of this problem lies within where I have and haven't installed the add-on onto. I've installed the add-on onto MYDFIR-Splunk (which houses the search head, indexer, and parsing components), but not onto the Linux UF. Considering my Splunk setup is a single-instance deployment with universal forwarders, [the documentation](https://docs.splunk.com/Documentation/AddOns/released/Overview/Singleserverinstall) states that I'm supposed to deploy the add-on to the UF as well. I just got a little confused whilst navigating through the installation instructions, admittedly.
 
-When referring to the Splunk hierarchy back in Part 2 of this lab, theoretically speaking the problem doesn’t seem to lie within the parsing/indexing phase, otherwise all of the events would not have an action field to begin with. Additionally, there’s the fact that some searches (such as the one from when I was checking the results of the re-indexing process) do return events with the action=blocked label. So, this is very likely a problem within the search-time process of Splunk (specifically, the part between the indexing and searching phase). As action=blocked breaks the search process, I had to come up with an alternative, hence tag=start action!=started. And even then, I feel as if this doesn’t return all failed authentication events. I would eventually conjure up a better query, but for now this is the one that seemed the most accurate amongst the other queries that I’ve tried.
-Report Query and Alert (Failed Authentications Only)
-
-
-
-
-
+### Report Query and Alert (Failed Authentications Only)
+![](/screenshots/192.png)
+![](/screenshots/193.png)
+![](/screenshots/194.png)
+![](/screenshots/195.png)
+![](/screenshots/196.png)
 Body (HTTP Alert Action):
+![](/screenshots/197.png)
+I tried many ways to get newline formatting to show up in osTicket, but none of them stuck. Even trying `|||` as a separator for each field doesn't get rendered by osTicket, so I ended up going with a bunch of spaces after each field.
 
-I had tried many ways to get newline formatting to show up in the ticket, but none of them stuck. I thought I was getting somewhere via encodings, considering the ticket actually rendered &lt;br&gt;, but when trying the encoding for newline (%0D%0A), osTicket didn’t render it. With all possible options exhausted, I had no choice but to go with a separator for each field. I was going to use |||, but osTicket wouldn’t render it either, much to my annoyance, so I just went with a bunch of spaces, as shown.
-Map (Failed Authentications)
+### Map (Failed Authentications)
+![](/screenshots/198.png)
+Saved to the **Authentication Activity** dashboard with the panel title **SSH Failed Authentication Activity Map**
 
-Saved to the “Authentication Activity” dashboard with the title “SSH Failed Authentication Activity Map”
-Map (Successful Authentications)
+### Map (Successful Authentications)
+![](/screenshots/199.png)
+Saved to the **Authentication Activity** dashboard with the panel title **SSH Successful Authentication Activity Map**
 
-Saved to the “Authentication Activity” dashboard with the title “SSH Successful Authentication Activity Map”
-Table (Failed Authentication Activity)
+### Table (Failed Authentication Activity)
+![](/screenshots/200.png)
+![](/screenshots/201.png)
+Regarding the empty user column under United States, India, and Russia, those refer to these types of events:
+![](/screenshots/202.png)
+![](/screenshots/203.png)
+As well as some events where the user ` ` was specified.
 
+### Table (Successful Authentication Activity)
+![](/screenshots/204.png)
 
-Regarding the empty user column for the United States, India, and Russia, those refer to these types of events:
+Both tables are saved to the **Authentication Activity** dashboard with the panel titles **SSH Failed Authentication Activity Table** and **SSH Successful Authentication Activity Table**, respectively
 
+### Adding Event Logs to Dashboard
+During the construction of the table for failed SSH authentication activity, I came across some unusual events, like the ones with the user ` `. These events led to some unorthodox results, as briefly shown in the screenshots there. I worried about the heightened potential of error in human judgement, specifically false negatives, as a consequence of these results, so I wanted to remedy this by adding the failed & successful SSH authentication event logs to the dashboard. Due to Splunk reports utilizing their own time pickers, I'm not able to insert reports into the **Authentication Activity** dashboard as panels. Thus, I resorted to adding "Events" panels, which I could paste the queries into.
 
-As well as some events where the user   was specified.
-Table (Successful Authentication Activity)
+For the first event panel, I entered the following information:
+![](/screenshots/205.png)
 
-Both tables are saved to the “Authentication Activity” dashboard with the titles “SSH Failed Authentication Activity Table” and “SSH Successful Authentication Activity Table”, respectively
-Adding Event Logs to Dashboard
-After adding in the SSH authentication panels, I could’ve finalized the dashboard right here, but didn’t because I worry that the blank user slots mentioned just recently might cause some error in judgement; one may mistake them as no user being specified, resulting in potential false negatives. While a few events don’t in fact specify a username, some of the other events actually specify   for the user. As a remedy, I’ve opted to add the failed & successful SSH authentication logs to the dashboard. I was going to use the reports I just created, but because they have their own dedicated time pickers, Splunk wouldn’t allow me to insert them into the dashboard as panels. So, I resorted to the following alternate solution:
-In the “Authentication Activity” dashboard, click Edit, then Add Panel.
-In the Add Panel menu, click New, then Events.
-I entered in the following information, then clicked Add to Dashboard:
+For the second event panel, I entered the following information:
+![](/screenshots/206.png)
 
-Then, I repeated steps 1-3 for successful authentication logs:
+The current state of my **Authentication Activity** dashboard after adding the panels:
+![](/screenshots/207.png)
+![](/screenshots/208.png)
+![](/screenshots/209.png)
+![](/screenshots/210.png)
+![](/screenshots/211.png)
+![](/screenshots/212.png)
 
-Click Save to save the changes.
-With the panels created, this is what my dashboard looks like now:
-
-
-
-
-
-
-Home Lab Phase: It’s Investigating Time!
+## It’s Investigating Time!
 With an updated dashboard on hand, it’s finally time to start the real show: Actually doing some log investigating! I’ll be focusing on the SSH authentication activity in this part, but I will deal with the RDP activity in the next part. Before getting things rolling, I did a couple of preliminaries:
 I exposed the Linux instance to the internet throughout September 22 to generate additional telemetry to analyze.
 After removing the test tickets, I generated two tickets in osTicket manually by running two curl commands in MYDFIR-Splunk’s CLI:
