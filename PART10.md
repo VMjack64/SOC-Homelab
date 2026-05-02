@@ -169,9 +169,7 @@ The current state of my **Authentication Activity** dashboard after adding the p
 ![](/screenshots/212.png)
 
 ## It’s Investigating Time!
-With an updated dashboard on hand, it’s finally time to start the real show: Actually doing some log investigating! I’ll be focusing on the SSH authentication activity in this part, but I will deal with the RDP activity in the next part. Before getting things rolling, I did a couple of preliminaries:
-I exposed the Linux instance to the internet throughout September 22 to generate additional telemetry to analyze.
-After removing the test tickets, I generated two tickets in osTicket manually by running two curl commands in MYDFIR-Splunk’s CLI:
+Now that my **Authentication Activity** dashboard has gotten some upgrades and I have event logs on hand, it’s finally time to start the real show of this lab: Actually doing investigative log analysis! Starting things out, I'd like to investigate the SSH authentication activity. Before getting things rolling, I did a couple things. First, I exposed the Linux server to the internet throughout September 22 to generate additional telemetry. Next, after removing the test tickets in osTicket, I generated two tickets for the software manually by running two curl commands in MYDFIR-Splunk’s CLI:
 
 
 
