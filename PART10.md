@@ -256,7 +256,7 @@ As for whether the IP address is a known threat, Steven mentions a couple of use
 ![](/screenshots/232.png)
 ![](/screenshots/233.png)
 
-For additional intel, I ran the IP through GreyNoise. The site also reveals it to be known to perform brute force attacks:
+For additional intel, I ran the IP through GreyNoise. The site also reveals that the IP is known to perform brute force attacks:
 ![](/screenshots/234.png)
 ![](/screenshots/235.png)
 
@@ -304,6 +304,7 @@ During Question 4 of the investigation, I came up with queries for finding all t
   - Connection reset by \<ip_addr\> port \<port_number\>
 
 Joining all these queries together, my new query for failed SSH authentication events is:
+
 `index="linux-ssh-events" AND ((eventtype=sshd_session_start NOT action=started) OR (eventtype=sshd_session_end name="Connection closed") OR (((disconnected from) OR disconnecting) (authenticating OR invalid) user) OR ((connection reset by NOT eventtype=nix_errors)))`
 
 Modifying the queries in my SSH failed authentication map & table panels:
