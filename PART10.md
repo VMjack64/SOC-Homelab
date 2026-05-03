@@ -181,47 +181,62 @@ These tickets are where I’ll report the results of my analyses on each type of
 ![](/screenshots/219.png)
 ![](/screenshots/220.png)
 
-With those out of the way, I began the investigation process by admitting that I had no idea where to begin with performing a proper investigative process, so I turned to the Day 26 video for advice. From there, I got some good starting questions, including:
-Any successful attempts? If so, what did the attacker do?
-Is the IP address known to perform brute force attacks?
-What usernames did the suspicious IP address target?
-Additionally, I managed to conjure up a question of my own, befitting of the circumstances from using AWS:
-What are the outcomes of the various types of failed login attempts?
-Question 1: Any successful attempts (not from my IP address)? If so, what did the attacker do?
-Starting off the investigative process with the most obvious question (in hindsight), I took a quick glance at the SSH successful authentications on my dashboard. I do see some successful activity, but all of them came from my laptop’s IP address:
+With that done, I had no idea where to start at when it comes to performing a proper investigative process, so I turned to the Day 26 video for advice. I got some good starting questions, including:
+  - Any successful attempts? If so, what did the attacker do?
+  - Is the IP address known to perform brute force attacks?
+  - What usernames did the suspicious IP address target?
 
+From there, I conjured up a question of my own, befitting of the circumstances from using AWS:
+  - What happened in the various types of failed login attempts?
 
-And just to verify that the query in my dashboard isn’t wrong, I ran a query searching for the word “Accepted” in the logs. I ended up getting exactly the same events:
+### Question 1: Any successful attempts (not from my IP address)? If so, what did the attacker do?
+Taking a quick glance at the SSH successful authentications on my dashboard, I do see some successful activity, but all of them came from my laptop’s IP address:
+![](/screenshots/221.png)
+![](/screenshots/222.png)
 
+For further verification, I ran a query searching for the word “Accepted” in the logs. I ended up getting the same events:
+![](/screenshots/223.png)
+![](/screenshots/224.png)
 
 So no, there hasn’t been a successful attempt from any outside entity.
-Question 2: What activity did I perform in my first successful authentication session?
-There may not have been any successful activity from an outsider, but I figured I’d answer this question while I’m still checking the successful log activity, just for the sake of practice. Grabbing the timestamp for the bottom-most event from my successful authentication report, which is the connection time for my first session, I ran a search for events after that time, with the reverse command piped in to sort the events from oldest-newest, so that I can start the analysis chain from the accepted event:
 
+### Question 2: What activity did I perform in my first successful authentication session?
+While there was no successful attempt that didn't come from me, I did this anyway for the sake of practice. Grabbing the timestamp for the oldest event from my successful authentication report, I ran a search for all events after that time, with the `reverse` command piped in to sort the events from oldest-newest so that I can start the analysis chain from the time of connection for the first session:
+![](/screenshots/225.png)
+![](/screenshots/226.png)
 
-Right away, I can see some logs that are absolutely unnecessary to my investigation, so I started crafting up some filters that can get rid of the excess noise. First off, I dealt with the “session opened” & “session closed” events, which comprised the bulk of the noise. This returns a significantly lower log count:
+Next, I began crafting up some filters to exclude events that are unnecessary to my investigation. First, I dealt with the “session opened” and “session closed” events, which comprised the majority of the excess noise:
+![](/screenshots/227.png)
 
-Even then, there are still too many logs to be able to analyze in a feasible manner. However, this search also accounts for my activities from the other login sessions, meaning I had to have disconnected from the instance at some point in the first login session, which would’ve been captured by the Splunk UF. To find this event, I modified the query to include my IP address. Thanks to the query, I was able to find the event almost immediately, which is the third log down the list:
+Despite the filter, there's still too many logs to analyze in a timely manner. However, considering the amount of successful authentications that came from me, this search not only accounts for my activities from the other login sessions, but also that I had to have disconnected from the Linux server at some point in my first login session, which would’ve been logged. To find this disconnection event, I modified the query to include my IP address. With the modification, I found the event almost immediately:
+![](/screenshots/228.png)
 
-With the disconnect event’s timestamp on hand, I modified the query again, this time adjusting the time range to end at the disconnect time for the first login session, as well as removing my IP address from the query:
+Grabbing the event’s timestamp, I re-modified the query, focusing the time range between the time of connection & the time of disconnection for my first login session, as well as removing my IP address:
+![](/screenshots/229.png)
 
-With this query, only events from the first login session are returned. And fortunately, the amount returned is feasible enough to work with. Combing through the logs, this is the activity I uncovered from my first login session:
-Ran the commands apt-get update & apt-get upgrade (repository updating)
-Utilized the dpkg command to initiate the installation of a splunkforwarder Debian package. No event of the package being downloaded is recorded; this would be recorded via network packet captures instead of Splunk.
-The nano command was ran to create a deploymentclient.conf file in the splunkforwarder‘s local folder, then was subsequently removed
-chown was ran recursively on the splunkforwarder directory to change its ownership to ubuntu, which is the main username on the instance
-ufw allow was ran twice, one to allow traffic through ports 8089 and again for ports 9997 (the default ports used by splunkd and Splunk receivers, respectively)
-Question 3: Is the IP address known to perform brute force attacks? And what usernames did the suspicious IP address target?
-There’s a lot of IP addresses for me to work with when viewing all the failed SSH authentications on my dashboard. I could’ve chosen to answer this question for all of them, but for the sake of time, I’ve opted to just use the one with the most events. First, getting the easy stuff right out the gate: A quick glance at the dashboard is all I need to determine the users targeted:
+Now, only events that occurred during the first login session are returned; the amount returned is feasible enough to work with. Combing through the events, this is what I did in my first login session:
+  - Ran the commands `apt-get update` & `apt-get upgrade` (repository updating)
+  - Utilized the `dpkg` command to initiate the download of a `splunkforwarder` Debian package. No event of the package itself being downloaded is recorded; this would exist in network packet captures instead.
+  - The `nano` command was ran to create a `deploymentclient.conf` file in the `local` directory for `splunkforwarder`, then was subsequently removed
+  - `chown` was ran recursively on the `splunkforwarder` directory to change its ownership to `ubuntu`, which is the main username for the Linux server
+  - `ufw allow` was ran twice, one to allow traffic through ports 8089 and again for ports 9997 (the default ports used by splunkd and Splunk receivers, respectively)
 
-In the Day 26 video, Steven provides a couple of resources that can be used to determine if an IP address is known to conduct brute force attacks: AbuseIPDB and GreyNoise. Grabbing the top IP address and running it through AbuseIPDB, I get my answer almost right away - yes:
+Much of what happened in my first login session involved setting up the Linux UF, which included tasks like connecting it to the deployment server and preparing it for log forwarding.
 
+### Question 3: Is the IP address known to perform brute force attacks? And what usernames did the suspicious IP address target?
+Looking at all failed SSH authentications on my dashboard, there's a lot of IP addresses to choose from. For the sake of time, I’ve chosen to use the one with the most events to answer this question. First, getting the easy stuff right out the gate: A quick glance at the dashboard is all I need to determine the users targeted:
+![](/screenshots/230.png)
 
+As for whether the IP address is a known threat, Steven mentions a couple of useful resources in the Day 26 video: [AbuseIPDB](https://www.abuseipdb.com/) and [GreyNoise](https://www.greynoise.io/). Running the IP address through AbuseIPDB, I get my answer almost right away - yes:
+![](/screenshots/231.png)
+![](/screenshots/232.png)
+![](/screenshots/233.png)
 
-For additional intel, I ran the same IP through GreyNoise. The site does in fact reveal it to be an IP known to perform brute forcing:
+For additional intel, I ran the IP through GreyNoise. The site also reveals it to be known to perform brute force attacks:
+![](/screenshots/234.png)
+![](/screenshots/235.png)
 
-
-Question 4: What were the outcomes of the various types of failed login attempts? (In other words, explain each type of failed authentication log)
+### Question 4: What were the outcomes of the various types of failed login attempts? (In other words, explain each type of failed authentication log)
 Because of the fact that I authenticate into my Linux instances in AWS by providing a keyfile instead of a password, this is a good question that came to mind, as I would have a different set of failed authentication logs compared to what I would have if VULTR was my cloud provider instead. To figure out all the types of failed authentication events that have been logged by Splunk, I spent a good amount of time playing around with the list of interesting fields extensively. These are all the types of failed event logs I could find that were generated by my Linux instance, along with a brief explanation as to how they were generated, based on what I could find on the internet:
 banner exchange: Invalid format - scanner (see: https://security.stackexchange.com/questions/281647/what-are-these-sshd-session-banner-exchange-invalid-format)
 banner exchange: could not read protocol version - given the message & what I could find about this from the internet, my guess is that invalid security protocols between the client and server are used.
