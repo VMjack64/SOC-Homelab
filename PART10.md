@@ -1,3 +1,27 @@
+Previous Part                          | Return to Introduction                  | Next Part
+-------------------------------------- | --------------------------------------- | ---------
+[Part 9: osTicket & Splunk](/PART9.md) | [Introduction](/README.md#introduction) | [Part 11: The RDP Investigation Part](/PART11.md)
+
+[Part 10: A Late Linux Addition](#part-10-a-late-linux-addition-days-12-13-14-26)
+- [Installing Linux UF](#installing-linux-uf)
+- [Adding Linux UF to the Deployment Server and Connecting to the Splunk Indexer](#adding-linux-uf-to-the-deployment-server-and-connecting-to-the-splunk-indexer)
+- [A New Problem](#a-new-problem)
+  - [Event Re-Indexing](#event-re-indexing)
+- [Creating Reports, Alerts, and Dashboards](#creating-reports-alerts-and-dashboards)
+  - [Report Query and Alert (Failed Authentications Only)](#report-query-and-alert-failed-authentications-only)
+  - [Map (Failed Authentications)](#map-failed-authentications)
+  - [Map (Successful Authentications)](#map-successful-authentications)
+  - [Table (Failed Authentication Activity)](#table-failed-authentication-activity)
+  - [Table (Successful Authentication Activity)](#table-successful-authentication-activity)
+  - [Adding Event Logs to Dashboard](#adding-event-logs-to-dashboard)
+- [It’s Investigating Time!](#its-investigating-time)
+  - [Question 1: Any successful attempts (not from my IP address)? If so, what did the attacker do?](#question-1-any-successful-attempts-not-from-my-ip-address-if-so-what-did-the-attacker-do)
+  - [Question 2: What activity did I perform in my first successful authentication session?](#question-2-what-activity-did-i-perform-in-my-first-successful-authentication-session)
+  - [Question 3: Is the IP address known to perform brute force attacks? And what usernames did the suspicious IP address target?](#question-3-is-the-ip-address-known-to-perform-brute-force-attacks-and-what-usernames-did-the-suspicious-ip-address-target)
+  - [Question 4: What happened in the various types of failed login attempts? (In other words, explain each type of failed authentication event)](#question-4-what-happened-in-the-various-types-of-failed-login-attempts-in-other-words-explain-each-type-of-failed-authentication-event)
+  - [osTicket Report](#osticket-report)
+- [Changing SSH Failed Authentication Query](#changing-ssh-failed-authentication-query)
+
 # Part 10: A Late Linux Addition (Days 12, 13, 14, 26)
 Having accomplished integrating osTicket with Splunk, I can finally start doing some in-depth analysis of all the brute force telemetry generated… almost. A reminder of my learning goals for this lab made me decide at the last moment to create a Linux server with the following specifications:
   - Name: MYDFIR-Linux-SSH
@@ -291,3 +315,6 @@ And with that, this is the final version of my **Authentication Activity** dashb
 ![](/screenshots/243.png)
 ![](/screenshots/244.png)
 
+Previous Part                          | Return to Introduction                  | Next Part
+-------------------------------------- | --------------------------------------- | ---------
+[Part 9: osTicket & Splunk](/PART9.md) | [Introduction](/README.md#introduction) | [Part 11: The RDP Investigation Part](/PART11.md)
