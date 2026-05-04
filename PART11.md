@@ -47,9 +47,13 @@ In need of another source instead of solely relying on AbuseIPDB, I sought an al
 ![](/screenshots/262.png)
 ![](/screenshots/263.png)
 
-Due to conducting this CrowdSec lookup (plus all other lookups) in February, the timeframe only went back as far as November
+Due to conducting this CrowdSec lookup (plus all other CrowdSec lookups) in February, the timeframe only went back as far as November. Despite that, there have been many reports about malicious brute forcing activity coming from the IP, meaning it’s still as active as before. The location specified in CrowdSec differed from my initial GreyNoise lookup, but the exact same AS (Autonomous System) name is specified in both, meaning it's still the same:
+- GreyNoise
+  ![](/screenshots/264.png)
+- CrowdSec
+  ![](/screenshots/265.png)
 
-Note that all the CrowdSec screenshots were taken this February, a few months after my first lookup session of these IP addresses. Despite a differing location here compared to what was in the screenshots from my initial investigation, CrowdSec still lists the exact same AS (Autonomous System) name from GreyNoise, so it’s still the same IP. The activity time window only goes back as far as November, but even within that time frame, there have been many reports about malicious brute forcing activity coming from the IP, meaning it’s still as active as before. Topping things off, CrowdSec even shows a graph of what countries were targeted most by this IP, which in this case is the US.
+Note that all the CrowdSec screenshots were taken this February, a few months after my first lookup session of these IP addresses. Despite a differing location here compared to what was in the screenshots from my initial investigation, CrowdSec still lists the exact same AS (Autonomous System) name from GreyNoise, so it’s still the same IP. The activity time window only goes back as far as November, but even within that time frame,  Topping things off, CrowdSec even shows a graph of what countries were targeted most by this IP, which in this case is the US.
 Satisfied with CrowdSec’s results, I proceeded to run the other two IPs through it as well:
 Middle IP
 
