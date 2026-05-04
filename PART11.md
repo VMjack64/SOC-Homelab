@@ -61,11 +61,12 @@ Satisfied with CrowdSec’s results, I proceeded to run the other two IPs throug
   ![](/screenshots/270.png)
   ![](/screenshots/271.png)
 
-Based on the CrowdSec reports for the IPs, it is likely that the three make up a botnet that executes automated mass brute force attacks against target systems, as well as scanning them for vulnerabilities to exploit to gain access (which, sure enough, [such a thing](https://www.xda-developers.com/youre-putting-your-data-at-risk-by-exposing-services/) exists). However, I wanted more information to further verify this theory, so I went and queried the AS name:
+Based on the CrowdSec reports for the IPs, it is likely that the three machines make up part of a botnet that executes automated scans for exposed machines to exploit, and carries out automated brute force attacks against these targets to gain access. However, I wanted more information for further verification, so I went and queried the AS name:
+![](/screenshots/272.png)
+![](/screenshots/273.png)
+![](/screenshots/274.png)
 
-
-
-Although this is only two handfuls of results returned, the information is enough to confirm my suspicions; this is indeed a botnet. Additionally, the “Top Behaviors” column on the left reveals that the botnet targets the HTTP and TCP protocols for its scans. When I was filtering for results involving these scanning behaviors, I uncovered even more behavioral information about the botnet, which included things like DDoS attacking and exploitation of vulnerabilities in the CVE list, such as:
+Although this is only two handfuls of results returned, the information on the left is enough to confirm my suspicions; this is indeed a botnet. Additionally, the “Top Behaviors” column on the left reveals that the botnet targets the HTTP and TCP protocols for its scans. When I was filtering for results involving these scanning behaviors, I uncovered even more behavioral information about the botnet, which included things like DDoS attacking and exploitation of vulnerabilities in the CVE list, such as:
 SAP NetWeaver - RCE (CVE-2025-31324)
 PAN-OS - RCE (CVE-2024-3400) and exploitation of vulnerabilities in the CVE list to deploy malicious commands and software
 These CVE vulnerabilities only target specific software and infrastructure. With all this new information, it reinforces the fact that this is an active malicious botnet scanner capable of hacking. This sentiment is also somewhat echoed in the AbuseIPDB reports:
