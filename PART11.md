@@ -2,45 +2,52 @@
 With my investigation of the SSH authentication activity wrapped up, next up is the Windows server's RDP activity. Thankfully, since Splunk naturally parses the Windows events perfectly fine, I can just jump straight into the investigation. I'm using the same questions from the previous part here, except Question 4, since there isn't any variety for me to work with, in terms of what types of failed authentication events for Windows exist. To try and make this investigation somewhat interesting, I've exposed the Windows server to the internet for one more telemetry gathering session, which I'll analyze alongside the old telemetry.
 
 ## Question 1: Any successful attempts (not from my IP address)? If so, what did the attacker do?
-A quick glance at my dashboard shows some successful authentications via RDP, but all of them came from my IP:
+A quick glance at the RDP successful authentications on my dashboard shows some successes, but all of them came from my IP:
+![](/screenshots/245.png)
 
-To verify further, I ran a quick search of the “windows-server-events” index for events with event ID 4624. Checking the Source_Network_Address field, I see a blank value and my IP address making up the available values for the field:
+To verify further, I searched the `windows-server-events` index for events with event ID 4624. In the `Source_Network_Address` field, I see a blank value and my IP address comprising the available values:
+![](/screenshots/246.png)
+![](/screenshots/247.png)
 
+Filtering for the events with the blank value, I checked the `Logon_Type` field for a 3, 7, and/or 10. Neither of them appeared, meaning these events were spawned by critical Windows processes. Thus, no successful attempts from any unknown entity occurred here.
 
-Filtering down to the events with the blank value, I checked the Logon_Type field for any 3s, 7s, and/or 10s. None of them appeared, meaning these events were spawned by critical Windows processes, thus no successful attempts from any outsiders occurred here.
-Question 2: Is the IP address known to perform brute force attacks? And what usernames did the suspicious IP address target?
-Like last time, I’m only going to focus on the country with the most events. I say country in particular because I saw a LOT of events coming from the Netherlands:
+## Question 2: Is the IP address known to perform brute force attacks? And what usernames did the suspicious IP address target?
+Like last time, I’m only going to focus on the country with the most events. There were a LOT coming from the Netherlands:
+![](/screenshots/248.png)
 
-Because of the significant amount of events coming from the same city, alongside the three IPs sharing the same CIDR block (the first three digits are the exact same, with only the last digit differing), I was led to believe that this might be a malicious organization executing a distributed brute forcing offensive here. Therefore, for this situation, I’ve decided to focus on the three IPs shown.
-First off, I checked the event count for each IP. The IP in the middle (185.156.73.173) didn’t generate much events:
+The significant amount of events, plus the similarities between the three IPs, led me to suspect a group operation at play here, executing a distributed brute forcing offensive. Therefore, for this situation, I want to focus on the three IPs shown.
 
-The top & bottom IPs (185.156.73.169 & 185.156.73.69, respectively), on the other hand, comprised the bulk of the events logged:
+First off, I checked the event count for each IP. The middle IP (185.156.73.173) didn’t generate much events:
+![](/screenshots/249.png)
 
+While the top & bottom IPs (185.156.73.169 and 185.156.73.69, respectively) comprised the bulk of the events logged:
+![](/screenshots/250.png)
+![](/screenshots/251.png)
 
-Next, I ran the IPs through AbuseIPDB:
-Top IP
+Afterwards, I ran the IPs through AbuseIPDB:
+- Top IP
+  ![](/screenshots/252.png)
+  ![](/screenshots/253.png)
+  ![](/screenshots/254.png)
 
+- Middle IP
+  ![](/screenshots/255.png)
+  ![](/screenshots/256.png)
+  ![](/screenshots/257.png)
 
+- Bottom IP
+  ![](/screenshots/258.png)
+  ![](/screenshots/259.png)
+  ![](/screenshots/260.png)
 
-Middle IP
+Then, I ran the IPs through GreyNoise. GreyNoise didn’t observe any activity from either of them. However, while writing my first draft for this part, I reviewed the screenshots I took and realized that the timeframe for all three only went back as far as one day. Rerunning one of the IPs, I tried to find a way to expand the timeframe to go back even further, but was quickly hit with the revelation that this is impossible in my situation; GreyNoise restricts the timeframe to 1-2 days maximum on free plan accounts, which is what I’ve been using all this time.
 
+In need of another source instead of solely relying on AbuseIPDB, I sought an alternative to GreyNoise. This led me to [CrowdSec](https://www.crowdsec.net/search), which just so happens to be open source. Running the bottom IP into the tool, CrowdSec does provide some additional information about the IP, to a level of detail that's comparable to GreyNoise:
+![](/screenshots/261.png)
+![](/screenshots/262.png)
+![](/screenshots/263.png)
 
-
-Bottom IP
-
-
-
-Then, I ran the IPs through GreyNoise:
-Top IP
-
-Middle IP
-
-Bottom IP
-
-GreyNoise didn’t observe any activity for either of the three IPs. However, I only realized when writing up my draft for this part that the time window only went back as far as one day. Noticing this, I reran one of the IPs through GreyNoise to try and see if I could find a way to view the activity from the past 180 days (~6 months). A little bit of fiddling later, I quickly realized that this is impossible in my situation; GreyNoise restricts the time window to 1-2 days maximum for free plan accounts, which is what I’ve been using all this time. So, I’m relying solely on AbuseIPDB for this.
-Because of this restriction, I ultimately decided to look for an alternative to GreyNoise on the internet. This led me to CrowdSec, which happens to be open source. Running the bottom IP into the tool, CrowdSec provides some additional information about the IP, to a similar level of detail that GreyNoise does:
-
-
+Due to conducting this CrowdSec lookup (plus all other lookups) in February, the timeframe only went back as far as November
 
 Note that all the CrowdSec screenshots were taken this February, a few months after my first lookup session of these IP addresses. Despite a differing location here compared to what was in the screenshots from my initial investigation, CrowdSec still lists the exact same AS (Autonomous System) name from GreyNoise, so it’s still the same IP. The activity time window only goes back as far as November, but even within that time frame, there have been many reports about malicious brute forcing activity coming from the IP, meaning it’s still as active as before. Topping things off, CrowdSec even shows a graph of what countries were targeted most by this IP, which in this case is the US.
 Satisfied with CrowdSec’s results, I proceeded to run the other two IPs through it as well:
@@ -52,7 +59,7 @@ Top IP
 
 
 
-The CrowdSec reports state that the three IPs are all in the same CIDR block, with the same AS name. This likely indicates that the IPs make up a botnet that executes automated mass brute force attacks against target systems, as well as scanning them for vulnerabilities to exploit to gain access. However, I wanted more information to further verify this theory, so I went and queried the AS name:
+The CrowdSec reports state that the three IPs are all in the same CIDR block, with the same AS name. This likely indicates that the IPs make up a botnet that executes automated mass brute force attacks against target systems, as well as scanning them for vulnerabilities to exploit to gain access (which, sure enough, such a thing exists). However, I wanted more information to further verify this theory, so I went and queried the AS name:
 
 
 
@@ -72,7 +79,8 @@ With the IP addresses now determined to be part of a malicious botnet, there’s
 The screenshot only captures the tail end of the list, but looking at the scroll bar on the right should be a sign as to how many usernames this botnet used. With this many usernames involved, determining how many attempts used a unique username (and consequently, determining the number of unique usernames) would be incredibly tedious. Fortunately, I can always run a query to determine this outcome:
 
 Ultimately though, for this part of the question, I just screenshotted the entire list of usernames used by the botnet and pasted them into my osTicket report.
-Question 3: What activity did I perform in one of my successful authentication sessions?
+
+## Question 3: What activity did I perform in one of my successful authentication sessions?
 As my dashboard doesn’t include the logs for successful RDP activity, I used the knowledge on Event IDs & Logon Types from Part 7 and I ran the following query to view all of them:
 
 Back in the SSH investigation, I utilized my first authenticated session to answer this question. This time, to mix things up, I’m using a successful authentication session somewhere in between the first and last event. I’ve chosen to settle with the following event created on September 3, 2025, 4:20:28.000AM UTC:
