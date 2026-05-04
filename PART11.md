@@ -81,8 +81,9 @@ This sentiment is also somewhat echoed in the AbuseIPDB reports, further driving
 While there’s probably even more information about the botnet I don't know about, I feel like I’ve reached a satisfactory conclusion with everything I've uncovered, so I won't continue digging any deeper.
 
 Now that I know the IP addresses are associated with a malicious botnet, there’s still the other part of the question: What usernames were targeted? A quick glance at the RDP failed authentications on my dashboard reveals a LOT:
+![](/screenshots/278.png)
 
-The screenshot only captures the tail end of the list, but looking at the scroll bar on the right should give an idea as to how many usernames this botnet used. With this many usernames involved, determining how many attempts used a unique username (and consequently, determining the number of unique usernames) would be incredibly tedious. Fortunately, I can always run a query to determine this outcome:
+This screenshot only shows the tail end of the list, but looking at the scroll bar on the right should give an idea as to the amount of usernames involved. Considering the kinds of usernames used, this is probably a credential stuffing attack, which utilizes username, as well as password credentials, from previous breaches. To determine the exact count of unique usernames here quickly, I ran the following query:
 
 Ultimately though, for this part of the question, I just screenshotted the entire list of usernames used by the botnet and pasted them into my osTicket report.
 
