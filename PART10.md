@@ -278,7 +278,7 @@ And these are the rest, all of which I could find vague to no conclusive informa
   - `banner exchange: could not read protocol version`
   - `Connection closed by <ip_addr> port <port_number> [preauth]`
   - `Connection reset by <ip_addr> port <port_number> [preauth]` - [server couldn’t receive the credentials provided by the source machine while attempting to authenticate](https://stackoverflow.com/questions/68670742/sshd-connection-issue-connection-reset-by-ip-port-x-preauth)
-  - `Connection reset by <ip_addr> port <port_number>`
+  - `Connection reset by <ip_addr> port <port_number>` - server-side issue (sources: [these](https://github.com/orgs/community/discussions/58249) [two](https://stackoverflow.com/questions/61185751/ssh-kex-exchange-identification-read-connection-reset-by-peer))
     ![](/screenshots/237.png)
 
 ### osTicket Report
