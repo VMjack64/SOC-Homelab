@@ -29,12 +29,10 @@ Afterwards, I ran the IPs through AbuseIPDB:
   ![](/screenshots/252.png)
   ![](/screenshots/253.png)
   ![](/screenshots/254.png)
-
 - Middle IP
   ![](/screenshots/255.png)
   ![](/screenshots/256.png)
   ![](/screenshots/257.png)
-
 - Bottom IP
   ![](/screenshots/258.png)
   ![](/screenshots/259.png)
@@ -42,28 +40,28 @@ Afterwards, I ran the IPs through AbuseIPDB:
 
 Then, I ran the IPs through GreyNoise. GreyNoise didn’t observe any activity from either of them. However, while writing my first draft for this part, I reviewed the screenshots I took and realized that the timeframe for all three only went back as far as one day. Rerunning one of the IPs, I tried to find a way to expand the timeframe to go back even further, but was quickly hit with the revelation that this is impossible in my situation; GreyNoise restricts the timeframe to 1-2 days maximum on free plan accounts, which is what I’ve been using all this time.
 
-In need of another source instead of solely relying on AbuseIPDB, I sought an alternative to GreyNoise. This led me to [CrowdSec](https://www.crowdsec.net/search), which just so happens to be open source. Running the bottom IP into the tool, CrowdSec does provide some additional information about the IP, to a level of detail that's comparable to GreyNoise:
+In need of another source instead of solely relying on AbuseIPDB, I sought an alternative to GreyNoise. This led me to [CrowdSec](https://www.crowdsec.net/search), which just so happens to be open source. Running the bottom IP into the tool, CrowdSec does provide some additional information about the IP, to a level of detail that's favorably comparable to GreyNoise:
 ![](/screenshots/261.png)
 ![](/screenshots/262.png)
 ![](/screenshots/263.png)
 
-Due to conducting this CrowdSec lookup (plus all other CrowdSec lookups) in February, the timeframe only went back as far as November. Despite that, there have been many reports about malicious brute forcing activity coming from the IP, meaning it’s still as active as before. The location specified in CrowdSec differed from my initial GreyNoise lookup, but the exact same AS (Autonomous System) name is specified in both, meaning it's still the same:
+Due to conducting this lookup, as well as all other CrowdSec lookups, in February, the timeframe only went back as far as November. Despite that, there have been many reports about malicious brute forcing activity coming from the IP, meaning it’s still as active as before. The location specified in CrowdSec differs from my initial GreyNoise lookup, but the same AS (Autonomous System) name is specified in both, reaffirming that it's still the same culprit:
 - GreyNoise
   ![](/screenshots/264.png)
 - CrowdSec
   ![](/screenshots/265.png)
 
-Note that all the CrowdSec screenshots were taken this February, a few months after my first lookup session of these IP addresses. Despite a differing location here compared to what was in the screenshots from my initial investigation, CrowdSec still lists the exact same AS (Autonomous System) name from GreyNoise, so it’s still the same IP. The activity time window only goes back as far as November, but even within that time frame,  Topping things off, CrowdSec even shows a graph of what countries were targeted most by this IP, which in this case is the US.
 Satisfied with CrowdSec’s results, I proceeded to run the other two IPs through it as well:
-Middle IP
+- Middle IP
+  ![](/screenshots/266.png)
+  ![](/screenshots/267.png)
+  ![](/screenshots/268.png)
+- Top IP
+  ![](/screenshots/269.png)
+  ![](/screenshots/270.png)
+  ![](/screenshots/271.png)
 
-
-
-Top IP
-
-
-
-The CrowdSec reports state that the three IPs are all in the same CIDR block, with the same AS name. This likely indicates that the IPs make up a botnet that executes automated mass brute force attacks against target systems, as well as scanning them for vulnerabilities to exploit to gain access (which, sure enough, such a thing exists). However, I wanted more information to further verify this theory, so I went and queried the AS name:
+Based on the CrowdSec reports for the IPs, it is likely that the three make up a botnet that executes automated mass brute force attacks against target systems, as well as scanning them for vulnerabilities to exploit to gain access (which, sure enough, [such a thing](https://www.xda-developers.com/youre-putting-your-data-at-risk-by-exposing-services/) exists). However, I wanted more information to further verify this theory, so I went and queried the AS name:
 
 
 
