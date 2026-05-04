@@ -61,25 +61,28 @@ Satisfied with CrowdSec’s results, I proceeded to run the other two IPs throug
   ![](/screenshots/270.png)
   ![](/screenshots/271.png)
 
-Based on the CrowdSec reports for the IPs, it is likely that the three machines make up part of a botnet that executes automated scans for exposed machines to exploit, and carries out automated brute force attacks against these targets to gain access. However, I wanted more information for further verification, so I went and queried the AS name:
+Based on the CrowdSec reports for the IPs, it is likely that the three machines make up part of a botnet whose purpose entails executing automated scans for exposed machines to exploit, and carrying out automated brute force attacks against these targets to gain access. However, I wanted more information for further verification, so I went and queried the AS name:
 ![](/screenshots/272.png)
 ![](/screenshots/273.png)
 ![](/screenshots/274.png)
 
-Although this is only two handfuls of results returned, the information on the left is enough to confirm my suspicions; this is indeed a botnet. Additionally, the “Top Behaviors” column on the left reveals that the botnet targets the HTTP and TCP protocols for its scans. When I was filtering for results involving these scanning behaviors, I uncovered even more behavioral information about the botnet, which included things like DDoS attacking and exploitation of vulnerabilities in the CVE list, such as:
-SAP NetWeaver - RCE (CVE-2025-31324)
-PAN-OS - RCE (CVE-2024-3400) and exploitation of vulnerabilities in the CVE list to deploy malicious commands and software
-These CVE vulnerabilities only target specific software and infrastructure. With all this new information, it reinforces the fact that this is an active malicious botnet scanner capable of hacking. This sentiment is also somewhat echoed in the AbuseIPDB reports:
-Top IP
+Although this is only two handfuls of results returned, all the information provided is enough to solidify my suspicions that this is indeed a brute forcing botnet. Furthermore, under the **Top Behaviors** column on the left, there's a decent amount of reports stating that the botnet targets the HTTP and/or TCP protocols for its scans, indicating that the targets are typically web applications and/or remote machines, respectively. I looked into the results involving these scanning behaviors, and ended up uncovering even more behavioral information about the botnet, which included things like DDoS attacking and exploitation of vulnerabilities in the CVE list, such as:
+- SAP NetWeaver - RCE ([CVE-2025-31324](https://tracker.crowdsec.net/cves/CVE-2025-31324))
+- PAN-OS - RCE ([CVE-2024-3400](https://tracker.crowdsec.net/cves/CVE-2024-3400))
 
-Middle IP
+This sentiment is also somewhat echoed in the AbuseIPDB reports, further driving home the malicious nature of this botnet:
+- Top IP
+![](/screenshots/275.png)
+- Middle IP
+![](/screenshots/276.png)
+- Bottom IP
+![](/screenshots/277.png)
 
-Bottom IP
+While there’s probably even more information about the botnet I don't know about, I feel like I’ve reached a satisfactory conclusion with everything I've uncovered, so I won't continue digging any deeper.
 
-While there’s probably even more information about the botnet I haven’t uncovered, I feel like I’ve reached a satisfactory enough conclusion with the information I know about, so I won’t continue digging deeper beyond this point.
-With the IP addresses now determined to be part of a malicious botnet, there’s still the other part of the question to be answered: What usernames did it try using? Well, a LOT:
+Now that I know the IP addresses are associated with a malicious botnet, there’s still the other part of the question: What usernames were targeted? A quick glance at the RDP failed authentications on my dashboard reveals a LOT:
 
-The screenshot only captures the tail end of the list, but looking at the scroll bar on the right should be a sign as to how many usernames this botnet used. With this many usernames involved, determining how many attempts used a unique username (and consequently, determining the number of unique usernames) would be incredibly tedious. Fortunately, I can always run a query to determine this outcome:
+The screenshot only captures the tail end of the list, but looking at the scroll bar on the right should give an idea as to how many usernames this botnet used. With this many usernames involved, determining how many attempts used a unique username (and consequently, determining the number of unique usernames) would be incredibly tedious. Fortunately, I can always run a query to determine this outcome:
 
 Ultimately though, for this part of the question, I just screenshotted the entire list of usernames used by the botnet and pasted them into my osTicket report.
 
