@@ -84,21 +84,24 @@ Now that I know the IP addresses are associated with a malicious botnet, there�
 ![](/screenshots/278.png)
 
 To determine the exact count of unique usernames here quickly, I ran the following query:
+![](/screenshots/279.png)
 
-Because of the large amount of unique usernames, I'm only showing the tail end of the list here, with the entire list pasted into my osTicket report. Considering the kinds of usernames used, this is probably a credential stuffing attack, which utilizes username, as well as password credentials, from previous breaches. 
-
-Ultimately though, for this part of the question, I just screenshotted the entire list of usernames used by the botnet and pasted them into my osTicket report.
+Because of the large amount of unique usernames, I've only shown the last few entries in the list, with the rest pasted into my osTicket report. Considering the kinds of usernames used, the botnet probably carries out credential stuffing attacks, a kind of brute forcing that utilizes username and password credentials from previous breaches.
 
 ## Question 3: What activity did I perform in one of my successful authentication sessions?
-As my dashboard doesn’t include the logs for successful RDP activity, I used the knowledge on Event IDs & Logon Types from Part 7 and I ran the following query to view all of them:
+As my dashboard doesn’t include the logs for successful RDP activity, I ran the following query to view all of them:
+![](/screenshots/280.png)
 
-Back in the SSH investigation, I utilized my first authenticated session to answer this question. This time, to mix things up, I’m using a successful authentication session somewhere in between the first and last event. I’ve chosen to settle with the following event created on September 3, 2025, 4:20:28.000AM UTC:
+For this question, I’ve settled upon this event:
+![](/screenshots/281.png)
 
-Referring to my correlation technique for the text file back in Part 7, I used that knowledge and grabbed the logon ID for the event:
+Utilizing the correlation technique I learned back in [Part 7](/PART7.md#correlating-text-file-creation--successful-authentication-activity), I grabbed the logon ID for the event:
+![](/screenshots/282.png)
 
-Then, I ran another query where I searched the “windows-server-events” index for this ID:
+Then, queried the `windows-server-events` index for all events containing this ID:
+![](/screenshots/283.png)
 
-Immediately, I spotted the disconnect time for the session, which was 9:08:07.000AM UTC on the same day. Other than that, the rest of the logs didn’t unveil anything significant, so I changed the query’s index over to the Sysmon one. There, I uncovered three process created events:
+Right away, I got the disconnection time for the session, which was 9\:08\:07.000AM UTC on the same day. Other than that, the rest of the logs didn’t unveil anything significant, so I changed the query’s index over to the Sysmon one. There, I uncovered three process created events:
 Two of those events involve the notepad.exe process. In both cases, a text file named “hello-world.txt” was opened. The events happened a few hours apart from each other. However, the directory location differed between the two:
 
 
