@@ -1,27 +1,33 @@
 # Part 12: What EDR to use? (Day 29)
-Throughout this lab, I've gone through a lot, from setting up Splunk to investigating two types of authentication activity and a malware situation, to establishing a ticketing system. Now, to cap off the main challenge, I’ve decided to attempt integrating an endpoint detection & response (EDR) tool with Splunk. With Elastic Defend not being a viable option to begin with, I did some prior research for other EDR tools that could work with Splunk, free of charge. This led me to across one of MyDFIR’s YouTube Shorts, where Steven talks about various tools to learn as a SOC analyst. One of the tools he mentioned was an EDR called Aurora Lite. Looking up this tool, I found it pretty much fulfills my needs; the only catch was that this is a watered down version of Aurora (the full version), but Steven echoed some wise words of wisdom in the same short:
-“Tools are just tools. What matters most is knowing how to use them to make sense of data and to tell a story.”
-Even if it’s a different experience from Elastic Defend, the most important takeaway I got from this is understanding the fundamentals, or concepts, of the type of tool. With that, I’ve settled upon Aurora Lite for my lab’s EDR tool.
-Home Lab Phase: Installing Aurora Lite
-After heading to the Aurora site, I clicked “Download”, then “Download Aurora Lite”.
-After entering in my name & email, I checked the second box (the required one that sends a verification), then clicked “Submit”.
-Navigating to the inbox of the email that I used in step 2, open the confirmation email sent by Nextron Systems and click Confirm. Another email from Nextron should appear shortly, which contains two download links: The application license, and the application itself.
-I want to download the license onto the Windows Server instance, not my host computer. To do so, I right-clicked the link, selected “Copy Link”, then opened up Edge on the Windows Server instance and pasted the link over there in the URL. Then, I repeated this step to download the application. Make sure both pages are still up.
-For the application, a zip file will be provided. To be safe, I verified the SHA1 hash of the file first before unzipping:
-Open PowerShell, then run the command Get-FileHash -Path <file_path_to_zip_file> -Algorithm SHA1.
-Copy the hash produced, then return to the application download page. This page provides the original SHA1 hash of the zip file. On the page, press CTRL+F to open Finder, then paste the hash from PowerShell into the “Find…” text box.
-If a match is found (the hash on the page is highlighted), that means the file is legitimate and thereby safe to proceed. If not, then the download was compromised; delete the file and restart the download process.
-After verifying that the file is legitimate, I proceeded to install Aurora Lite by following the “Quick Installation” section of the Aurora agent documentation, up to step 5.
-For step 5 of the documentation, I want to install with the standard configuration preset for detections. To do so, I ran the command aurora-agent.exe --install -c agent-config-standard.yml.
-After running the command above, I continued following the last two steps of the documentation; I’m able to verify new events involving Aurora from the Windows event logs:
+Throughout this lab, I've gone through so much, from setting up Splunk to investigating two types of authentication activity and a malware situation, to establishing a ticketing system. Now, to cap off the main challenge, I’ve decided to make an attempt on integrating an endpoint detection & response (EDR) tool with Splunk. With Elastic Defend not being a viable option to begin with, I did some prior research for other EDR tools that could work with Splunk, preferably free of charge. This led me to this [YouTube short by MyDFIR](https://www.youtube.com/shorts/BzRXa4IGOy8), where Steven mentions an EDR called Aurora Lite. Looking up this tool, I found it to fulfill much of my needs; the only catch was that this is a watered down version of Aurora (the full version), but Steven echos some wise words of wisdom in the same short:
 
-By default, Aurora writes its logs to the Application event logs, which conveniently are already set up to be ingested into Splunk:
+***“Tools are just tools. What matters most is knowing how to use them to make sense of data and to tell a story.”***
 
-Home Lab Phase: Testing Aurora Lite
-After successfully installing Aurora Lite onto the instance and integrating it with Splunk, I want to test and see if it’ll work for me as a free EDR tool. For that, I’m bringing back Mythic; I want Aurora Lite to detect and remove the Apollo agent from the machine. Before starting, I modified my malware alert to push to osTicket, now that the software is integrated with Splunk:
+What I took away from this is that even if it’s a different experience from Elastic Defend, what's most important for me at the moment is understanding the fundamentals, or concepts, of EDRs. As such, I’ve settled upon Aurora Lite for my lab’s EDR.
 
+## Installing Aurora Lite
+1. First, I downloaded Aurora Lite by heading to the [Aurora site](https://www.nextron-systems.com/aurora/), then clicked “Download” > “Download Aurora Lite”.
+2. After entering in my name & email, I checked the second box (the required one that sends a verification), then clicked “Submit”.
+3. In the inbox for the email used in the previous step, I opened the confirmation email sent by Nextron Systems and clicked Confirm. Another email from Nextron appeared shortly after, which contains two download links: The application license, and the application itself. I want to download both onto the Windows server, not my host.
+4. After connecting to the Windows server, I right-clicked the license download link and selected "Copy Link". Then, on the Windows server, I opened up Microsoft Edge and pasted the copied link there.
+5. I repeated the previous step for the application download link. A zip file will be provided. I also kept both download pages up.
+6. To be safe, I verified the SHA1 hash of the file first before unzipping:
+    1. With PowerShell opened, I ran the command `Get-FileHash -Path <file_path_to_zip_file> -Algorithm SHA1`. This produces a hash.
+    2. With the hash copied, I returned to the application download page, which provides the original SHA1 hash of the zip file.
+    3. To compare the hashes, I opened Finder by pressing CTRL+F, then pasted the hash from PowerShell into the “Find…” text box. If a match is found (the hash on the page is highlighted), that means the file is legitimate and therefore safe to proceed. If not, then the download was compromised; I must delete the file and restart the process.
+7. After verifying that the file is legitimate, I proceeded to install Aurora Lite by following the “[Quick Installation](https://aurora-agent-manual.nextron-systems.com/en/latest/usage/installation.html#quick-installation)” section of the Aurora agent documentation, up to step 5.
+8. For step 5, I want to install with the standard configuration preset for detections. To do so, I ran the command `aurora-agent.exe --install -c agent-config-standard.yml`.
+9. Afterwards, I followed the last two steps to finish the installation; I’m able to verify new events involving Aurora from the Windows event logs:
+![](/screenshots/289.png)
+Conveniently, Aurora writes its logs to the Application event logs by default, which are already set up to be ingested into Splunk:
+![](/screenshots/290.png)
 
+## Testing Aurora Lite
+With Aurora Lite installed onto the Windows server and integrated with Splunk (via log ingestion), I want to test it to see if the tool will work out for me. For that, I’m bringing back in Mythic; I want Aurora Lite to detect and remove the Apollo agent from the machine. Before starting, I modified my malware alert to push tickets to osTicket:
+![](/screenshots/291.png)
+![](/screenshots/292.png)
 Body:
+![](/screenshots/293.png)
 
 With those changes made, I went and redownloaded my Apollo agent onto the Windows Server instance, hoping that Aurora Lite, out of the box, detects the malicious binary being downloaded and responds by automatically removing it from the instance. Doing so does trigger Aurora’s detection, as evident in the logs:
 
