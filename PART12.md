@@ -29,7 +29,7 @@ With Aurora Lite installed onto the Windows server and integrated with Splunk (v
 Body:
 ![](/screenshots/293.png)
 
-With those changes made, I went and redownloaded my Apollo agent onto the Windows Server instance, hoping that Aurora Lite, out of the box, detects the malicious binary being downloaded and responds by automatically removing it from the instance. Doing so does trigger Aurora’s detection, as evident in the logs:
+Afterwards, I went and redownloaded my Apollo agent onto the Windows server, hoping that Aurora Lite, out of the box, detects the malicious binary being downloaded and responds by automatically removing it from the instance. Doing so does trigger Aurora’s detection, as evident in the logs:
 
 
 But no removal response occurred:
