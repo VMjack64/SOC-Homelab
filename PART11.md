@@ -2,11 +2,11 @@ Previous Part                                | Return to Introduction           
 -------------------------------------------- | --------------------------------------- | ---------
 [Part 10: A Late Linux Addition](/PART10.md) | [Introduction](/README.md#introduction) | [Part 12: What EDR to Use?](/PART12.md)
 
-[Part 11: The RDP Investigation Part](#part-10-a-late-linux-addition-days-12-13-14-26)
-- [Installing Linux UF](#installing-linux-uf)
-- [Adding Linux UF to the Deployment Server and Connecting to the Splunk Indexer](#adding-linux-uf-to-the-deployment-server-and-connecting-to-the-splunk-indexer)
-- [A New Problem](#a-new-problem)
-  - [Event Re-Indexing](#event-re-indexing)
+[Part 11: The RDP Investigation Part](#part-11-the-rdp-investigation-part-day-27)
+- [Question 1: Any successful attempts (not from my IP address)? If so, what did the attacker do?](#question-1-any-successful-attempts-not-from-my-ip-address-if-so-what-did-the-attacker-do)
+- [Question 2: Is the IP address known to perform brute force attacks? And what usernames did the suspicious IP address target?](#question-2-is-the-ip-address-known-to-perform-brute-force-attacks-and-what-usernames-did-the-suspicious-ip-address-target)
+- [Question 3: What activity did I perform in one of my successful authentication sessions?](#question-3-what-activity-did-i-perform-in-one-of-my-successful-authentication-sessions)
+- [osTicket Report](#osticket-report)
 
 # Part 11: The RDP Investigation Part (Day 27)
 With my investigation of the SSH authentication activity wrapped up, next up is the Windows server's RDP activity. Thankfully, since Splunk naturally parses the Windows events perfectly fine, I can just jump straight into the investigation. I'm using the same questions from the previous part here, except Question 4, since there isn't any variety for me to work with, in terms of what types of failed authentication events for Windows exist. To try and make this investigation somewhat interesting, I've exposed the Windows server to the internet for one more telemetry gathering session, which I'll analyze alongside the old telemetry.
@@ -126,3 +126,6 @@ With this information, I can draw the conclusion that I simply opened up a text 
 With all questions answered, I submitted my report to the RDP ticket in osTicket, which includes a text file containing all the usernames used by the 3 IP addresses in Question 2:
 ![](/screenshots/288.png)
 
+Previous Part                                | Return to Introduction                  | Next Part
+-------------------------------------------- | --------------------------------------- | ---------
+[Part 10: A Late Linux Addition](/PART10.md) | [Introduction](/README.md#introduction) | [Part 12: What EDR to Use?](/PART12.md)
