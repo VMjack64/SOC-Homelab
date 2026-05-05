@@ -23,20 +23,24 @@ Conveniently, Aurora writes its logs to the Application event logs by default, w
 ![](/screenshots/290.png)
 
 ## Testing Aurora Lite
-With Aurora Lite installed onto the Windows server and integrated with Splunk (via log ingestion), I want to test it to see if the tool will work out for me. For that, I’m bringing back in Mythic; I want Aurora Lite to detect and remove the Apollo agent from the machine. Before starting, I modified my malware alert to push tickets to osTicket:
+Now that Aurora Lite is installed onto the Windows server and integrated with Splunk (via log ingestion), I want to test Aurora to see if the tool will work out for me. For that, I’m bringing back in Mythic; I want Aurora Lite to detect and remove the Apollo agent from the machine. Before beginning, I modified my malware alert to push tickets to osTicket:
 ![](/screenshots/291.png)
 ![](/screenshots/292.png)
 Body:
 ![](/screenshots/293.png)
 
-Afterwards, I went and redownloaded my Apollo agent onto the Windows server, hoping that Aurora Lite, out of the box, detects the malicious binary being downloaded and responds by automatically removing it from the instance. Doing so does trigger Aurora’s detection, as evident in the logs:
-
+With that out of the way, I redownloaded the Apollo agent onto the Windows server, hoping that Aurora Lite, out of the box, detects the malicious binary being downloaded and responds by automatically removing it from the server. The download does trigger Aurora’s detection, as evident in the logs:
+![](/screenshots/294.png)
+![](/screenshots/295.png)
 
 But no removal response occurred:
+![](/screenshots/296.png)
 
-So, the next thing I tried was running the binary, hoping that would get Apollo Lite to remove it, or at the very least, stop the binary from performing its malicious activities. Unfortunately, the same results occurred; Aurora detected the binary running:
+I ran the binary, hoping that would get Aurora to remove it, or at the very least, stop the binary from performing its malicious activities. Unfortunately, the outcome here was similar; Aurora detected the binary running:
+![](/screenshots/297.png)
 
 But no termination response happened; a connection was established & actively calling back, indicated via the last check in time of the highlighted interaction being mere seconds ago:
+![](/screenshots/298.png)
 
 Since Aurora Lite failed to initiate a response to the Apollo binary being downloaded and executed, I spent some time viewing more of the documentation to troubleshoot my Aurora service installation. One of the things I ended up doing was checking the service’s status by running the command aurora-agent-64.exe --status. Viewing the resulting status report, I saw that response actions were disabled:
 
