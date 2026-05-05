@@ -101,18 +101,19 @@ Utilizing the correlation technique I learned back in [Part 7](/PART7.md#correla
 Then, queried the `windows-server-events` index for all events containing this ID:
 ![](/screenshots/283.png)
 
-Asides getting the disconnection time for the session, which was 9\:08\:07.000AM UTC on the same day, nothing useful came up in this search, so I modified the query, changing the index to the Sysmon one. There, it's revealed that three process created events occurred throughout the session:
-- Two of those events involve the `notepad.exe` process. In both cases, a text file named `hello-world.txt` was opened. The events happened a few hours apart from each other. However, the directory location differed between the two, meaning that two files with the same name exist in the instance:
+Asides getting the disconnection time for the session, which was 9\:08\:07.000AM UTC on the same day, nothing useful came up in this search, so I modified the query, changing the index to the Sysmon one. There, I uncovered three process created events throughout the session:
+- Two of those events involved the `notepad.exe` process. In both cases, a text file named `hello-world.txt` was opened. The events happened a few hours apart from each other. However, the directory location differed between events, meaning that two files with the same name exist:
 ![](/screenshots/284.png)
 ![](/screenshots/285.png)
-- The third event involved the `DismHost.exe` process (Dism Host Servicing Process). This process was created by the `cleanmgr.exe` executable, which removes any unnecessary files from the machine:
+- The third event involved the `DismHost.exe` process (Dism Host Servicing Process). This process was created by the `cleanmgr.exe` process, which removes any unnecessary files from the machine:
 ![](/screenshots/286.png)
 ![](/screenshots/287.png)
-Based on the `ParentCommandLine` field, it's apparant that the parent process is configured to run automatically on occasion against the instance’s hard disk. And judging by the file path of `Dismhost.exe` that's specified in the event, the `CommandLine` ran, and the timestamp, this event probably occurred as a result of closing Notepad minutes after creating the first `hello-world.txt` file, freeing up space that was used by the application.
+Based on the `ParentCommandLine` field, it's apparant that the parent process was configured to run automatically on occasion against the instance’s hard disk. And judging by the file path of `Dismhost.exe` specified in the event, the `CommandLine` ran, and the timestamp, this event probably occurred as a result of closing Notepad minutes after creating the first `hello-world.txt` file, freeing up space that was used by the application.
 
-With all this information, I could draw the conclusion that I simply opened up a text file via Notepad, closed it, created another text file with the same name via Notepad, then opened that file. Though, on a deeper level, the change in directories between the two notepad.exe events might be indicative of stuff happening behind-the-scenes. indicate a few things. Namely, either I did in fact have two files with the same name under different directories, or I created the second text file shortly after the first event occurred. Now, this is all answered in Part 7 of this lab; the timestamps do match the time when I did my preemptive warmup for getting familiar with Splunk. I bring this point up as a mental note to keep in mind something to take note of when doing real-world analysis work.
+With this information, I can draw the conclusion that I simply opened up a text file named `hello-world.txt` on Notepad, closed it, then opened a different `hello-world.txt` file on Notepad in this session. This is pretty much what I did in the [Log Analysis Warmup](https://github.com/JJackM/SOC-Homelab/blob/main/PART7.md#log-analysis-warmup) section, except I had also created a new text document in the same session, which became the second `hello-world.txt` file. That file creation event didn't get accounted for in this search; comparing the screenshots from that section with this section, the logon ID wasn't present in the event. So, for future session correlations, I should consider filtering the Sysmon index via connection & disconnection time ranges, instead of logon ID.
 
 ## osTicket Report
-With all questions of this investigation answered, I submitted my report to the RDP ticket in osTicket, which includes a text file containing all the usernames used by the 3 IP addresses in Question 2:
+With all questions answered, I submitted my report to the RDP ticket in osTicket, which includes a text file containing all the usernames used by the 3 IP addresses in Question 2:
+![](/screenshots/288.png)
 
 
