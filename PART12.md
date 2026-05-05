@@ -1,7 +1,7 @@
 # Part 12: What EDR to use? (Day 29)
 Throughout this lab, I've gone through so much, from setting up Splunk to investigating two types of authentication activity and a malware situation, to establishing a ticketing system. Now, to cap off the main challenge, I’ve decided to make an attempt on integrating an endpoint detection & response (EDR) tool with Splunk. With Elastic Defend not being a viable option to begin with, I did some prior research for other EDR tools that could work with Splunk, preferably free of charge. This led me to this [YouTube short by MyDFIR](https://www.youtube.com/shorts/BzRXa4IGOy8), where Steven mentions an EDR called Aurora Lite. Looking up this tool, I found it to fulfill much of my needs; the only catch was that this is a watered down version of Aurora (the full version), but Steven echos some wise words of wisdom in the same short:
 
-***“Tools are just tools. What matters most is knowing how to use them to make sense of data and to tell a story.”***
+> ***Tools are just tools. What matters most is knowing how to use them to make sense of data and to tell a story.***
 
 What I took away from this is that even if it’s a different experience from Elastic Defend, what's most important for me at the moment is understanding the fundamentals, or concepts, of EDRs. As such, I’ve settled upon Aurora Lite for my lab’s EDR.
 
@@ -17,7 +17,7 @@ What I took away from this is that even if it’s a different experience from El
     3. To compare the hashes, I opened Finder by pressing CTRL+F, then pasted the hash from PowerShell into the “Find…” text box. If a match is found (the hash on the page is highlighted), that means the file is legitimate and therefore safe to proceed. If not, then the download was compromised; I must delete the file and restart the process.
 7. After verifying that the file is legitimate, I proceeded to install Aurora Lite by following the “[Quick Installation](https://aurora-agent-manual.nextron-systems.com/en/latest/usage/installation.html#quick-installation)” section of the Aurora agent documentation, up to step 5.
 8. For step 5, I want to install with the standard configuration preset for detections. To do so, I ran the command `aurora-agent.exe --install -c agent-config-standard.yml`.
-9. Afterwards, I followed the last two steps to finish the installation; I’m able to verify new events involving Aurora from the Windows event logs:
+9. Afterwards, I proceeded to finish the installation; I’m able to verify new events involving Aurora from the Windows event logs:
 ![](/screenshots/289.png)
 Conveniently, Aurora writes its logs to the Application event logs by default, which are already set up to be ingested into Splunk:
 ![](/screenshots/290.png)
@@ -39,13 +39,15 @@ But no removal response occurred:
 I ran the binary, hoping that would get Aurora to remove it, or at the very least, stop the binary from performing its malicious activities. Unfortunately, the outcome here was similar; Aurora detected the binary running:
 ![](/screenshots/297.png)
 
-But no termination response happened; a connection was established & actively calling back, indicated via the last check in time of the highlighted interaction being mere seconds ago:
+But no response was executed and the C2 was established, indicated by the last check in time of the selected interaction being mere seconds ago:
 ![](/screenshots/298.png)
 
-Since Aurora Lite failed to initiate a response to the Apollo binary being downloaded and executed, I spent some time viewing more of the documentation to troubleshoot my Aurora service installation. One of the things I ended up doing was checking the service’s status by running the command aurora-agent-64.exe --status. Viewing the resulting status report, I saw that response actions were disabled:
+With Aurora Lite failing to execute the response I wanted in both cases, I spent some time troubleshooting by reading more of the documentation. I ended up checking the Aurora service’s status by running the command `aurora-agent-64.exe --status`. Viewing the resulting report, I noticed that response actions were disabled, hence the lack of responses:
+![](/screenshots/299.png)
 
-Seeing that response actions are disabled, this means I’ll need to go and enable it for them to work. Before proceeding, however, I’d like to first build a dedicated sigma rule that detects any instance of the Apollo binary within the machine (as in, find the binary in any folder, not exclusively the Public directory) and remove the binary as a response action. Given how easy it is to change the hashes of Apollo binaries, and noting the types of sigma rules that detected the binary when I was reviewing the logs, creating this rule will provide a guaranteed means of mitigating Apollo C2 attacks. When looking back at the tests that I just did, I realized I only scratched the surface of Aurora Lite’s list of detection rules; there might already exist a rule dedicated to detecting Apollo that I wasn’t aware of. Even if that’s the case, this task wouldn’t have been a waste, as it gives me a glimpse into detection engineering and the kinds of tasks involved.
-Building Custom Sigma Rules & Responses
+### Building Custom Sigma Rules & Responses
+Before proceeding to enable these actions, I wanted to first build a dedicated sigma rule that finds the Apollo binary in any folder, not exclusively the `Public` directory, and removes the binary as a response action to reliably mitigate Apollo C2 attacks, in addition to giving me a crash course on detection engineering and the fundamental tasks involved.
+
 To help me get started with building my rules, I referred back to the Aurora documentation. For responses, I read through the chapter on creating responses, which includes examples that helped provide clarity on the options that can be used, as well as showcase the general formatting of response sigmas. For custom rules, I looked at the chapter on custom signatures and IoCs. There, I found that not only can I add my custom rules under the custom-signatures/sigma-rules directory, but the base rules are located under signatures/sigma-rules. Digging into those directories in my Aurora installation provided me with a breadth of examples that helped serve as a template for how I should format my sigma rules:
 
 
