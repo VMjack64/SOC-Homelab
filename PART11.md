@@ -101,16 +101,18 @@ Utilizing the correlation technique I learned back in [Part 7](/PART7.md#correla
 Then, queried the `windows-server-events` index for all events containing this ID:
 ![](/screenshots/283.png)
 
-Right away, I got the disconnection time for the session, which was 9\:08\:07.000AM UTC on the same day. Other than that, the rest of the logs didn’t unveil anything significant, so I changed the query’s index over to the Sysmon one. There, I uncovered three process created events:
-Two of those events involve the notepad.exe process. In both cases, a text file named “hello-world.txt” was opened. The events happened a few hours apart from each other. However, the directory location differed between the two:
-
-
-The third event involved the DismHost.exe process (Dism Host Servicing Process). This process was created by the cleanmgr.exe executable, which removes any unnecessary files from the machine:
-
-
+Asides getting the disconnection time for the session, which was 9\:08\:07.000AM UTC on the same day, nothing useful came up in this search, so I modified the query, changing the index to the Sysmon one. There, it's revealed that three process created events occurred throughout the session:
+- Two of those events involve the `notepad.exe` process. In both cases, a text file named `hello-world.txt` was opened. The events happened a few hours apart from each other. However, the directory location differed between the two:
+![](/screenshots/284.png)
+![](/screenshots/285.png)
+- The third event involved the `DismHost.exe` process (Dism Host Servicing Process). This process was created by the `cleanmgr.exe` executable, which removes any unnecessary files from the machine:
+![](/screenshots/286.png)
+![](/screenshots/287.png)
 Given the ParentCommandLine, this process runs automatically against the instance’s hard disk. And looking at the CommandLine & Image fields, this event targeted a file in the temp directory, or temporary directory, which as the name states, houses files currently in use. Judging by the timestamp, which happened about an hour after the first instance of me opening the “hello-world.txt” file, this event likely occurred as a result of closing the Notepad app, which would’ve freed up space used for rendering the text.
+
 With all this information, I could draw the surface-level conclusion that I simply opened up a text file via Notepad, closed it, then opened another text file with the same name via Notepad. Though, on a deeper level, the change in directories between the two notepad.exe events might be indicative of stuff happening behind-the-scenes. indicate a few things. Namely, either I did in fact have two files with the same name under different directories, or I created the second text file shortly after the first event occurred. Now, this is all answered in Part 7 of this lab; the timestamps do match the time when I did my preemptive warmup for getting familiar with Splunk. I bring this point up as a mental note to keep in mind something to take note of when doing real-world analysis work.
-osTicket Report
+
+## osTicket Report
 With all questions of this investigation answered, I submitted my report to the RDP ticket in osTicket, which includes a text file containing all the usernames used by the 3 IP addresses in Question 2:
 
 
