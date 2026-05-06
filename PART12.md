@@ -1,3 +1,13 @@
+Previous Part                                     | Return to Introduction                  | Next Part
+------------------------------------------------- | --------------------------------------- | ---------
+[Part 11: The RDP Investigation Part](/PART11.md) | [Introduction](/README.md#introduction) | [Part 13: The Bonus Challenge](/PART13BONUS.md)
+
+[Part 12: What EDR to Use?](#part-12-what-edr-to-use-day-29)
+- [Installing Aurora Lite](#installing-aurora-lite)
+- [Testing Aurora Lite](#testing-aurora-lite)
+    - [Building Custom Sigma Rules & Responses](#building-custom-sigma-rules--responses)
+    - [Making Changes to the Installation](#making-changes-to-the-installation)
+
 # Part 12: What EDR to use? (Day 29)
 Throughout this lab, I've gone through so much, from setting up Splunk to investigating two types of authentication activity and a malware situation, to establishing a ticketing system. Now, to cap off the main challenge, I’ve decided to make an attempt on integrating an endpoint detection & response (EDR) tool with Splunk. With Elastic Defend not being a viable option to begin with, I did some prior research for other EDR tools that could work with Splunk, preferably free of charge. This led me to this [YouTube short by MyDFIR](https://www.youtube.com/shorts/BzRXa4IGOy8), where Steven mentions an EDR called Aurora Lite. Looking up this tool, I found it to fulfill much of my needs; the only catch was that this is a watered down version of Aurora (the full version), but Steven echos some wise words of wisdom in the same short:
 
@@ -89,4 +99,6 @@ To fix this, I added the flag `lowprivonly: false` to my rule's response. After 
 ![](/screenshots/311.png)
 ![](/screenshots/312.png)
 
-
+Previous Part                                     | Return to Introduction                  | Next Part
+------------------------------------------------- | --------------------------------------- | ---------
+[Part 11: The RDP Investigation Part](/PART11.md) | [Introduction](/README.md#introduction) | [Part 13: The Bonus Challenge](/PART13BONUS.md)
