@@ -61,7 +61,7 @@ Next, I constructed the downloaded Apollo binaries rule. I went a different rout
 
 My original idea here was to have the rule monitor the Sysmon events for any event with EventID=11. However, when taking a look at the events with this ID in Splunk, I found out that they don’t contain the `OriginalFileName` field, which complicated matters. For the sake of simplicity, I ended up utilizing the base rule above, despite the goals I've outlined in this section. Additionally, I originally wanted both the **Apollo C2 Malware Executed** and **Suspicious Binaries and Scripts in Public Folder** rules utilizing the same response. However, since both don't share a `Image` or `TargetFileName` field containing the executable's absolute path, I wasn't able to implement this, so I gave each rule their own responses as shown above.
 
-Despite going against my goals regarding the downloaded Apollo binaries rule, it ultimately didn’t matter, because when I added my custom rules & responses to the `custom-signatures/sigma-rules` directory and tested them out, I didn't get the results I was expecting. When reading through the feature list available in Aurora Lite, I realized I misinterpreted the clause about custom responses; I can't use them, and am limited to predefined responses. The full list of predefined responses are as follows:
+Despite going against my goals regarding the downloaded Apollo binaries rule, it ultimately didn’t matter, because shortly after constructing my rules and responses, I read through the feature list available in Aurora Lite, and realized that I misinterpreted the clause about custom responses; I can't use them, and am limited to predefined responses. The full list of predefined responses are as follows:
 ![](/screenshots/303.png)
 
 Due to this restriction, I was forced to remove all custom response actions from my rules. This left my downloaded Apollo binaries rule unused as a result, leaving only my **Apollo C2 Malware Executed** rule, which now looks like this:
@@ -72,16 +72,21 @@ Thankfully, despite the setback, I still have my Apollo executed rule that I can
 ![](/screenshots/305.png)
 
 Once I've added my rules, I reran the install command, this time with the `--activate-responses` flag to tell the re-installation to use response actions:
+
 ![](/screenshots/306.png)
 
-Now, the new Aurora Lite service is able to execute responses and actively using my **Apollo C2 Malware Executed** rule. To test the rule & response out, I ran the Apollo binary. The first time executing it, the response failed to fire off. Checking the corresponding error log, I saw the problem right away: I was using the wrong process ID field:
+Now, the new Aurora Lite service is able to execute responses and actively using my **Apollo C2 Malware Executed** rule. To test the rule & response out, I ran the Apollo binary. The first time executing it, the response failed to fire off. Looking into the Aurora logs, I found the error corresponding to this event, and saw the problem right away: I was using the wrong process ID field:
+![](/screenshots/307.png)
 
-which at the very least indicates that the detection rule is indeed working
-After re-installing the service again to echo the change, I ran the binary again for another test. The test failed again. Checking the log, this time the error was caused by the fact that the binary was run with escalated privileges (a.k.a. as root):
+At the very least, this log confirms that the detection rule is working. I corrected the field name:
+![](/screenshots/308.png)
 
-To fix this, I added the flag lowprivonly: false under response: of my rule. Then I ran the binary for a third time; maybe the third time’s the charm. Indeed it was, because this test succeeded:
+Then re-installed the service to echo the change. Afterwards, I ran the binary again for another test. The test failed again. Checking the logs, this time the error was caused by the fact that the binary was run with escalated privileges (a.k.a. as root):
+![](/screenshots/309.png)
 
-The corresponding log in Splunk:
-
+To fix this, I added the flag `lowprivonly: false` to my rule's response. After echoing the change, I ran the binary for a third time, and this time the test succeeded:
+![](/screenshots/310.png)
+![](/screenshots/311.png)
+![](/screenshots/312.png)
 
 
