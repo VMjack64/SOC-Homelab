@@ -50,8 +50,6 @@ Before proceeding to enable these actions, I wanted to first build a dedicated s
 
 To get started with things, I referred back to the Aurora documentation, reading through [the chapter on creating responses](https://aurora-agent-manual.nextron-systems.com/en/latest/usage/responses.html), as well as [the chapter on custom signatures and IoCs](https://aurora-agent-manual.nextron-systems.com/en/latest/usage/custom-signatures.html). From there, I looked at examples across the readings, Aurora Lite's base rules under `signatures/sigma-rules`, and Aurora's `response-sets` directory, which not only helped provide clarity on knowledge gaps such as response options, but also served as helpful templates for my own rules; Section 10 provides a link to the [sigma specification](https://github.com/SigmaHQ/sigma-specification?tab=readme-ov-file), which includes the full rule structure and the full list of options that can be specified.
 
---There, I found that not only can I add my custom rules under the  directory--
-
 Once I've gotten a grasp on everything I need to know about sigma rules and responses, I went to work on crafting my rules. In addition to the downloaded Apollo binary detection rule, I want another rule that detects the malicious binary being executed and responds by killing the process, then removing said binary. This rule will act as a safeguard should the download rule fail. I constructed this rule first, which looks like this:
 ![](/screenshots/300.png)
 
@@ -61,15 +59,16 @@ Next, I constructed the downloaded Apollo binaries rule. I went a different rout
 ![](/screenshots/301.png)
 ![](/screenshots/302.png)
 
-My original idea here was to have the rule monitor the Sysmon events for any event with EventID=11. However, when taking a look at the events with this ID in Splunk, I found out that they don’t contain the `OriginalFileName` field, which complicated matters. For the sake of simplicity, I ended up utilizing the base rule above, despite the goals I've outlined in this section. Additionally, I originally wanted both the **Apollo C2 Malware Executed** and **Suspicious Binaries and Scripts in Public Folder** rules utilizing the same response. However, without a common field containing the executable's absolute path being shared between the rules, I wasn't able to implement this, so I gave each rule their own responses as shown.
+My original idea here was to have the rule monitor the Sysmon events for any event with EventID=11. However, when taking a look at the events with this ID in Splunk, I found out that they don’t contain the `OriginalFileName` field, which complicated matters. For the sake of simplicity, I ended up utilizing the base rule above, despite the goals I've outlined in this section. Additionally, I originally wanted both the **Apollo C2 Malware Executed** and **Suspicious Binaries and Scripts in Public Folder** rules utilizing the same response. However, since both don't share a `Image` or `TargetFileName` field containing the executable's absolute path, I wasn't able to implement this, so I gave each rule their own responses as shown above.
 
-Regarding my downloaded binary rule, I only realized when writing my first draft of this part that the rule only targets a specific directory, not all, which is what I was supposed to do. But that didn’t matter, because shortly after constructing my rules and responses, I was faced with the reality that I can’t use my custom responses; rereading through the documentation, it says that Aurora’s Lite version only allows the usage of predefined ones. The full list of predefined responses are as follows:
+Despite going against my goals regarding the downloaded Apollo binaries rule, it ultimately didn’t matter, because when I added my custom rules & responses to the `custom-signatures/sigma-rules` directory and tested them out, I didn't get the results I was expecting. When reading through the feature list available in Aurora Lite, I realized I misinterpreted the clause about custom responses; I can't use them, and am limited to predefined responses. The full list of predefined responses are as follows:
+![](/screenshots/303.png)
 
-Adding my custom rules & responses to the `custom-signatures/sigma-rules` directory and testing them out, I didn't get the results I was expecting.
+Due to this restriction, I was forced to remove all custom response actions from my rules. This left my downloaded Apollo binaries rule unused as a result, leaving only my **Apollo C2 Malware Executed** rule, which now looks like this:
+![](/screenshots/304.png)
 
-Due to this restriction, I was forced to remove all custom response actions from my rules. Since my response set for the “Suspicious Binaries and Scripts in Public Folder” rule only has the custom response, it ended up going unused as a result. That leaves my “Apollo C2 Malware Executed” rule as the only custom rule left, which now looks like this:
-
-Making Changes to the Installation
+### Making Changes to the Installation
+Despite the setback, I still have one rule established
 Having now established my custom rule, pushing the change is a different story. When installing Aurora Lite as a service, the service will operate based on the flags specified in the command line, as well as the files that were in the temporary folder at the time of installation. At the time I installed Aurora, I didn’t start up any custom rules and responses yet, meaning that my current installation is running without any of them active. Anytime I want to push changes to Aurora post-installation, such as making it use custom rules and activating responses, I’ll have to reinstall the service. Before doing so, first I need to add my rule to the appropriate directory in the temporary folder that I used when I first installed Aurora Lite (which in this case was C:/aurora):
 
 Although, I’ve also added the rule under the installation:
