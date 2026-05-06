@@ -68,16 +68,15 @@ Due to this restriction, I was forced to remove all custom response actions from
 ![](/screenshots/304.png)
 
 ### Making Changes to the Installation
-Despite the setback, I still have one rule established
-Having now established my custom rule, pushing the change is a different story. When installing Aurora Lite as a service, the service will operate based on the flags specified in the command line, as well as the files that were in the temporary folder at the time of installation. At the time I installed Aurora, I didn’t start up any custom rules and responses yet, meaning that my current installation is running without any of them active. Anytime I want to push changes to Aurora post-installation, such as making it use custom rules and activating responses, I’ll have to reinstall the service. Before doing so, first I need to add my rule to the appropriate directory in the temporary folder that I used when I first installed Aurora Lite (which in this case was C:/aurora):
+Thankfully, despite the setback, I still have my Apollo executed rule that I can use. Getting Aurora to use the rule, on the other hand, was a different story. When I installed Aurora Lite as a service, the service operates based on the flags I specified in the command line, in addition to the files that were present in the temporary folder at the time of installation. Back then, I didn’t have any custom rules & responses and I didn't specify the flag to activate responses, meaning that my current installation is running without response actions and my Apollo executed rule active. If I want Aurora Lite to use my custom rule (as well as any other changes) post-installation, I'll need to reinstall the service, after adding my rule to the `custom-signatures/sigma-rules` directory under the temporary folder that I used for the installation process (which in my case was `C:/aurora`). Just in case, I’ve also added my rule under the current installation's folder:
+![](/screenshots/305.png)
 
-Although, I’ve also added the rule under the installation:
+Once I've added my rules, I reran the install command, this time with the `--activate-responses` flag to tell the re-installation to use response actions:
+![](/screenshots/306.png)
 
-Then, I reran the install command under the temp folder with the following flags:
+Now, the new Aurora Lite service is able to execute responses and actively using my **Apollo C2 Malware Executed** rule. To test the rule & response out, I ran the Apollo binary. The first time executing it, the response failed to fire off. Checking the corresponding error log, I saw the problem right away: I was using the wrong process ID field:
 
-After doing the re-installation, Aurora Lite is now able to execute response actions and should actively be using the “Apollo C2 Malware Executed” rule. To test the rule & response out, I went and got my Apollo binary up and running. The first time executing it, the response failed to fire off, which at the very least indicates that the detection rule is indeed working. Checking the corresponding error log, I saw the problem right away: I was using the wrong process ID field:
-
-
+which at the very least indicates that the detection rule is indeed working
 After re-installing the service again to echo the change, I ran the binary again for another test. The test failed again. Checking the log, this time the error was caused by the fact that the binary was run with escalated privileges (a.k.a. as root):
 
 To fix this, I added the flag lowprivonly: false under response: of my rule. Then I ran the binary for a third time; maybe the third time’s the charm. Indeed it was, because this test succeeded:
