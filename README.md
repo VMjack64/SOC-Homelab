@@ -21,7 +21,7 @@ This series proved fantastic for getting the hands-on experience I needed, as it
 10. [A Late Linux Addition](/PART10.md)
 11. [The RDP Investigation Part](/PART11.md)
 12. [What EDR to Use?](/PART12.md)
-13. [The Bonus Challenge](/PART13.md)
+13. [The Bonus Challenge](/PART13BONUS.md)
 
 [Conclusion](/END.md)
 
