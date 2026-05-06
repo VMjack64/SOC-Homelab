@@ -1,5 +1,4 @@
 # Part 13 (The Bonus Challenge): Running a Real Malware and Analyzing its Activity Using Splunk
-DISCLAIMER: DO NOT visit the malicious website described in this part. You don’t want your computer to get pwned.
 It has been 12 excruciatingly long parts, but I’m finally all done with MyDFIR’s challenge. Throughout this journey, I’ve obtained a better understanding of the fundamentals on using Splunk to search for specific kinds of activity. Now, as a way to put that newfound knowledge to the test, I’ve given myself a bonus challenge to complete. As I’ve probably alluded to in the beginning of this write-up (and the fact it's outlined in the title of this part), my plan is to execute an actual piece of malware that I’ve found on the internet in a controlled environment, then analyze its activity using Splunk to try and determine what its purpose is.
 Preparations
 Before starting this challenge, some preparations have to be done first. Starting off the list, I modified the search query of my Malware Analysis dashboard, specifically the Initiated Network Connections panel:
