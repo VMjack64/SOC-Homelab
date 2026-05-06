@@ -1,8 +1,9 @@
 # Part 13 (The Bonus Challenge): Running a Real Malware and Analyzing its Activity Using Splunk
-It has been 12 excruciatingly long parts, but I’ve finally finished MyDFIR’s challenge. This is a journey that's given me a better understanding of core SOC analyst & cybersecurity knowledge, from networking fundamentals to effective threat hunting with the use of a SIEM tool like Splunk. Now, to put everything I've learned from this lab to the test, I’ve thought of one more challenge to try. As I’ve alluded in the beginning of this writeup (and in this part's title), my plan is to execute an actual piece of malware from the internet in a controlled environment, then analyze its activity using Splunk to try and determine its purpose.
+It has been 12 excruciatingly long parts, but I’ve finally finished MyDFIR’s challenge. This is a journey that's given me a better understanding of core SOC analyst & cybersecurity knowledge, from networking fundamentals to effective threat hunting with the use of a SIEM tool like Splunk. Now, to put everything I've learned from this lab to the test, I’ve thought of one more challenge to try. As I’ve alluded in the beginning of this writeup (and in this part's title), I want to execute an actual piece of malware from the internet in a controlled environment, then analyze its activity using Splunk to try and determine its purpose.
 
 ## Preparations
-Before starting this challenge, some preparations have to be done first. Starting off the list, I modified the search query of my Malware Analysis dashboard, specifically the Initiated Network Connections panel:
+Before starting the challenge, I went through a list of preparations. First, I modified the search query of my malware dashboard, specifically the **Initiated Network Connections** panel:
+![](/screenshots/313.png)
 
 The modification, in question, involves the MpDefenderCoreService.exe executable. When viewing the dashboard again after some time, I saw it reflooded with Microsoft Defender events. Looking into it, I found out why: The platform version, as seen in the image below:
 
