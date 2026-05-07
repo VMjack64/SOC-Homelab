@@ -36,15 +36,20 @@ After running the commands, I checked Wireshark to see how the activity came out
 Despite the predicament, I still attempted to make out as much as I could, using the results from the commands as a baseline. For instance, I took note of the following data binary:
 ![](/screenshots/321.png)
 
-Looking at the timestamp on the server (Mythic instance) stream at the top, the client (Windows server) streamed the data binary (indicated by the POST request) to the server around 8\:40\:55 AM GMT time, or UTC time, the same time I ran the `ifconfig` command in Mythic:
+Looking at the timestamp on the server (Mythic instance) stream at the top, the client (Windows server) streamed the data binary to the server around 8\:40\:55 AM GMT time, or UTC time, the same time I ran the `ifconfig` command in Mythic:
 ![](/screenshots/322.png)
-- Note that the timezone for my Mythic instance is 4 hours behind Wireshark.
+- Note that the timezone for the Mythic instance is 4 hours behind Wireshark.
 
-If I excluded the `ifconfig` context, I would’ve assumed that this large data binary is indicative of data exfiltration on the surface, which alone is an IoC for C2 activity. But even with this context, these Wireshark packets at the very least provide hard confirmation of C2 activity, given the POST request made by the Windows client and the specified host IP address not that of the Windows instance; the following TCP stream captures a typical connection check in process from Apollo:
+The POST request, coupled with the unknown IP address (Mythic instance), does provide an IoC (indicator of compromise) for C2 activity, regardless of command context.
+
+The following TCP streams seems to capture a typical connection check in process from Apollo:
+![](/screenshots/323.png)
 
 While exploring more of the packet capture, I actually found the following unencrypted packet:
+![](/screenshots/324.png)
 
-But when checking the packet’s assemblies, they were encrypted as well:
+But when I checked the packet’s assemblies, they were encrypted as well:
+![](/screenshots/325.png)
 
 With all these encrypted C2 packets flowing in, this poses an immediate question: Is there any way to decrypt them for inspection? Looking up information about this on the internet points me towards needing a decryption key for Apollo if I want to perform this task. During my search, I stumbled across an article about decrypting Cobalt Strike C2 traffic, in which the user utilized a key that was publicly leaked to pull this off. This gave me the idea of attempting the same strategy with Apollo. Amidst my hunt for these keys, I came across the Mythic check in documentation and read it to learn how the keys are handled. According to the documentation, an RSA key pair is used to encrypt communications. Keeping that in mind, I opened up the PowerShell session for the Mythic instance, and ran commands searching the system files for anything containing a key pair of some sort, but turned up with no results. So next, in the Mythic GUI, I went to the configuration settings of my Apollo payload. There, I seemingly found what I was looking for, but when using the “key” in Wireshark (with the help of this video), it didn’t decrypt the files. With all possible options exhausted by this point, I gave up with my search; in a real scenario, this probably wouldn’t be a feasible strategy anyway.
 Having accepted the expectation of dealing with encrypted Wireshark packets, I sought additional internet resources for any information that would let me make sense of them in their encrypted state. I found this video very helpful in that regard; details that I should watch for include:
