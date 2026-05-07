@@ -15,28 +15,32 @@ The next item on the list is a VPN (Virtual Private Network), which will change 
 
 As for how I'm connecting to my test instance, I’m going to do so through my Kali VM from Part 8. The VM will act as another layer of defense should the malware escape the instance via exploiting any network protocol vulnerabilities, adhering to the defense in depth principle. I need NAT selected for bringing internet access to the VM to even establish a connection, which poses a problem since it's still possible for the attacker to discover my host, given how NAT works. In response, I executed least privilege principles on the VM, which included tasks like ensuring shared folders, clipboard sharing, and drag & drop are disabled. In theory, this should minimize the risk of an infection on my host.
 
-As for where I'll run the VPN, I'm running it in Kali, mainly due to the fact that the IP change would mess with my ability to connect to my other instances that are also relevant here (Although in retrospect, I definitely would’ve been able to (and should’ve) run the VPN on my host, provided I change a couple of steps in this part). I followed [this guide](https://protonvpn.com/support/official-linux-vpn-ubuntu?srsltid=AfmBOorByyKOB7STaZCUJXT4OkmLaqIbDaSp6UQ2Tk_7jP7_Of-15W_b) to install ProtonVPN on Kali.
+As for where I'll run the VPN, I'm running it in Kali, mainly due to the fact that the IP change would mess with my ability to connect to my other instances that are also relevant here (Although in hindsight, I definitely would’ve been able to (and should’ve) run the VPN on my host, provided I change a couple of steps in this part). I followed [this guide](https://protonvpn.com/support/official-linux-vpn-ubuntu?srsltid=AfmBOorByyKOB7STaZCUJXT4OkmLaqIbDaSp6UQ2Tk_7jP7_Of-15W_b) to install ProtonVPN on Kali.
 
 ### Playing with Wireshark
-The final item on the list is a network packet capturing tool (packet sniffer), which enables monitoring & viewing of network communications for suspicious activity. Particularly, as mentioned in Part 8, this tool captures the actions executed in a C2 session, making this tool perfect for whatever kind of malware I’m dealing with. Searching the internet for a packet sniffer turns up many different options to choose from, but Wireshark is the most widely recommended, so I went for that.
+The final item on the list is a network packet capturing tool (packet sniffer), which enables monitoring & viewing of network communications for suspicious activity. Particularly, as mentioned in Part 8, this tool can capture the actions executed in a C2 session, making this tool perfect for whatever kind of malware I’m dealing with. Searching the internet for a packet sniffer turns up many different options to choose from, but Wireshark is the most widely recommended, so I went for that.
 
-Having decided upon a packet sniffer, I want to spend some time playing around with the tool first & gain a level of familiarity with the tool to the point that I can start applying it for analyzing the malware’s activity. So, I installed the tool onto my Windows Server instance & set it up to start monitoring network traffic on the instance. Then, I loaded my Mythic setup and ran the following C2 commands:
-whoami
-ifconfig
-download hello-world.txt
+Having decided upon a packet sniffer, I want to spend some time learning how to use the tool first before I can start applying it for the malware analysis. So, I installed the tool onto my RDP Windows server, then loaded up my Mythic setup and ran the following C2 commands:
+- `whoami`
+- `ifconfig`
+- `download hello-world.txt`
+![](/screenshots/315.png)
 
-After running the commands, I checked out how the activity came out in Wireshark. As mentioned in the Day 28 video, any C2 traffic such as the one just now would be captured in the network layer via Wireshark. However, what Steven also mentions in the same video is that the captured C2 traffic would be encrypted, asides a few exceptions. True to his word, when following the TCP stream, much of the activity captured came out encrypted, unfortunately:
+After running the commands, I checked Wireshark to see how the activity came out. As MyDFIR mentioned in the Day 28 video, any C2 activity such as the one just now would be captured by Wireshark. However, Steven also mentioned that any captured network communications, including C2 traffic, would be encrypted, asides a few exceptions. Sure enough, when following the TCP stream of my packet capture, much of the activity captured came out encrypted, unfortunately:
+![](/screenshots/316.png)
+![](/screenshots/317.png)
+![](/screenshots/318.png)
+![](/screenshots/319.png)
+![](/screenshots/320.png)
 
+Despite the predicament, I still attempted to make out as much as I could, using the results from the commands as a baseline. For instance, I took note of the following data binary:
+![](/screenshots/321.png)
 
+Looking at the timestamp on the server (Mythic instance) stream at the top, the client (Windows server) streamed the data binary (indicated by the POST request) to the server around 8\:40\:55 AM GMT time, or UTC time, the same time I ran the `ifconfig` command in Mythic:
+![](/screenshots/322.png)
+- Note that the timezone for my Mythic instance is 4 hours behind Wireshark.
 
-
-
-In spite of that, I still attempted to make out as much as I could. For instance, I took note of the following data binary:
-
-When looking at the timestamp on the server (Mythic instance) stream (in blue) directly above, this large data binary was sent (indicated via the POST request on the client stream in red) around 8:40:55 AM GMT, or UTC time, the same time I ran the ifconfig command in Mythic:
-
-(Note that the timezone for my Mythic instance is 4 hours behind the Wireshark installation)
-If I excluded the ifconfig context, I would’ve assumed that this large data binary is indicative of data exfiltration on the surface. But even with this context, these Wireshark packets at the very least provide hard confirmation of C2 activity, given the POST request made by the Windows client and the specified host IP address not that of the Windows instance; the following TCP stream captures a typical connection check in process from Apollo:
+If I excluded the `ifconfig` context, I would’ve assumed that this large data binary is indicative of data exfiltration on the surface, which alone is an IoC for C2 activity. But even with this context, these Wireshark packets at the very least provide hard confirmation of C2 activity, given the POST request made by the Windows client and the specified host IP address not that of the Windows instance; the following TCP stream captures a typical connection check in process from Apollo:
 
 While exploring more of the packet capture, I actually found the following unencrypted packet:
 
