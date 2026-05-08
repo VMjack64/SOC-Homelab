@@ -52,18 +52,17 @@ But when I checked the packet’s assemblies, they were encrypted as well:
 ![](/screenshots/325.png)
 
 With all these encrypted packets flowing in, a question immediately comes to mind: Is there any way I can decrypt them for inspection? Based on information I found on the internet, performing this task necessitates me acquiring a decryption key for Apollo. To hunt for this key, I tried searching the internet for any publicly leaked keys; the idea was based off [an article](https://isc.sans.edu/diary/27968) I stumbled upon where such a key was used to decrypt Cobalt Strike traffic. Then, based on what I've read from the [Mythic check in documentation](https://docs.mythic-c2.net/customizing/payload-type-development/create_tasking/agent-side-coding/initial-checkin), I opened up the Mythic instance's PowerShell session and ran commands searching the system files for anything containing a key of some sort. I thought that I could find the decryption key within the system files, but unfortunately no results turned up. So next, I went to the configuration settings of my Apollo payload. There, I seemingly found what I was looking for, but when I tried using the key in Wireshark, it didn’t decrypt the files. At this point, I gave up with my search.
-- In retrospect, I was kind of a fool here. I should've been looking into the C2 profile for this key, instead of the config settings for the payload.
+- In retrospect, I was kind of a fool here. I should've been looking into the C2 profile for this key, not the config settings of the payload.
 
-Having failed in my goal to decrypt the Wireshark packets, I sought additional internet resources for any information that would let me make sense of them in their encrypted state. I found this video very helpful in that regard; details that I should watch for include:
-Examining locations and/or IP addresses within the context of a business (Is there a server at the location that the business is supposed to communicate with? Is the IP address known to the organization? Is the IP address a known malicious server?)
-Suspicious naming conventions (ex: A server named cowboy)
-On older TLS versions, grabbing the JA3 hash and running a search on it
-Looking at unencrypted HTTP traffic
-Additionally, going back to the decryption keys, these can also come in the form of session keys, as described in the “Decrypt HTTPS traffic with Wireshark” video two links above. By following along with the video, I successfully decrypted the packets of a Wireshark homepage packet capture that I had done:
- 
-The original packet:
+Having failed in my goal to decrypt the Wireshark packets, I sought additional internet resources for any information that would let me make sense of them in their encrypted state. I got some good pointers from [this video](https://www.youtube.com/watch?v=ObUgYDn1zZ0). According to it, details that I should watch for include:
+- Examining locations and/or IP addresses within the context of a business (is there a server at the location that the business is supposed to communicate with? Is the IP address known to the organization? Is the IP address a known malicious server?)
+- Suspicious naming conventions (ex: A server named `cowboy`)
+- On older TLS versions, grabbing the JA3 hash and running a search on it
+- Looking at unencrypted HTTP traffic
 
-Setup Process
+Going back to the decryption keys, I found out there's another key I could've used: A captured session key, as shown in [this video](https://www.youtube.com/watch?v=5qecyZHL-GU). I tried this out for myself, and successfully decrypted the packets of a Wireshark homepage packet capture I had done. Unfortunately, I discovered this technique too late; I didn't enable session capturing when I did the packet capture for Mythic (nor did I had the foresight to enable it for the malware capture later on).
+
+## Setup Process
 Having spent some time playing around with Wireshark, I’ve gotten to the point where I’ve developed an understanding of the tool’s fundamentals. With that, I’m finally ready to start tackling this challenge. Since I’ll be dealing with live malware here, I want to create a separate subnet for the infected instance, adhering to the concepts of network segmentation from Part 4. As such, I adjusted my diagram, mapping the new addition:
 
 With everything planned out, I proceeded to create the subnet “infected-subnet”:
