@@ -60,36 +60,40 @@ Having failed in my goal to decrypt the Wireshark packets, I sought additional i
 - On older TLS versions, grabbing the JA3 hash and running a search on it
 - Looking at unencrypted HTTP traffic
 
-Going back to the decryption keys, I found out there's another key I could've used: A captured session key, as shown in [this video](https://www.youtube.com/watch?v=5qecyZHL-GU). I tried this out for myself, and successfully decrypted the packets of a Wireshark homepage packet capture I had done. Unfortunately, I discovered this technique too late; I didn't enable session capturing when I did the packet capture for Mythic (nor did I had the foresight to enable it for the malware capture later on).
+Going back to the decryption keys, I found out there's another key I could've used: A captured session key, as shown in [this video](https://www.youtube.com/watch?v=5qecyZHL-GU). I tried this out for myself, and successfully decrypted the packets of a Wireshark homepage packet capture I had done. Unfortunately, I discovered this technique too late; I didn't enable session capturing when I did the packet capture for Mythic (nor did I have the foresight to enable it for the malware capture later on).
 
 ## Setup Process
-Having spent some time playing around with Wireshark, I’ve gotten to the point where I’ve developed an understanding of the tool’s fundamentals. With that, I’m finally ready to start tackling this challenge. Since I’ll be dealing with live malware here, I want to create a separate subnet for the infected instance, adhering to the concepts of network segmentation from Part 4. As such, I adjusted my diagram, mapping the new addition:
+After spending my time becoming familiar with Wireshark, I felt ready enough to begin this challenge. Since I’ll be dealing with live malware here, I want to create a separate subnet for the infected instance, adhering to the concepts of network segmentation. As such, I adjusted my diagram, mapping out the new addition:
+![](/screenshots/326.png)
 
-With everything planned out, I proceeded to create the subnet “infected-subnet”:
+With everything planned out, I proceeded to create the subnet `infected-subnet`:
+![](/screenshots/327.png)
+![](/screenshots/328.png)
+![](/screenshots/329.png)
 
+Along with its corresponding NACL, `infected-acl`:
+![](/screenshots/330.png)
+![](/screenshots/331.png)
+![](/screenshots/332.png)
+![](/screenshots/333.png)
 
+Now that the subnet is set up, I constructed the instance for it, providing the following specs:
+- Name: Infected-Server
+- AMI: Windows, Microsoft Windows Server 2022 Base
+  - Architecture: 64-bit (x86)
+- Instance type: c7i-flex.large. Since I’m infecting this instance with malware, having high specs would probably ensure consistent performance.
+- Key pair: RSA type, .pem format
+- Network settings:
+  - VPC: MYDFIR-30Day-SOC-Challenge
+  - Subnet: infected-subnet
+  - Auto-assign public IP: Enabled
+  - Firewall (security groups): Create security group, with the following settings:
+    ![](/screenshots/334.png)
+    ![](/screenshots/335.png)
+- Configure storage: 1 volume only:
+  - Text box: 30 GiB
+  - Dropdown box: Left as whatever option is selected
 
-Along with its corresponding NACL, “infected-acl”:
-
-
-
-
-Once the subnet is all set up, I went and created its instance, with the following specs:
-Name: Infected-Server
-AMI: Windows, Microsoft Windows Server 2022 Base
-Architecture: 64-bit (x86)
-Instance type: c7i-flex.large. Since I’m infecting this instance with malware, having high specs would probably ensure consistent performance.
-Key pair: RSA type, .pem format
-Network settings:
-VPC: MYDFIR-30Day-SOC-Challenge
-Subnet: infected-subnet
-Auto-assign public IP: Enabled
-Firewall (security groups): Create security group, with the following settings:
-
-
-Configure storage: 1 volume only:
-Text box: 30 GiB
-Dropdown box: Leave as whatever option is selected.
 Once the instance was created, I connected to it, then proceeded to install the Splunk forwarder, Sysmon, and Wireshark onto it. For the forwarder setup process, I decided to have the logs forwarded to the same index as my RDP Windows Server, as a way of learning how to manage multiple machines using the same index. To differentiate the instances, I gave the test instance the name “Compromised Windows Server 2022”.
 With the instance all primed up, I wanted to create a backup for my test instance, as well as for Kali. While I was able to make one for the latter, the former turned out to be essentially impossible on AWS’s free tier. Based on what I’ve read about AWS backups, the best option for my situation was to create snapshots of my storage volume. However, there’s a catch:
 
