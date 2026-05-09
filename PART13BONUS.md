@@ -77,7 +77,7 @@ Along with its corresponding NACL, `infected-acl`:
 ![](/screenshots/332.png)
 ![](/screenshots/333.png)
 
-Now that the subnet is set up, I constructed the instance for it, providing the following specs:
+Now that the subnet is set up, I constructed the test instance, providing the following specs:
 - Name: Infected-Server
 - AMI: Windows, Microsoft Windows Server 2022 Base
   - Architecture: 64-bit (x86)
@@ -94,18 +94,23 @@ Now that the subnet is set up, I constructed the instance for it, providing the 
   - Text box: 30 GiB
   - Dropdown box: Left as whatever option is selected
 
-Once the instance was created, I connected to it, then proceeded to install the Splunk forwarder, Sysmon, and Wireshark onto it. For the forwarder setup process, I decided to have the logs forwarded to the same index as my RDP Windows Server, as a way of learning how to manage multiple machines using the same index. To differentiate the instances, I gave the test instance the name “Compromised Windows Server 2022”.
-With the instance all primed up, I wanted to create a backup for my test instance, as well as for Kali. While I was able to make one for the latter, the former turned out to be essentially impossible on AWS’s free tier. Based on what I’ve read about AWS backups, the best option for my situation was to create snapshots of my storage volume. However, there’s a catch:
+After creating the instance and remote connecting to it, I proceeded to install the Splunk forwarder, Sysmon, and Wireshark onto it. For the forwarder, I decided to have the events forwarded to the same index as my RDP Windows server (`windows-server-events`), as a way of learning how to manage multiple machines in the same index. To differentiate the instances, the hostname that I've given the test instance is **Compromised Windows Server 2022**.
 
-The 1 GB limit makes snapshots unfeasible for me; the tools that I’ve installed as well as the system files will very likely cause my snapshots to exceed this cap. So, I’ll have to run this malware with no fallback measures in place. Before running it, I made sure the following are active:
-The MYDFIR-Splunk instance for log forwarding
-VPN is active in Kali
-A Wireshark packet capture session in the test instance, with the capture filter not (tcp port 3389) or (net (<kali vpn ip> or 172.20.0.30)) to exclude RDP packets as well as Splunk & Kali packets from the packet capture
-To determine the public IP in Kali, I ran the following command in the command line: curl -4/-6 icanhazip.com.
-Turn off Windows Defender in the test instance
-Shared clipboard, drag & drop, and shared folders are disabled in Kali
-Running the Malware
-Once I’ve verified that all of the components above are set up as described, it was now time to bring in the malware. Before this challenge, I received a spam text message with a link attached, which I thought would be the perfect candidate for this. But entering that link in the test instance directed me to a car dealer website, making the link not viable for this challenge. In my search for other malware samples, I had the idea of checking uBlock Origin’s online malicious URL block list for an influx of candidates to choose from:
+With all the necessary tools set up, I wanted to create a backup for my test instance, as well as for Kali. I managed to make one for the latter, but not for the former; on AWS’s free tier, the best option from what I've read was to create snapshots of my storage volume. However, there’s a catch:
+![](/screenshots/336.png)
+
+Given the tools that I’ve installed onto the instance, as well as the system files, those would very likely cause the snapshots to exceed the 1 GB limit, making this option unfeasible for me. With no other viable substitutes, I'm forced to run this malware with no fallback measures in place.
+
+With only one shot to run the malware, I made sure the following are in place before proceeding:
+- MYDFIR-Splunk is up & running for log forwarding
+- VPN is active in Kali
+- An active Wireshark packet capture session in the test instance, with the capture filter `not (tcp port 3389) or (net (<kali_vpn_ip> or 172.20.0.30))` to exclude RDP packets, as well as Splunk & Kali packets, from being captured
+  - To determine the public IP in Kali, I ran the command `curl -4/-6 icanhazip.com`
+- Windows Defender is turned off in the test instance
+- Shared clipboard, drag & drop, and shared folders are disabled for the Kali VM
+
+## Running the Malware
+Once I’ve verified that all of the components above are set up as described, it was now time to bring in the malware. Initially, I was going to use a spam text message I received that had a link attached, But entering that link in the test instance directed me to a car dealer website, making the link not viable for this challenge. In my search for other malware samples, I had the idea of checking uBlock Origin’s online malicious URL block list for an influx of candidates to choose from:
 
 Skimming through the list, I ended up settling with this one:
 
@@ -113,7 +118,8 @@ Entering the link into the test instance, an executable named view.exe was downl
 
 
 As shown above, there were some suspicious executables and files that hadn’t been there beforehand. Keeping these files in mind, I went to the directory with the Apollo binary, ran it, then in the Mythic GUI in Kali (with the VPN still active), I ran the download command on the pcap file. With the file downloaded into the Mythic instance, I navigated to “Search Files” in Mythic and clicked on the pcap file path to extract them into Kali.
-Analyzing the Malware’s Activity
+
+## Analyzing the Malware’s Activity
 With a copy of the pcap file successfully saved into Kali, I set it aside temporarily while I opened up Splunk on my actual host to begin analyzing the Splunk logs, initiating the analysis phase. In the Sysmon index, I started off the intel gathering process by searching for event ID 15 (FileCreateStreamHash), which generally occurs via downloads from the web browser, a noteworthy spot for finding suspicious software:
 
 Using the file path, I ran another search that returns all events containing event ID 1 & where the process path is the aforementioned file path:
