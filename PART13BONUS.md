@@ -94,7 +94,7 @@ Now that the subnet is set up, I constructed the test instance, providing the fo
   - Text box: 30 GiB
   - Dropdown box: Left as whatever option is selected
 
-After creating the instance and remote connecting to it, I proceeded to install the Splunk forwarder, Sysmon, and Wireshark onto it. For the forwarder, I decided to have the events forwarded to the same index as my RDP Windows server (`windows-server-events`), as a way of learning how to manage multiple machines in the same index. To differentiate the instances, the hostname that I've given the test instance is **Compromised Windows Server 2022**.
+Afterwards, I connected to the instance through Kali w/ VPN enabled, then proceeded to install the Splunk forwarder, Sysmon, and Wireshark onto the instance. For the forwarder, I decided to have the events forwarded to the same index as my RDP Windows server (`windows-server-events`), as a way of learning how to manage multiple machines in the same index. To differentiate the instances, the hostname that I've given the test instance is **Compromised Windows Server 2022**.
 
 With all the necessary tools set up, I wanted to create a backup for my test instance, as well as for Kali. I managed to make one for the latter, but not for the former; on AWS’s free tier, the best option from what I've read was to create snapshots of my storage volume. However, there’s a catch:
 ![](/screenshots/336.png)
@@ -108,24 +108,26 @@ With only one shot to run the malware, I made sure the following are in place be
   - To determine the public IP in Kali, I ran the command `curl -4/-6 icanhazip.com`
 - Windows Defender is turned off in the test instance
 - Shared clipboard, drag & drop, and shared folders are disabled for the Kali VM
+- Remote connected to the test instance through Kali
 
 ## Running the Malware
 > [!CAUTION]
-> All the sites listed in this section are considered malicious. If planning to analyze any of these sites, do so within a test environment, configured to be completely isolated from the host machine (in other words, all potential links between the test environment and the host are blocked) in order to ensure no infection of the host occurs.
+> All the sites listed in this section are considered malicious. If planning to analyze any of these sites, do so within a test environment, configured to be completely isolated from other machines within the network (in other words, all potential links between the test environment and the machines are severed) in order to ensure the infection doesn't spread.
 
 After getting everything set up accordingly, it was time to bring in the malware. My first candidate for this was a link from a spam text message I received, but going to that link in the test instance directed me to a car dealer website with nothing interesting. Then, in my search for potential malware samples, I had the idea of checking uBlock Origin’s online malicious URL block list:
 ![](/screenshots/337.png)
 
-Skimming through the list of candidates, I settled upon this one:
+Skimming through the list of candidates, I settled upon the one highlighted:
 ![](/screenshots/338.png)
 
-Entering the link into the test instance, an executable named view.exe was downloaded. After running the executable, I noticed a couple of surface-level activities. First off, a couple of applications were automatically downloaded and configured to run upon logging into the instance; one of those is AnyDesk, a remote desktop software. Seeing this, my first response was to disconnect from the test instance, since I thought that my remote connection would probably prevent the attacker from connecting through the software. After waiting a few hours, I reconnected to the instance, then stopped the packet capture, having felt that I captured all the necessary data. After saving the capture as a pcap file, I now needed a way to extract the pcap into my local systems without any drag & dropping involved, as to ensure the malware doesn’t spread onto my actual host. To pull this off, I got the idea of utilizing my Mythic setup. With “infected-acl” allowing outbound traffic to the Mythic instance, I booted up the Mythic instance and downloaded the binary onto the infected test instance. While navigating to the directory with the binary, I found another surface-level activity involving the malware, this time in the Public directory:
+Right away, when going to the link, an executable named `view.exe` was downloaded. Running the executable in the test instance, I noticed a few suspicious surface-level activities. First, a couple of applications were automatically downloaded and configured to auto-start upon logging in; one of those is AnyDesk, a remote desktop software. Seeing this app, I disconnected from the instance, thinking my remote session would prevent the attacker from being able to connect via the software. After waiting a few hours to let the malware run its course, I reconnected to the instance, then stopped the packet capture, having felt that I captured all the data I need. Saving the capture as a `.pcap` file, I now needed a way to extract it into Kali without doing any drag & dropping, as to ensure I don't bring the malware to Kali in the process. I was able to pull this off by utilizing Mythic. With `infected-acl` allowing outbound traffic to the Mythic instance, I booted the instance up and downloaded the Apollo binary onto the infected test instance. Then, while navigating to the directory containing the binary, I stumbled upon another surface-level activity involving the `view.exe` executable, this time in the Public directory:
+![](/screenshots/339.png)
+![](/screenshots/340.png)
 
-
-As shown above, there were some suspicious executables and files that hadn’t been there beforehand. Keeping these files in mind, I went to the directory with the Apollo binary, ran it, then in the Mythic GUI in Kali (with the VPN still active), I ran the download command on the pcap file. With the file downloaded into the Mythic instance, I navigated to “Search Files” in Mythic and clicked on the pcap file path to extract them into Kali.
+Here, some unusual executables and files popped up in the directory. I made a mental note of these files, as I continued on to the directory with the Apollo binary, ran it, then with the Mythic GUI open in Kali (while the VPN is still active), I ran the `download` command, targeting the pcap file. Once the file is successfully downloaded, I navigated to “Search Files” in Mythic and clicked on the pcap file path to extract into Kali.
 
 ## Analyzing the Malware’s Activity
-With a copy of the pcap file successfully saved into Kali, I set it aside temporarily while I opened up Splunk on my actual host to begin analyzing the Splunk logs, initiating the analysis phase. In the Sysmon index, I started off the intel gathering process by searching for event ID 15 (FileCreateStreamHash), which generally occurs via downloads from the web browser, a noteworthy spot for finding suspicious software:
+Now that I obtained a copy of the pcap in Kali, I set it aside temporarily while I opened up Splunk on my actual host to begin analyzing the Splunk logs, initiating the analysis phase. In the Sysmon index, I started off the intel gathering process by searching for event ID 15 (FileCreateStreamHash), which generally occurs via downloads from the web browser, a noteworthy spot for finding suspicious software:
 
 Using the file path, I ran another search that returns all events containing event ID 1 & where the process path is the aforementioned file path:
 
