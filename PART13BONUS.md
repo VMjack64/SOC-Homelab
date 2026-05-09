@@ -140,26 +140,31 @@ Through this search, I grabbed the process GUID of the executable to begin corre
 Searching the executable’s process GUID returned 16 events involving the executable:
 ![](/screenshots/344.png)
 
-These events paint the following timeline as to what the executable did (All Splunk times are in UTC):
-12:38:17.951 AM: Executable was executed
-12:38:19 AM: A lot of .txt files were created. All these files were associated with event ID 29, indicating potentially unwanted software that were automatically installed by view.exe. For instance, one of the .txt files that I noticed was AnyDesk.txt, referring to the AnyDesk application that I saw was automatically installed onto the test Windows Server instance earlier The full list are as follows:
+The events paint the following timeline as to what the executable did (All Splunk times are in UTC):
+- 12\:38\:17.951 AM: Executable was executed
+- 12\:38\:19 AM: A lot of `.txt` files were created. All of these files were associated with event ID 29, indicating potentially unwanted software that was automatically installed by the executable. For instance, one of the files I noticed was `AnyDesk.txt`, referring to the AnyDesk application that I spotted earlier. The full list are as follows:
+![](/screenshots/345.png)
+- 12\:38\:19.265 AM: A batch script file, `C:\Users\ADMINI~1\AppData\Local\Temp\2\Start.cmd`, was created. This file was executed almost immediately, on 12\:38\:19.648 AM, by `C:\Windows\SysWOW64\cmd.exe`. Looking up on SysWOW64, I learned that this folder enables 32-bit applications used by `view.exe` to run on 64-bit hardware.
+- 12\:38\:19.474 AM: A suspicious dll, `C:\Windows\SysWOW64\urlmon.dll`, was loaded by the executable
+- 12\:38\:19.654 AM: Executable was terminated
 
-12:38:19.265 AM: A batch script file, C:\Users\ADMINI~1\AppData\Local\Temp\2\Start.cmd, was created. This file was executed almost immediately, on 12:38:19.648 AM, by another batch script file, C:\Windows\SysWOW64\cmd.exe. Looking up SysWOW64, it’s revealed that this folder enables 32-bit applications used by view.exe to run on 64-bit hardware.
-12:38:19.474 AM: A suspicious dll, C:\Windows\SysWOW64\urlmon.dll, was loaded by the executable
-12:38:19.654 AM: Executable was terminated
-The GUID trail ran cold at this point, but I wanted to do one more thing before moving on. I recalled in the Day 28 video that MyDFIR searched up the process ID of the Apollo executable in an attempt to find more leads. I tried the same thing with the executable, and actually got an additional lead that I could work with:
+The GUID trail ran cold at this point, but I did one more thing before moving on. I recalled from the Day 28 video that MyDFIR searched up the process ID of the Apollo executable in an attempt to find more leads. I tried the same thing with the executable, and actually got an additional lead that I could work with:
+![](/screenshots/346.png)
+![](/screenshots/347.png)
+![](/screenshots/348.png)
+![](/screenshots/349.png)
+![](/screenshots/350.png)
+![](/screenshots/351.png)
 
+The execution of an attribute removal process on `L2cache`, a critical system processor (according to the top sources on the internet), from the `Downloads` directory makes this event suspicious. Furthermore, the system, hidden, and read-only attributes were targeted in the removal. The `parent_process` field unveils another batch script to correlate, `Start3.cmd`. I put this information aside while I began tracing the activities of `Start.cmd`.
 
-
-
-
-
-The execution of an attribute removal process on L2cache, a critical system processor (from what the top sources on the internet say), in the Downloads directory makes this suspicious. The “parent_process” field unveils another batch script being used, Start3.cmd. I put this information aside while I began tracing the activities of the Start.cmd batch script that was created.
-Grabbing the process GUID of C:\Users\ADMINI~1\AppData\Local\Temp\2\Start.cmd, then running it in a search, 4 events were yielded:
+### Start.cmd Events
+Searching the process GUID of `C:\Users\ADMINI~1\AppData\Local\Temp\2\Start.cmd` yielded 4 events:
+![](/screenshots/352.png)
 
 Excluding the process creation event, the following occurred with this batch script:
-Two registry value set events (event ID 13) targeting HKLM\System\CurrentControlSet\Services\bam\State\UserSettings\S-1-5-21-490752419-3154468780-1763789047-500\\Device\HarddiskVolume1\Windows\SysWOW64\cmd.exe. Unfortunately, the value was encoded, so I can’t determine what exactly happened, but after a bit of Googling on Windows registries as well as the fact that the registry involved relates to the batch script C:\Windows\SysWOW64\cmd.exe, it’s safe to assume that malware persistence is being established here.
-Another batch script, C:\Users\ADMINI~1\AppData\Local\Temp\2\Start.cmd, was spawned. However, this script has a different process GUID compared to the previous Start.cmd script:
+- Two registry value set events (event ID 13) targeting `HKLM\System\CurrentControlSet\Services\bam\State\UserSettings\S-1-5-21-490752419-3154468780-1763789047-500\\Device\HarddiskVolume1\Windows\SysWOW64\cmd.exe`. Unfortunately, the value was encoded, so I can’t determine what exactly happened, but after a bit of Googling on Windows registries as well as synthesizing the fact that the registry involved relates to the batch script `C:\Windows\SysWOW64\cmd.exe`, it’s safe to assume that malware persistence is being established here.
+- Another batch script, `C:\Users\ADMINI~1\AppData\Local\Temp\2\Start.cmd`, was spawned. However, this script has a different process GUID compared to the previous `Start.cmd` script:
 
 Searching the process ID of the current Start.cmd script turned up no additional leads, so I began correlating the other Start.cmd script, which had 9 events involved:
 
