@@ -110,9 +110,14 @@ With only one shot to run the malware, I made sure the following are in place be
 - Shared clipboard, drag & drop, and shared folders are disabled for the Kali VM
 
 ## Running the Malware
-Once I’ve verified that all of the components above are set up as described, it was now time to bring in the malware. Initially, I was going to use a spam text message I received that had a link attached, But entering that link in the test instance directed me to a car dealer website, making the link not viable for this challenge. In my search for other malware samples, I had the idea of checking uBlock Origin’s online malicious URL block list for an influx of candidates to choose from:
+> [!CAUTION]
+> All the sites listed in this section are considered malicious. If planning to analyze any of these sites, do so within a test environment, configured to be completely isolated from the host machine (in other words, all potential links between the test environment and the host are blocked) in order to ensure no infection of the host occurs.
 
-Skimming through the list, I ended up settling with this one:
+After getting everything set up accordingly, it was time to bring in the malware. My first candidate for this was a link from a spam text message I received, but going to that link in the test instance directed me to a car dealer website with nothing interesting. Then, in my search for potential malware samples, I had the idea of checking uBlock Origin’s online malicious URL block list:
+![](/screenshots/337.png)
+
+Skimming through the list of candidates, I settled upon this one:
+![](/screenshots/338.png)
 
 Entering the link into the test instance, an executable named view.exe was downloaded. After running the executable, I noticed a couple of surface-level activities. First off, a couple of applications were automatically downloaded and configured to run upon logging into the instance; one of those is AnyDesk, a remote desktop software. Seeing this, my first response was to disconnect from the test instance, since I thought that my remote connection would probably prevent the attacker from connecting through the software. After waiting a few hours, I reconnected to the instance, then stopped the packet capture, having felt that I captured all the necessary data. After saving the capture as a pcap file, I now needed a way to extract the pcap into my local systems without any drag & dropping involved, as to ensure the malware doesn’t spread onto my actual host. To pull this off, I got the idea of utilizing my Mythic setup. With “infected-acl” allowing outbound traffic to the Mythic instance, I booted up the Mythic instance and downloaded the binary onto the infected test instance. While navigating to the directory with the binary, I found another surface-level activity involving the malware, this time in the Public directory:
 
