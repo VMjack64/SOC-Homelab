@@ -148,7 +148,7 @@ The events paint the following timeline as to what the executable did (All Splun
 - 12\:38\:19.474 AM: A suspicious dll, `C:\Windows\SysWOW64\urlmon.dll`, was loaded by the executable
 - 12\:38\:19.654 AM: Executable was terminated
 
-The GUID trail ran cold at this point, but I did one more thing before moving on. I recalled from the Day 28 video that MyDFIR searched up the process ID of the Apollo executable in an attempt to find more leads. I tried the same thing with the executable, and actually got an additional lead that I could work with:
+The GUID trail ran cold at this point, but I did one more thing before moving on. I recalled from the Day 28 video that MyDFIR searched up the process ID of the Apollo executable in an attempt to find more leads. I tried the same strategy with the executable, and actually got an additional lead that I could work with:
 ![](/screenshots/346.png)
 ![](/screenshots/347.png)
 ![](/screenshots/348.png)
@@ -156,19 +156,21 @@ The GUID trail ran cold at this point, but I did one more thing before moving on
 ![](/screenshots/350.png)
 ![](/screenshots/351.png)
 
-The execution of an attribute removal process on `L2cache`, a critical system processor (according to the top sources on the internet), from the `Downloads` directory makes this event suspicious. Furthermore, the system, hidden, and read-only attributes were targeted in the removal. The `parent_process` field unveils another batch script to correlate, `Start3.cmd`. I put this information aside while I began tracing the activities of `Start.cmd`.
+The execution of an attribute removal process on `L2cache`, a critical system processor (according to the top sources on the internet), from the `Downloads` directory makes this event suspicious. Furthermore, the system, hidden, and read-only attributes were targeted in the removal. The `parent_process` field unveils another batch script, `Start3.cmd`, for future correlation. In the meantime, I began tracing the activities of `Start.cmd`.
 
 ### Start.cmd Events
 Searching the process GUID of `C:\Users\ADMINI~1\AppData\Local\Temp\2\Start.cmd` yielded 4 events:
 ![](/screenshots/352.png)
 
 Excluding the process creation event, the following occurred with this batch script:
-- Two registry value set events (event ID 13) targeting `HKLM\System\CurrentControlSet\Services\bam\State\UserSettings\S-1-5-21-490752419-3154468780-1763789047-500\\Device\HarddiskVolume1\Windows\SysWOW64\cmd.exe`. Unfortunately, the value was encoded, so I can’t determine what exactly happened, but after a bit of Googling on Windows registries as well as synthesizing the fact that the registry involved relates to the batch script `C:\Windows\SysWOW64\cmd.exe`, it’s safe to assume that malware persistence is being established here.
-- Another batch script, `C:\Users\ADMINI~1\AppData\Local\Temp\2\Start.cmd`, was spawned. However, this script has a different process GUID compared to the previous `Start.cmd` script:
+- Two registry value set events (event ID 13) targeting `HKLM\System\CurrentControlSet\Services\bam\State\UserSettings\S-1-5-21-490752419-3154468780-1763789047-500\\Device\HarddiskVolume1\Windows\SysWOW64\cmd.exe`. The value was encoded, rendering it impossible to determine what exactly happened. However, given the context on event ID 13 [here](https://www.gravwell.io/blog/whats-in-a-sysmon-event-windows-registry-eventids-12-13-14) and the fact that the target registry involves `C:\Windows\SysWOW64\cmd.exe`, I can only assume that malware persistence is being established here.
+- Another batch script, `C:\Users\ADMINI~1\AppData\Local\Temp\2\Start.cmd`, was spawned. This script has a different process GUID compared to the previous `Start.cmd` script:
+![](/screenshots/353.png)
 
+### Start.cmd #2 Events
 Searching the process ID of the current Start.cmd script turned up no additional leads, so I began correlating the other Start.cmd script, which had 9 events involved:
 
-This script performed the following:
+Event timeline:
 12:38:19.872 AM: A Windows script (wscript) named C:\Users\Public\testvb1.vbs was created. This script was executed almost immediately at 12:38:19.885 AM.
 12:38:19.889 AM: Another batch script, a variant named C:\Users\Administrator\AppData\Local\Temp\2\Start2.cmd, was created. At the same time, the command C:\Windows\system32\cmd.exe /c type "C:\Users\ADMINI~1\AppData\Local\Temp\2\Start.cmd" was executed, where type displays the contents of Start.cmd. Furthermore, a registry set event occurred at the same time, targeting the Start.cmd script.
 12:38:20.196 AM: The Start2.cmd script was executed via PowerShell, through the command C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -Command "Start-Process 'C:\Users\Administrator\AppData\Local\Temp\2\Start2.cmd' -windowstyle hidden". The hidden option keeps the process window hidden while activated.
