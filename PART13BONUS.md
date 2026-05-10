@@ -252,7 +252,7 @@ Notable events:
 As I continued correlating batch scripts, I found myself encountering even more scripts to correlate. By this point, I was growing fatigued and uncertain on how long this chain will go before the interesting stuff finally shows up. So, I changed my approach - I stopped correlating the scripts through process GUIDs, and instead ran a query that shows a table of all the event codes involved after the time the malware was ran:
 ![](/screenshots/367.png)
 
-From here, I began searching through the event codes that are likely to indicate the presence of malware. I’ve filtered out destination port 3389 (RDP) as I’ve looked into it and found no successful attempts from any outside entity.
+From here, I began searching through the event codes that are likely to indicate the presence of malware. I’ve filtered out destination port 3389 (RDP) as I looked into it and found no successful attempts from any outside entity.
 
 starting from bottom to top, or least # of events to highest, for the sake of manageability:
 
