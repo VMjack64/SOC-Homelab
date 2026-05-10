@@ -213,35 +213,41 @@ Having hit a dead end with `testvb1.vbs`, `Start2.cmd` was next:
 
 - 12\:38\:21.947 AM: The `C:\Users\ADMINI~1\AppData\Local\Temp\2\Start.cmd` script was removed by this one. Then almost immediately, another batch script, `C:\Users\Administrator\AppData\Local\Temp\2\NhStart3.cmd`, was created at 12\:38\:21.950 AM.
 - 12\:38\:22.219 AM: The registry command `C:\Windows\System32\reg.exe query "HKLM\Software\Microsoft\Windows\CurrentVersion\Policies\System" /v "ConsentPromptBehaviorAdmin"` was ran, where `query` displays a list of subkeys and name values under the `HKLM\Software\Microsoft\Windows\CurrentVersion\Policies\System` key, with `/v` telling the command to display the value of the name value `ConsentPromptBehaviorAdmin` specifically.
-- 12\:38\:22.251 AM: Another registry query command was ran, targeting `HKCU\Software\Microsoft\Windows`. Reconnaissance was the first thing that came to mind when seeing these query operations; the attacker is likely trying to change the privileges and configurations of the computer and current user in order to allow the malware to run at its fullest potential.
-- 12\:38\:22.263 AM: Another batch script file, `C:\Users\Administrator\AppData\Local\Temp\2\uac.cmd`, was created & ran with the window hidden. I had a hunch to look up the filename, and found that UAC stands for User Account Control, which means this file was likely designed for modifying user permissions to enable further elevated privileges for the malware, coinciding with the previous point about reconnaissance.
+- 12\:38\:22.251 AM: Another registry query command was ran, this time targeting `HKCU\Software\Microsoft\Windows`. Reconnaissance was the first thing that came to mind when seeing these query operations; the attacker is likely trying to change the privileges and configurations of the computer & current user in order to allow the malware to run at its fullest potential.
+- 12\:38\:22.263 AM: Another batch script file, `C:\Users\Administrator\AppData\Local\Temp\2\uac.cmd`, was created and ran with the window hidden. Given the filename, I had a hunch to look it up on the internet. According to the top sources, UAC stands for User Account Control, indicating that this file was likely designed for modifying user permissions to enable further elevated privileges for the malware, coinciding with the previous point about reconnaissance.
 - 12\:38\:22.614 AM: Ping to 192.168.1.1 detected
-- 12\:38\:36.324 AM: C:\Windows\System32\reg.exe query "HKLM\Software\Microsoft\Windows\CurrentVersion\Policies\System" /v "ConsentPromptBehaviorAdmin" command repeated
-- 12\:38\:36.351 AM: A new Start.cmd variant, Start3.cmd, was created
-- 12\:38\:36.353 AM: The PowerShell command C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -Command "&amp; {Get-Content -Path "'C:\Users\Administrator\AppData\Local\Temp\2\NhStart3.cmd'" | Out-File -FilePath "'C:\Users\Administrator\AppData\Local\Temp\2\Start3.cmd'" -Encoding ascii}" -Wait was ran. Essentially, this command copies the data of the NhStart3.cmd script into Start3.cmd, with the -Encoding ascii option encoding the data into ASCII during the copy process and the -Wait option keeping the PowerShell process active until the task is completed. Shortly after, NhStart3.cmd was deleted, and Start3.cmd was started as administrator on 12\:38\:36.820 AM.
+- 12\:38\:36.324 AM: `C:\Windows\System32\reg.exe query "HKLM\Software\Microsoft\Windows\CurrentVersion\Policies\System" /v "ConsentPromptBehaviorAdmin"` command was repeated
+- 12\:38\:36.351 AM: A new `Start.cmd` variant, `Start3.cmd`, was created
+- 12\:38\:36.353 AM: The PowerShell command `C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -Command "&amp; {Get-Content -Path "'C:\Users\Administrator\AppData\Local\Temp\2\NhStart3.cmd'" | Out-File -FilePath "'C:\Users\Administrator\AppData\Local\Temp\2\Start3.cmd'" -Encoding ascii}" -Wait` was ran. This command basically copies the data of `NhStart3.cmd` into `Start3.cmd`, with the data encoded into ASCII via `-Encoding ascii` and `-Wait` keeping the PowerShell process active until the task is completed. Shortly after, `NhStart3.cmd` was deleted, and `Start3.cmd` was started as administrator on 12\:38\:36.820 AM.
 
 ### uac.cmd Events
-Searching the process GUID of uac.cmd, 16 events were returned:
+Searching the process GUID of uac.cmd returned 16 events:
+![](/screenshots/364.png)
 
-However, when looking through the events, I realized that a lot of them were ones that I’ve seen before:
-Suspicious DLL System.Management.Automation.ni.dll loaded
-PowerShell script policy C:\Users\Administrator\AppData\Local\Temp\2\__PSScriptPolicyTest_d5dstequ.qk0.ps1 created & deleted shortly afterwards
-PowerShell PipeCreated event
-Another uac.cmd script executed at 12:38:22.569 AM
-C:\Users\Administrator\AppData\Local\Microsoft\Windows\PowerShell\StartupProfileData-NonInteractive modified
-Because of the similarities, I didn’t bother correlating the other uac.cmd script via searching its process GUID; I utilized the process ID strategy again, using the current script’s to find additional events:
+However, I realized that a lot of them were ones that I’ve seen before:
+- Suspicious DLL `System.Management.Automation.ni.dll` loaded
+- PowerShell script `C:\Users\Administrator\AppData\Local\Temp\2\__PSScriptPolicyTest_d5dstequ.qk0.ps1` created & deleted shortly afterwards
+- PowerShell PipeCreated event
+- Another `uac.cmd` script executed at 12\:38\:22.569 AM
+- `C:\Users\Administrator\AppData\Local\Microsoft\Windows\PowerShell\StartupProfileData-NonInteractive` modified
+
+Because of the similarities, instead of correlating the other `uac.cmd` script via process GUID, I returned to the process ID strategy, using that of the current `uac.cmd` script to find additional events:
+![](/screenshots/365.png)
 
 Sure enough, I found a few points of interest from this search:
-12:43:20.923 AM: The following suspicious task was scheduled: C:\Windows\System32\schtasks.exe /create /sc minute /mo 30 /tn "Svtasks" /tr "\"C:\Users\Administrator\AppData\Local\Temp\2\svtasks.cmd\"" /f. The task named Svtasks runs the batch script svtasks.cmd every 30 minutes, ignoring warnings if such a task already exists (/f).
-12:43:21.170 AM: A DLL, C:\Windows\SysWOW64\taskschd.dll, was loaded
-12:45:16.728 AM: Another batch script, C:\Windows\SysWOW64\show.cmd, was executed
+- 12\:43\:20.923 AM: The following suspicious task was scheduled: C:\Windows\System32\schtasks.exe /create /sc minute /mo 30 /tn "Svtasks" /tr "\"C:\Users\Administrator\AppData\Local\Temp\2\svtasks.cmd\"" /f. The task named Svtasks runs the batch script svtasks.cmd every 30 minutes, ignoring warnings if such a task already exists (/f).
+- 12\:43\:21.170 AM: A DLL, C:\Windows\SysWOW64\taskschd.dll, was loaded
+- 12\:45\:16.728 AM: Another batch script, C:\Windows\SysWOW64\show.cmd, was executed
+
+### uac.cmd #2 Events
 When looking into the process ID of the other uac.cmd script executed, I get back the following event count:
 
 Some of the more notable ones include:
 12:38:22.620 AM: PowerShell command executed: "C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe" -Command "Start-Process cmd -ArgumentList '/c "C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe" Set-Itemproperty -Path REGISTRY::HKLM\Software\Microsoft\Windows\CurrentVersion\Policies\System -Name ConsentPromptBehaviorAdmin -Value 0' -Verb RunAs -Wait -windowstyle hidden". This hidden PowerShell session is started as an administrator to set the ConsentPromptBehaviorAdmin registry to 0x00000000, enabling the malware to perform elevated operations without the need for permissions first. The process doesn’t stop until its task is completed. This action essentially confirms the reconnaissance theory mentioned back when the registry was queried.
 12:46:02.769 AM: Ping to 192.168.1.1
 Command ran to list all currently running tasks; process discovery in action or related to the Svtasks task earlier
-A Different Approach
+
+### A Different Approach
 As I continued correlating more batch scripts, I found myself encountering even more batch scripts to correlate. By this point, I was growing fatigued and uncertain on how long this chain will go before I can get to the interesting stuff. So, I switched strategies; I stopped correlating the scripts, and instead ran a table query listing all the event codes involved after the time the malware was ran:
 
 From here, I began searching through the event codes likely to indicate the presence of malware, starting from bottom to top, or least # of events to highest, for the sake of manageability. Additionally, I’ve filtered out destination port 3389 (RDP) since I’ve already looked into it and found no successful attempts from outsiders.
