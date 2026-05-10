@@ -231,13 +231,13 @@ However, I realized that a lot of them were ones that I’ve seen before:
 - Another `uac.cmd` script executed at 12\:38\:22.569 AM
 - `C:\Users\Administrator\AppData\Local\Microsoft\Windows\PowerShell\StartupProfileData-NonInteractive` modified
 
-Because of the similarities, I returned to the process ID strategy, using that of the current `uac.cmd` script to find additional events:
+Because of the similarities, I returned to the process ID strategy, using that of the current `uac.cmd` script to find additional IoCs:
 ![](/screenshots/365.png)
 
-Sure enough, I uncovered some potential IoCs:
-- 12\:43\:20.923 AM: The following suspicious task was scheduled: C:\Windows\System32\schtasks.exe /create /sc minute /mo 30 /tn "Svtasks" /tr "\"C:\Users\Administrator\AppData\Local\Temp\2\svtasks.cmd\"" /f. The task named Svtasks runs the batch script svtasks.cmd every 30 minutes, ignoring warnings if such a task already exists (/f).
-- 12\:43\:21.170 AM: A DLL, C:\Windows\SysWOW64\taskschd.dll, was loaded
-- 12\:45\:16.728 AM: Another batch script, C:\Windows\SysWOW64\show.cmd, was executed
+Sure enough, I uncovered some potential ones:
+- 12\:43\:20.923 AM: The following suspicious task was scheduled: `C:\Windows\System32\schtasks.exe /create /sc minute /mo 30 /tn "Svtasks" /tr "\"C:\Users\Administrator\AppData\Local\Temp\2\svtasks.cmd\"" /f`. The task `Svtasks` runs the batch script `svtasks.cmd` every 30 minutes, ignoring warnings if such a task already exists (`/f`).
+- 12\:43\:21.170 AM: A DLL, `C:\Windows\SysWOW64\taskschd.dll`, was loaded
+- 12\:45\:16.728 AM: Another batch script, `C:\Windows\SysWOW64\show.cmd`, was executed
 
 ### uac.cmd #2 Events
 For the other `uac.cmd` script, I also used its process ID instead of the process GUID:
