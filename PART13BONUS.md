@@ -247,7 +247,7 @@ Some of the more notable ones include:
 12:46:02.769 AM: Ping to 192.168.1.1
 Command ran to list all currently running tasks; process discovery in action or related to the Svtasks task earlier
 
-### A Different Approach
+## A Different Approach
 As I continued correlating more batch scripts, I found myself encountering even more batch scripts to correlate. By this point, I was growing fatigued and uncertain on how long this chain will go before I can get to the interesting stuff. So, I switched strategies; I stopped correlating the scripts, and instead ran a table query listing all the event codes involved after the time the malware was ran:
 
 From here, I began searching through the event codes likely to indicate the presence of malware, starting from bottom to top, or least # of events to highest, for the sake of manageability. Additionally, I’ve filtered out destination port 3389 (RDP) since I’ve already looked into it and found no successful attempts from outsiders.
