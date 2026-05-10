@@ -205,8 +205,10 @@ Having hit a dead end with `testvb1.vbs`, `Start2.cmd` was next:
   
   I wasn't able to find any conclusive information as to whether they could communicate between processes on hosts across different networks. Not that it matters anyway, as when I searched the pipe's name, no event containing event ID 18 (Pipe Connected) came up, meaning the pipe hadn't been used in any capacity.
 - 12\:38\:21.875 AM: A different `Start2.cmd` script was executed
-- 12\:38\:21.882 AM: A FileCreate event occurred, targeting C:\Users\Administrator\AppData\Local\Microsoft\Windows\PowerShell\StartupProfileData-NonInteractive. An action of modified was also specified, indicating additional persistence shenanigans by the malware.
-12:38:46.712 AM: Registry set event targeting Windows Defender’s AllowFastServiceStartup. For this event, I can see the value set, which was 0x00000000, or disabled. In this context, Defender runs with low priority, essentially allowing all components of the malware to activate without Defender getting a chance to take action.
+- 12\:38\:21.882 AM: A FileCreate event occurred, targeting `C:\Users\Administrator\AppData\Local\Microsoft\Windows\PowerShell\StartupProfileData-NonInteractive`. An action of `modified` was also specified in the event, indicating additional persistence shenanigans by the malware.
+- 12\:38\:46.712 AM: Registry set event targeting Windows Defender’s AllowFastServiceStartup. For this event, I can see the value set, which was 0x00000000, or disabled. In this context, Defender runs with low priority, essentially allowing all components of the malware to activate without Defender getting a chance to take action.
+
+### Start2.cmd #2 Events
 Results from searching the process GUID of the second Start2.cmd script:
 
 12:38:21.947 AM: The C:\Users\ADMINI~1\AppData\Local\Temp\2\Start.cmd script was removed by this one. Immediately afterwards, another one, C:\Users\Administrator\AppData\Local\Temp\2\NhStart3.cmd, was created at 12:38:21.950 AM.
