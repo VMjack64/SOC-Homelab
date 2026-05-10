@@ -240,18 +240,23 @@ Sure enough, I uncovered some potential ones:
 - 12\:45\:16.728 AM: Another batch script, `C:\Windows\SysWOW64\show.cmd`, was executed
 
 ### uac.cmd #2 Events
-For the other `uac.cmd` script, I also used its process ID instead of the process GUID:
+For the other `uac.cmd` script, I also used its process ID instead of the process GUID for correlation:
+![](/screenshots/366.png)
 
 Notable events:
-12:38:22.620 AM: PowerShell command executed: "C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe" -Command "Start-Process cmd -ArgumentList '/c "C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe" Set-Itemproperty -Path REGISTRY::HKLM\Software\Microsoft\Windows\CurrentVersion\Policies\System -Name ConsentPromptBehaviorAdmin -Value 0' -Verb RunAs -Wait -windowstyle hidden". This hidden PowerShell session is started as an administrator to set the ConsentPromptBehaviorAdmin registry to 0x00000000, enabling the malware to perform elevated operations without the need for permissions first. The process doesn’t stop until its task is completed. This action essentially confirms the reconnaissance theory mentioned back when the registry was queried.
-12:46:02.769 AM: Ping to 192.168.1.1
-Command ran to list all currently running tasks; process discovery in action or related to the Svtasks task earlier
+- 12\:38\:22.620 AM: PowerShell command executed: `"C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe" -Command "Start-Process cmd -ArgumentList '/c "C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe" Set-Itemproperty -Path REGISTRY::HKLM\Software\Microsoft\Windows\CurrentVersion\Policies\System -Name ConsentPromptBehaviorAdmin -Value 0' -Verb RunAs -Wait -windowstyle hidden"`. This hidden PowerShell session is started as administrator to disable the `ConsentPromptBehaviorAdmin` registry. This enables the malware to perform elevated operations without needing to seek permissions first, confirming my reconnaissance theory. The process doesn’t stop until its task is completed.
+- 12\:46\:02.769 AM: Ping to 192.168.1.1
+- Command ran to list all currently running tasks. Either process discovery in action or for verification that the `Svtasks` task exists.
 
 ## A Different Approach
-As I continued correlating more batch scripts, I found myself encountering even more batch scripts to correlate. By this point, I was growing fatigued and uncertain on how long this chain will go before I can get to the interesting stuff. So, I switched strategies; I stopped correlating the scripts, and instead ran a table query listing all the event codes involved after the time the malware was ran:
+As I continued correlating batch scripts, I found myself encountering even more scripts to correlate. By this point, I was growing fatigued and uncertain on how long this chain will go before the interesting stuff finally shows up. So, I changed my approach - I stopped correlating the scripts through process GUIDs, and instead ran a query that shows a table of all the event codes involved after the time the malware was ran:
+![](/screenshots/367.png)
 
-From here, I began searching through the event codes likely to indicate the presence of malware, starting from bottom to top, or least # of events to highest, for the sake of manageability. Additionally, I’ve filtered out destination port 3389 (RDP) since I’ve already looked into it and found no successful attempts from outsiders.
-EventCode 22 (DNS Queries)
+From here, I began searching through the event codes that are likely to indicate the presence of malware. I’ve filtered out destination port 3389 (RDP) as I’ve looked into it and found no successful attempts from any outside entity.
+
+starting from bottom to top, or least # of events to highest, for the sake of manageability:
+
+### EventCode 22 (DNS Queries)
 Looking through the list of DNS queries involved, I see a lot of suspicious ones off the bat:
 
 After examining each suspicious query, I put together the following map of each query & their respective IP addresses and processes that called them:
