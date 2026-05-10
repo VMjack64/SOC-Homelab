@@ -199,7 +199,7 @@ Having hit a dead end with `testvb1.vbs`, `Start2.cmd` was next:
 ![](/screenshots/360.png)
 ![](/screenshots/361.png)
 ![](/screenshots/362.png)
-[When looking up on Windows pipes](https://learn.microsoft.com/en-us/windows/win32/ipc/pipes), I learned that they enable processes to communicate between each other, either on a host, or multiple hosts across a network. As such, some likely intentions I could think of for this named pipe include:
+[Looking up on Windows pipes](https://learn.microsoft.com/en-us/windows/win32/ipc/pipes), I learned that they enable processes to communicate between each other, either on a host, or multiple hosts across a network. As such, some likely intentions I could think of for this named pipe include:
   - Giving the applications installed by the malware a means of sending sensitive data between/communicating with each other.
   - Infecting other reachable hosts within the VPC in a similar vein.  
   
