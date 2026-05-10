@@ -168,34 +168,43 @@ Excluding the process creation event, the following occurred with this batch scr
 ![](/screenshots/353.png)
 
 ### Start.cmd #2 Events
-Searching the process ID of the current Start.cmd script turned up no additional leads, so I began correlating the other Start.cmd script, which had 9 events involved:
+Searching the process ID of `Start.cmd` #1 turned up no additional leads, so I began correlating the other Start.cmd script:
+![](/screenshots/354.png)
 
 Event timeline:
-12:38:19.872 AM: A Windows script (wscript) named C:\Users\Public\testvb1.vbs was created. This script was executed almost immediately at 12:38:19.885 AM.
-12:38:19.889 AM: Another batch script, a variant named C:\Users\Administrator\AppData\Local\Temp\2\Start2.cmd, was created. At the same time, the command C:\Windows\system32\cmd.exe /c type "C:\Users\ADMINI~1\AppData\Local\Temp\2\Start.cmd" was executed, where type displays the contents of Start.cmd. Furthermore, a registry set event occurred at the same time, targeting the Start.cmd script.
-12:38:20.196 AM: The Start2.cmd script was executed via PowerShell, through the command C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -Command "Start-Process 'C:\Users\Administrator\AppData\Local\Temp\2\Start2.cmd' -windowstyle hidden". The hidden option keeps the process window hidden while activated.
-12:38:21.917 AM: A ping operation to a private IP address, 192.168.1.1, was discovered
-12:38:30.816 AM: Another (persistence) registry set event, targeting C:\Windows\SysWOW64\cmd.exe.
-No more leads appeared when searching the process ID, so I proceeded to correlate the scripts that came up from this search, starting off with the testvb1.vbs Windows script. Searching its process GUID, this is what I noticed from looking at the events:
-A lot of DLLs were loaded. One of those, wshom.ocx, is an old one, dating back to the 2000s.
-On 12:38:20.134 AM, the following command was executed: "C:\Windows\System32\cmd.exe" /c cd /d C:\Users\Public\ &amp; copy /v /b /y C:\Users\Public\testvb1.vbs C:\Users\Public\testvb2.vbs. Basically, this command copies the contents of the Windows script into another one named testvb2.vbs. A noteworthy thing is the /b option, which indicates that the wscript is a binary file.
-With the wscript being a dead end, the Start2.cmd script was up next. Searching its process GUID returned 17 events:
+- 12\:38\:19.872 AM: A Windows script (wscript) named `C:\Users\Public\testvb1.vbs` was created. This script was executed almost immediately at 12\:38\:19.885 AM.
+- 12\:38\:19.889 AM: Another batch script, a variant of `Start.cmd` named `C:\Users\Administrator\AppData\Local\Temp\2\Start2.cmd`, was created. At the same time, the command `C:\Windows\system32\cmd.exe /c type "C:\Users\ADMINI~1\AppData\Local\Temp\2\Start.cmd"` was executed, where `type` displays the contents of `Start.cmd`. Furthermore, a registry set event occurred concurrently, targeting `Start.cmd`.
+- 12\:38\:20.196 AM: `Start2.cmd` was executed through PowerShell, running the command `C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -Command "Start-Process 'C:\Users\Administrator\AppData\Local\Temp\2\Start2.cmd' -windowstyle hidden"`. The `hidden` option keeps the process window for the batch script hidden while active, thwarting attempts to simply close off the script.
+- 12\:38\:21.917 AM: A ping operation to a private IP address, 192.168.1.1, was discovered
+- 12\:38\:30.816 AM: Another registry set event for malware persistence, targeting `C:\Windows\SysWOW64\cmd.exe`.
 
-A handful of these events were loaded DLLs. The majority of them had a legitimate signature, with the exception of one:
+No more additional leads came up when searching the process ID, so I proceeded to correlate the scripts that came up from this search, starting off with `testvb1.vbs`.
 
+### testvb1.vbs Events
+What I noticed:
+- A lot of DLLs were loaded. One of those, `wshom.ocx`, is an old one, dating back to the 2000s.
+- On 12\:38\:20.134 AM, the following command was executed: `"C:\Windows\System32\cmd.exe" /c cd /d C:\Users\Public\ &amp; copy /v /b /y C:\Users\Public\testvb1.vbs C:\Users\Public\testvb2.vbs`. Essentially, this command copies the contents of the current Windows script into another one named `testvb2.vbs`.
 
+### Start2.cmd Events
+Having hit a dead end with `testvb1.vbs`, `Start2.cmd` was next:
+![](/screenshots/355.png)
 
-
-12:38:21.292 AM: The following PowerShell script policy test was created: C:\Users\Administrator\AppData\Local\Temp\2\__PSScriptPolicyTest_lby1cg5c.kqb.ps1. However, this script was deleted immediately afterwards.
-12:38:21.470 AM: A PipeCreated event (event ID 17) was generated:
-
-
-
-Windows pipes enable processes to communicate between each other, either on a host, or multiple hosts across a network. Given this information, some likely intentions I could think of for this named pipe include:
-Giving the applications installed by the malware a means of communicating with/sending sensitive data between each other.
-Infecting other reachable hosts within the VPC in a similar vein.
-I would’ve added that these pipes might enable inter-process communication between hosts across different networks, but I wasn’t able to find any conclusive information that rings true. Regardless, searching the PipeName didn’t turn up any event ID 18s (Pipe Connected) associated with it, so these ideations wouldn’t have mattered anyway as the pipe hadn't been used.
-12:38:21.875 AM: A different Start2.cmd script was executed
+- A handful of these events involved loaded DLLs. The majority of them had a legitimate signature, with the exception of one:
+![](/screenshots/356.png)
+![](/screenshots/357.png)
+![](/screenshots/358.png)
+![](/screenshots/359.png)
+- 12\:38\:21.292 AM: The following PowerShell script was created: `C:\Users\Administrator\AppData\Local\Temp\2\__PSScriptPolicyTest_lby1cg5c.kqb.ps1`. But this script was deleted shortly afterwards, without being executed once.
+- 12\:38\:21.470 AM: A PipeCreated event (event ID 17) was generated:
+![](/screenshots/360.png)
+![](/screenshots/361.png)
+![](/screenshots/362.png)
+[When looking up on Windows pipes](https://learn.microsoft.com/en-us/windows/win32/ipc/pipes), I learned that they enable processes to communicate between each other, either on a host, or multiple hosts across a network. As such, some likely intentions I could think of for this named pipe include:
+  - Giving the applications installed by the malware a means of sending sensitive data between/communicating with each other.
+  - Infecting other reachable hosts within the VPC in a similar vein.  
+  
+  I wasn't able to find any conclusive information as to whether they could communicate between processes on hosts across different networks. However, searching the pipe's name didn't turn up any event containing event ID 18 (Pipe Connected) turned up, meaning the pipe hasn't been used in some capacity.
+- 12\:38\:21.875 AM: A different Start2.cmd script was executed
 12:38:21.882 AM: A FileCreate event occurred, targeting C:\Users\Administrator\AppData\Local\Microsoft\Windows\PowerShell\StartupProfileData-NonInteractive. An action of modified was also specified, indicating additional persistence shenanigans by the malware.
 12:38:46.712 AM: Registry set event targeting Windows Defender’s AllowFastServiceStartup. For this event, I can see the value set, which was 0x00000000, or disabled. In this context, Defender runs with low priority, essentially allowing all components of the malware to activate without Defender getting a chance to take action.
 Results from searching the process GUID of the second Start2.cmd script:
