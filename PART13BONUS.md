@@ -265,15 +265,15 @@ I spent some time examining each query for additional information. From there, I
 | QueryName                      | IP addresses(es) and/or DNS                  | Process(es) involved                                        |
 | ------------------------------ | ---------------------------------------      | ----------------------------------------------------------- |
 | auth10.aeroadmin.com           | 89.40.115.70                                 | `C:\ProgramData\IntelSvc.exe`                               |
-| pro13.emailserver.vn           | :\:ffff:103.110.129.113                       | `C:\Windows\SysWOW64\WindowsPowerShell\v1.0\powershell.exe` |
-| ulm.aeroadmin.com              | :\:ffff:104.21.37.227,<br/> :\:ffff:172.67.214.170  | `C:\ProgramData\IntelSvc.exe`                               |
-| xemhang.vn                     | :\:ffff:118.70.144.70                         | `C:\Windows\SysWOW64\WindowsPowerShell\v1.0\powershell.exe` |
+| pro13.emailserver.vn           | :\:ffff:103.110.129.113                      | `C:\Windows\SysWOW64\WindowsPowerShell\v1.0\powershell.exe` |
+| ulm.aeroadmin.com              | :\:ffff:104.21.37.227,<br/> :\:ffff:172.67.214.170  | `C:\ProgramData\IntelSvc.exe`                        |
+| xemhang.vn                     | :\:ffff:118.70.144.70                        | `C:\Windows\SysWOW64\WindowsPowerShell\v1.0\powershell.exe` |
 | auto.c3pool.org                | :\:ffff:154.12.244.206,<br/> :\:ffff:85.239.243.201 | `C:\Users\Administrator\AppData\Local\Temp\2\RtkAudio.exe`  |
-| boot.net.anydesk.com           | boot-relays.net.anydesk.com,<br/> :\:ffff:185.229.191.44,<br/> :\:ffff:185.229.190.236,<br/> :\:ffff:92.223.88.7,<br/> :\:ffff:185.229.191.39,<br/> :\:ffff:92.223.88.232,<br/> :\:ffff:92.223.88.41,<br/> :\:ffff:195.181.174.167,<br/> :\:ffff:57.129.19.230,<br/> :\:ffff:57.129.37.75,<br/> :\:ffff:57.129.37.28 | `C:\Users\Administrator\AppData\Local\Temp\2\AnyDesk.exe`,<br/> `C:\ProgramData\AnyDesk\AnyDesk.exe` |
+| boot.net.anydesk.com           | boot-relays.net.anydesk.com,<br/> :\:ffff:185.229.191.44,<br/> :\:ffff:185.229.190.236,<br/> :\:ffff:92.223.88.7,<br/> :\:ffff:185.229.191.39,<br/> :\:ffff:92.223.88.232,<br/> :\:ffff:92.223.88.41,<br/> :\:ffff:195.181.174.167,<br/> :\:ffff:57.129.19.230,<br/> :\:ffff:57.129.37.75,<br/> :\:ffff:57.129.37.28 | `C:\Users\Administrator\AppData\Local\Temp\2\AnyDesk.exe`,<br/> `C:\ProgramData\AnyDesk\AnyDesk.exe`                   |
 | donate.ssl.xmrig.com           | :\:ffff:45.32.185.122,<br/> :\:ffff:178.128.242.134 | `C:\Users\Administrator\AppData\Local\Temp\2\RtkAudio.exe`  |
-| relay-dc7501e7.net.anydesk.com | :\:ffff:92.38.177.14                          | `C:\Users\Administrator\AppData\Local\Temp\2\AnyDesk.exe`,<br/> `C:\ProgramData\AnyDesk\AnyDesk.exe` |
+| relay-dc7501e7.net.anydesk.com | :\:ffff:92.38.177.14                         | `C:\Users\Administrator\AppData\Local\Temp\2\AnyDesk.exe`,<br/> `C:\ProgramData\AnyDesk\AnyDesk.exe` |
 | EC2AMAZ-DH1SHEO                | fe80:\:c3a3\:6a8\:aaff:38e,<br/> :\:ffff:172.20.0.248,<br/> 172.20.0.248 (machine IP) | `C:\Windows\SysWOW64\wbem\WmiPrvSE.exe`,<br/> `C:\ProgramData\AnyDesk\AnyDesk.exe`,<br/> `C:\ProgramData\IntelSvc.exe` |
-| auth11.aeroadmin.com<br/> auth14.aeroadmin.com | 127.0.0.1                        | `C:\ProgramData\IntelSvc.exe`                               |
+| auth11.aeroadmin.com<br/> auth14.aeroadmin.com | 127.0.0.1                    | `C:\ProgramData\IntelSvc.exe`                               |
 | auth17.aeroadmin.org           | N/A                                          | `C:\ProgramData\IntelSvc.exe`                               |
 
 Throughout this process, I’ve uncovered a couple of suspicious processes that I haven’t seen before, most notably IntelSvc.exe and RtkAudio.exe. I’ll get to those momentarily.
