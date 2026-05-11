@@ -289,20 +289,19 @@ There are a lot of processes to deal with:
 ![](/screenshots/370.png)
 ![](/screenshots/371.png)
 
-I analyzed every one of them to the best of my ability, but for the sake of time, I’m only going to mention the ones that I’ve deemed suspicious:
+I analyzed every one of them to the best of my ability, but for the sake of time, I’m only going to mention the ones that I’ve deemed suspicious and are new to this section:
 - `icals.exe`: Executed at 12\:38:48.358 AM by `Start3.cmd`. The command ran was `C:\Windows\System32\icacls.exe "C:\Windows\System32\smartscreen.exe" /grant:r Administrator:F`, which grants the Administrator user full access to Windows Defender, replacing any previous privileges. A likely intention behind this is to permanently remove Defender with ease, or at the very least disable it.
 - `takeown.exe`: Executed at 12\:38:48.343 AM by `Start3.cmd`, with the command `C:\Windows\System32\takeown.exe /s EC2AMAZ-DH1SHEO /u Administrator /f "C:\Windows\System32\smartscreen.exe"`. This is related to the `icals.exe` event, as this command makes the Administrator user the owner of the Windows Defender internal files.
-- wscript.exe: Executed at 12:38:19.885 AM by Start.cmd. The script executed was C:\Users\Public\testvb1.vbs, which I’ve already covered.
-- RtkAudio.exe: Executed at 12:41:19.365 AM by Start3.cmd. I ran its SHA256 hash through VirusTotal, which is where I discovered that this is a masquerading malicious process:
-
-According to the analyses left by the top security vendors, one thing was constantly mentioned about this xmrig.exe executable: Cryptomining. This means that the view.exe executable has cryptomining intent as one of its malicious tasks. I decided to try searching up the executable name on Google, and the top results returned the homepage and the GitHub repository:
-
-I then performed log correlation for the executable, and discovered that it ran the command "C:\Users\Administrator\AppData\Local\Temp\2\RtkAudio.exe" --config="C:\Users\Administrator\AppData\Local\Temp\2\Tweaker\desktops.ini". According to the XMRig documentation, this command loads the JSON-formatted configuration file desktops.ini.
-net.exe: Executed 3 times by Start3.cmd within the timespan of 12:38:46.370 AM - 12:45:15.966 AM. The following commands were executed:
-C:\Windows\System32\NET.exe stop windefend, which stopped Windows Defender, as I predicted
-C:\Windows\System32\net.exe stop "Service Network"
-C:\Windows\System32\net.exe start "Service Network" a few seconds after the previous command was ran. The two commands stopped, then restarted a Windows service named Service Network. Searching this exact service name on Google didn’t turn up any conclusive information, yet I found some for something similar, Network Service, which ranges from a Windows process to a user account. The start action here only furthers the ambiguity on the purposes of this service.
-screen.exe: Executed by Start3.cmd at 12:41:33.879 AM. Original name of this executable was NirCmd.exe, and the command ran was "C:\Users\Administrator\AppData\Local\Temp\2\screen.exe" win hide ititle "RtkAudio", which hides the process window for the cryptomining software uncovered earlier. A different one located in the C:\Users\Public directory was also executed at 12:42:53.837 AM by taskmgr.cmd, with the command win hide ititle "kmgtas", hiding the window of a process named kmgtas.
+- `RtkAudio.exe`: Executed at 12\:41:19.365 AM by `Start3.cmd`. The event information seemed suspicious, so I decided to run the executable's SHA256 hash through VirusTotal, which is where I discovered that this is a masquerading malicious process:
+![](/screenshots/372.png)
+Skimming through the security vendor analyses, one thing was frequently mentioned about this `xmrig.exe` executable: Cryptomining. This means that `view.exe` has cryptomining intentions as one of its main goals. I searched up the executable name on Google, returning the homepage and the GitHub repository as the top results:
+![](/screenshots/373.png)
+With this newfound evidence, I performed event correlation for the executable, and discovered that it ran the command `"C:\Users\Administrator\AppData\Local\Temp\2\RtkAudio.exe" --config="C:\Users\Administrator\AppData\Local\Temp\2\Tweaker\desktops.ini"`, which loads the JSON-formatted configuration file `desktops.ini` into XMRig, according to its documentation.
+- `net.exe`: Executed 3 times by `Start3.cmd` within the timespan of 12\:38:46.370 AM - 12\:45:15.966 AM. The following commands were executed:
+  - `C:\Windows\System32\NET.exe stop windefend`, which stopped Windows Defender, as predicted
+  - `C:\Windows\System32\net.exe stop "Service Network"`
+  - `C:\Windows\System32\net.exe start "Service Network"` a few seconds after the previous command was ran. The last two commands stopped, then restarted a Windows service named `Service Network`. Searching this exact service name on Google didn’t turn up any conclusive information, but I found some for a similar service, `Network Service`, which ranges from a Windows process to a user account. Without such firm information, I could not determine the intention behind these two commands, especially the second.
+- `screen.exe`: Executed by Start3.cmd at 12:41:33.879 AM. Original name of this executable was NirCmd.exe, and the command ran was "C:\Users\Administrator\AppData\Local\Temp\2\screen.exe" win hide ititle "RtkAudio", which hides the process window for the cryptomining software uncovered earlier. A different one located in the C:\Users\Public directory was also executed at 12:42:53.837 AM by taskmgr.cmd, with the command win hide ititle "kmgtas", hiding the window of a process named kmgtas.
 AnyDesk.exe:
 12:40:40.834 AM: Executed by Start3.cmd; installed via the command line. A couple of  options were specified during the installation process; the first option, --silent, ensured a covert installation, while the second option, --start-with-win, enabled the application to start automatically.
 12:40:41.333 AM: Another command was run, this time with the --local-service option specified. This tells AnyDesk to use the client app to start up with limited functionality if it can’t connect to the service that the software uses. This was likely done for persistence purposes.
