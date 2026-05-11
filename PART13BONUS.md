@@ -290,10 +290,10 @@ There are a lot of processes to deal with:
 ![](/screenshots/371.png)
 
 I analyzed every one of them to the best of my ability, but for the sake of time, I’m only going to mention the ones that I’ve deemed suspicious:
-- icals.exe: Executed at 12:38:48.358 AM by the Start3.cmd script previously uncovered. The command ran was C:\Windows\System32\icacls.exe "C:\Windows\System32\smartscreen.exe" /grant:r Administrator:F, which grants the Administrator user full access to Windows Defender, replacing any previous privileges. A likely intent for doing this is to permanently remove Defender with ease, or at the very least disable it.
-takeown.exe: Executed at 12:38:48.343 AM by Start3.cmd, with the command C:\Windows\System32\takeown.exe /s EC2AMAZ-DH1SHEO /u Administrator /f "C:\Windows\System32\smartscreen.exe". This is related to the icals.exe event, as this makes the Administrator user the owner of the Windows Defender internal files.
-wscript.exe: Executed at 12:38:19.885 AM by Start.cmd. The script executed was C:\Users\Public\testvb1.vbs, which I’ve already covered.
-RtkAudio.exe: Executed at 12:41:19.365 AM by Start3.cmd. I ran its SHA256 hash through VirusTotal, which is where I discovered that this is a masquerading malicious process:
+- `icals.exe`: Executed at 12\:38:48.358 AM by `Start3.cmd`. The command ran was `C:\Windows\System32\icacls.exe "C:\Windows\System32\smartscreen.exe" /grant:r Administrator:F`, which grants the Administrator user full access to Windows Defender, replacing any previous privileges. A likely intention behind this is to permanently remove Defender with ease, or at the very least disable it.
+- `takeown.exe`: Executed at 12\:38:48.343 AM by `Start3.cmd`, with the command `C:\Windows\System32\takeown.exe /s EC2AMAZ-DH1SHEO /u Administrator /f "C:\Windows\System32\smartscreen.exe"`. This is related to the `icals.exe` event, as this command makes the Administrator user the owner of the Windows Defender internal files.
+- wscript.exe: Executed at 12:38:19.885 AM by Start.cmd. The script executed was C:\Users\Public\testvb1.vbs, which I’ve already covered.
+- RtkAudio.exe: Executed at 12:41:19.365 AM by Start3.cmd. I ran its SHA256 hash through VirusTotal, which is where I discovered that this is a masquerading malicious process:
 
 According to the analyses left by the top security vendors, one thing was constantly mentioned about this xmrig.exe executable: Cryptomining. This means that the view.exe executable has cryptomining intent as one of its malicious tasks. I decided to try searching up the executable name on Google, and the top results returned the homepage and the GitHub repository:
 
