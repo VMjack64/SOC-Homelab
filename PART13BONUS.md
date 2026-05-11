@@ -276,19 +276,21 @@ I spent some time examining each query for additional information. From there, I
 | auth11.aeroadmin.com<br/> auth14.aeroadmin.com | 127.0.0.1                    | `C:\ProgramData\IntelSvc.exe`                               |
 | auth17.aeroadmin.org           | N/A                                          | `C:\ProgramData\IntelSvc.exe`                               |
 
-Here, I've uncovered the `IntelSvc.exe` and `RtkAudio.exe` executables, which were also mentioned in the `.txt` file list.
+The most notable executables I found here are `IntelSvc.exe` and `RtkAudio.exe`, files that were also mentioned in the `.txt` file list.
 
 ### EventCode 6 (Driver Loaded)
-I uncovered a suspicious image with the path C:\Users\Administrator\AppData\Local\Temp\2\WinRing0x64.sys:
+I uncovered a suspicious image, `C:\Users\Administrator\AppData\Local\Temp\2\WinRing0x64.sys`:
+![](/screenshots/369.png)
 
-While the image itself is legitimate, the format of the file path is the exact same as the paths for the Start.cmd series of batch scripts, marking this as a potential indicator of compromise.
+While the image itself has a verifiable signature, the file path happens to be exactly the same as the file path for the `Start.cmd` batch scripts (and their variants), marking this as an indicator of compromise.
 
 ### EventCode 1 (Process executed)
-A lot of processes to deal with:
+There are a lot of processes to deal with:
+![](/screenshots/370.png)
+![](/screenshots/371.png)
 
-
-For the sake of time, I’m only going to focus on the ones that I’ve deemed suspicious:
-icals.exe: Executed at 12:38:48.358 AM by the Start3.cmd script previously uncovered. The command ran was C:\Windows\System32\icacls.exe "C:\Windows\System32\smartscreen.exe" /grant:r Administrator:F, which grants the Administrator user full access to Windows Defender, replacing any previous privileges. A likely intent for doing this is to permanently remove Defender with ease, or at the very least disable it.
+I analyzed every one of them to the best of my ability, but for the sake of time, I’m only going to mention the ones that I’ve deemed suspicious:
+- icals.exe: Executed at 12:38:48.358 AM by the Start3.cmd script previously uncovered. The command ran was C:\Windows\System32\icacls.exe "C:\Windows\System32\smartscreen.exe" /grant:r Administrator:F, which grants the Administrator user full access to Windows Defender, replacing any previous privileges. A likely intent for doing this is to permanently remove Defender with ease, or at the very least disable it.
 takeown.exe: Executed at 12:38:48.343 AM by Start3.cmd, with the command C:\Windows\System32\takeown.exe /s EC2AMAZ-DH1SHEO /u Administrator /f "C:\Windows\System32\smartscreen.exe". This is related to the icals.exe event, as this makes the Administrator user the owner of the Windows Defender internal files.
 wscript.exe: Executed at 12:38:19.885 AM by Start.cmd. The script executed was C:\Users\Public\testvb1.vbs, which I’ve already covered.
 RtkAudio.exe: Executed at 12:41:19.365 AM by Start3.cmd. I ran its SHA256 hash through VirusTotal, which is where I discovered that this is a masquerading malicious process:
