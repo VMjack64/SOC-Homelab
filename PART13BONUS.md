@@ -260,7 +260,7 @@ Going from bottom to top, or least amount of events to highest:
 Skimming through the list of DNS queries, I see a lot of suspicious ones:
 ![](/screenshots/368.png)
 
-I spent some time examining each query for additional information. From there, I put together the following map of each query & their respective IP addresses and processes that called them:
+I spent some time examining each query for additional information. From there, I put together the following table mapping each query and their associated IP addresses & processes that called them:
 
 | QueryName                      | IP addresses(es) and/or DNS                  | Process(es) involved                                        |
 | ------------------------------ | ---------------------------------------      | ----------------------------------------------------------- |
@@ -276,12 +276,14 @@ I spent some time examining each query for additional information. From there, I
 | auth11.aeroadmin.com<br/> auth14.aeroadmin.com | 127.0.0.1                    | `C:\ProgramData\IntelSvc.exe`                               |
 | auth17.aeroadmin.org           | N/A                                          | `C:\ProgramData\IntelSvc.exe`                               |
 
-Throughout this process, I’ve uncovered a couple of suspicious processes that I haven’t seen before, most notably IntelSvc.exe and RtkAudio.exe. I’ll get to those momentarily.
-EventCode 6 (Driver Loaded)
+Here, I've uncovered the `IntelSvc.exe` and `RtkAudio.exe` executables, which were also mentioned in the `.txt` file list.
+
+### EventCode 6 (Driver Loaded)
 I uncovered a suspicious image with the path C:\Users\Administrator\AppData\Local\Temp\2\WinRing0x64.sys:
 
 While the image itself is legitimate, the format of the file path is the exact same as the paths for the Start.cmd series of batch scripts, marking this as a potential indicator of compromise.
-EventCode 1 (Process executed)
+
+### EventCode 1 (Process executed)
 A lot of processes to deal with:
 
 
