@@ -353,20 +353,22 @@ The `/Change` commands disables all Windows tasks that help protect the computer
   ![](/screenshots/391.png)
   ![](/screenshots/392.png)
 
-tasklist.exe: Suspicious process Sophos.exe uncovered
-findstr.exe: Some of the commands grab information from .txt files created by the malware, likely to be piped into other operations as part of the malware setup process. The full list of commands:
+- `tasklist.exe`: Suspicious process `Sophos.exe` uncovered
+- `findstr.exe`: Some of the commands grab information from `.txt` files created by the malware, likely to be piped into other operations as part of the setup process. The full list of commands:
+![](/screenshots/393.png)
 
-PING.exe: The full list of commands:
+- `PING.exe`: The full list of commands:
+![](/screenshots/394.png)
+Seeing all these events target this one IP address made me go and search it up on Google, wondering what's so special about this one. In doing so, I might have discovered another ideation of this malware:
+![](/screenshots/395.png)
+![](/screenshots/396.png)
+![](/screenshots/397.png)
+![](/screenshots/398.png)
+According to these search results, the private IP address 192.168.1.1 is used to access the admin portal of a router. This puts these pings into perspective; the malware also has intentions of compromising the network of the compromised machine. Coupled with the cryptomining intentions unearthed earlier, the attacker behind this malware is clearly plotting a cryptomining operation with this one. Thankfully, the takeover never happened.
 
-I was clueless as to why all these commands targeted this one IP address, so I went and searched it up on Google. This is where I discovered another potential ideation of this malware:
-
-
-
-
-According to these results, as well as the Apple thread in the last picture, the private IP address 192.168.1.1 is used to access the admin portal of a router. This means that these pings are indicative of a potential network takeover operation by the malware. Thankfully, with how I set up my NACL, this didn’t work.
 Having seen a lot of these malicious processes initiated by Start3.cmd, I used the script’s process GUID and began correlating events. Running it in a search returned 500+ events, which are all the malware setup events. So, I took a look at the parent process that spawned this script. The parent process was Start2.cmd, then that parent process was Start.cmd, and finally that parent process was the view.exe executable itself. Throughout the analysis process, I also drew a diagram of the hierarchy for better visualization:
 
-EventCode 3 (Network Connections)
+### EventCode 3 (Network Connections)
 I want to look at all established outbound connections from the infected machine to an outsider IP, so I ran the following search to list all the destination IPs involved:
 
 
