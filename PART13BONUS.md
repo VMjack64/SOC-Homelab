@@ -333,22 +333,25 @@ The `/Change` commands disables all Windows tasks that help protect the computer
 - `netsh.exe`: TCP ports 50001, 6568, and 80 were opened on the test machine, and firewall rules were created to allow traffic from `tv_x86.exe` and `TeamViewer.exe`, alongside other suspicious executables already mentioned. The full list of commands:
 ![](/screenshots/385.png)
 ![](/screenshots/386.png)
-- `powershell.exe`: Summaries for each type of command:
+- `powershell.exe`: Notable command types and a brief summary of each:
   - `-ExecutionPolicy`: Enabled a couple of suspicious `.ps1` scripts to run without any caveats.
-  - `-inputformat -outputformat -NonInteractive -Command Add-MpPreference -ExclusionPath`: Excluded various directories housing the malware components from being scanned for malware.
+  - `-inputformat -outputformat -NonInteractive -Command Add-MpPreference -ExclusionPath`: Excluded various directories housing the malware's components from being scanned, preventing automated deletion of the malware.
   - `-Command DownloadFile()`: Used to download a file named `recoverdv.txt` from the same domain where the malware was first delivered.
   - `-Command Get-Content`: Made encoded copies of some `.txt` files and `.cmd` batch scripts (including `Start3.cmd`), making them harder to examine manually.
-  - `CreateShortcut()`: Creates a link file named `TeamViewer_Service` in the Windows Startup folder, allowing `tv_x86.exe` to automatically run at startup. Typing this, I realized that `tv_x86.exe` is actually TeamViewer, running a different hardware component for compatibility with other computer types
-  - `Set-ExecutionPolicy`: Allowed all malicious scripts to run.
+  - `CreateShortcut()`: Creates a link file named `TeamViewer_Service` in the Windows Startup folder, allowing `tv_x86.exe` to automatically boot at startup. I made the connection here that `tv_x86.exe` is TeamViewer, running 32-bit architecture for an expansive (and guaranteed) attack surface.
+  - `Set-ExecutionPolicy`: Allowed all suspicious and malicious scripts to run.
 
+  ![](/screenshots/387.png)
+  ![](/screenshots/388.png)
+  ![](/screenshots/389.png)
+  ![](/screenshots/390.png)
 
+- `cmd.exe`:
+  - The command `C:\Windows\system32\cmd.exe /c reg query "HKLM\SYSTEM\ControlSet001\Services" /s /k "webthreatdefusersvc" /f 2&gt;nul | find /i "webthreatdefusersvc"` finds all currently active Windows Defender services, likely so that the malware can disable them to ensure no thwarting.
+  - Two `echo` commands caught my interest: `/S /D /c" echo Thuyhue1234"` and `/S /D /c" echo "svchost#24" 2&gt;NUL"`. The latter seems to target a specific `svchost` process, while the former looks to be some sort of username/password (part of the text is also present in the domain I downloaded the malware from).
 
-
-cmd.exe:
-The command C:\Windows\system32\cmd.exe /c reg query "HKLM\SYSTEM\ControlSet001\Services" /s /k "webthreatdefusersvc" /f 2&gt;nul | find /i "webthreatdefusersvc" finds all currently active Windows Defender services, likely for the malware to disable to ensure no thwarting.
-Two echo commands caught my interest: /S /D /c" echo Thuyhue1234" and /S /D /c" echo "svchost#24" 2&gt;NUL". The second seems to target a specific svchost process, while the first looks to be some sort of username/password (part of the text is also present in the domain I visited to download the malware).
-Full list of commands:
-
+  ![](/screenshots/391.png)
+  ![](/screenshots/392.png)
 
 tasklist.exe: Suspicious process Sophos.exe uncovered
 findstr.exe: Some of the commands grab information from .txt files created by the malware, likely to be piped into other operations as part of the malware setup process. The full list of commands:
