@@ -300,7 +300,7 @@ With this newfound evidence, I performed event correlation for the executable, a
 - `net.exe`: Executed 3 times by `Start3.cmd` within the timespan of 12\:38:46.370 AM - 12\:45:15.966 AM. The following commands were executed:
   - `C:\Windows\System32\NET.exe stop windefend`, which stopped Windows Defender, as predicted
   - `C:\Windows\System32\net.exe stop "Service Network"`
-  - `C:\Windows\System32\net.exe start "Service Network"` a few seconds after the previous command was ran. The last two commands stopped, then restarted a Windows service named `Service Network`. Searching this exact service name on Google didn’t turn up any conclusive information, but I found some for a similar service, `Network Service`, which ranges from a Windows process to a user account. My guess here is that service network was stopped to make adjustments that benefit the malware, then restart the service with these adjustments in place. Cripple VPC functionalities. I searched up the command, didn't get anything noteworthy. Searched the service name next, and got the AWS documentation.
+  - `C:\Windows\System32\net.exe start "Service Network"` a few seconds after the previous command. The last two commands stopped, then restarted a Windows service named `Service Network`. Searching the command on Google didn’t turn up any information for `Service Network` exactly, but rather for a similar service, `Network Service`. But when searching the service name (with it enclosed in quotation marks for an exact search), I found this [AWS documentation](https://docs.aws.amazon.com/vpc-lattice/latest/ug/service-networks.html). Despite it all, I have no clue as to what the intention is behind these two commands; the `start` action, in particular, is what's throwing me off here.<!-- Any theories I had like crippling VPC functionalities, malware-beneficial changes, etc. are thrown out the window by this action. -->
 - `screen.exe`: Executed by Start3.cmd at 12:41:33.879 AM. Original name of this executable was NirCmd.exe, and the command ran was "C:\Users\Administrator\AppData\Local\Temp\2\screen.exe" win hide ititle "RtkAudio", which hides the process window for the cryptomining software uncovered earlier. A different one located in the C:\Users\Public directory was also executed at 12:42:53.837 AM by taskmgr.cmd, with the command win hide ititle "kmgtas", hiding the window of a process named kmgtas.
 AnyDesk.exe:
 12:40:40.834 AM: Executed by Start3.cmd; installed via the command line. A couple of  options were specified during the installation process; the first option, --silent, ensured a covert installation, while the second option, --start-with-win, enabled the application to start automatically.
@@ -353,7 +353,7 @@ findstr.exe: Some of the commands grab information from .txt files created by th
 
 PING.exe: The full list of commands:
 
-I was clueless as to why all these commands targeted this one IP address, so I went and searched it up on Google. This is where I discovered another potential target of this malware:
+I was clueless as to why all these commands targeted this one IP address, so I went and searched it up on Google. This is where I discovered another potential ideation of this malware:
 
 
 
