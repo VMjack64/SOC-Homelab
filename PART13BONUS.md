@@ -311,33 +311,35 @@ With this newfound evidence, I performed event correlation for the executable, a
 So, I grabbed the executable's process GUID for event correlation. Only 6 events involving this executable were returned, all of which occurred about an hour apart from each other. This strongly indicates that a scheduled task is involved, which became more plausible when looking at the parent process command: `C:\Windows\system32\svchost.exe -k netsvcs -p -s Schedule`. I searched for the executable itself to try and find this task, and did:
 ![](/screenshots/376.png)
 ![](/screenshots/377.png)
-  - In finding the task, I noticed the `netsh.exe` command directly above it, which adds a firewall rule named `Intel3` that allows inbound traffic from IntelSvc. This caught my interest, so I took a look at its event:
+  - In finding the task, I noticed the `netsh.exe` command directly above it, which adds a firewall rule named `Intel3` that allows inbound traffic from `fontdrvhots.exe`. This caught my interest, so I took a look at its event:
+![](/screenshots/378.png)
+![](/screenshots/379.png)
+According to the logs, both processes were executed by `Start3.cmd`. With all the other suspicious & malicious processes I’ve uncovered so far, it’s evident that this batch script is responsible for setting up the main components of this malware, so I grabbed its process GUID and process ID for future correlation:
+![](/screenshots/380.png)
+- `taskkill.exe`: Ran commands that forcibly ends Task Manager and Windows Defender Smartscreen as well as the child processes initiated by them (`/t` option, only in the case of Task Manager). However, it also forcibly ends the cryptominer process, which I find strange:
+![](/screenshots/381.png)
+- `sc.exe`: Executed by `Start3.cmd`. Commands ran:
+![](/screenshots/382.png)
+All these commands disable critical Windows services, enabling full reign of the malware.
 
+- `IntelSvc.exe`: A quick peek at the CommandLine field reveals that the process was installed as a service:
+![](/screenshots/383.png)  
+The parent process for this process was a PowerShell session, to which the parent process for that PowerShell was `Start3.cmd`.
 
-The logs tell me that both processes were executed by Start3.cmd. Given everything else I’ve uncovered so far, it’s evident that this batch script is responsible for setting up the core components of this malware, so I grabbed its process GUID and process ID for future correlation:
+- `schtasks.exe`: Commands ran:
+![](/screenshots/384.png)
+The `/Change` commands disables all Windows tasks that help protect the computer automatically, preventing the malware from being deleted.
 
-taskkill.exe: Ran commands that forcibly ends Task Manager and Windows Defender Smartscreen as well as the child processes started by them (/t option; only in the case of Task Manager). However, it also forcibly ends the cryptominer process, which I find strange:
-
-sc.exe: Executed by Start3.cmd. Commands ran:
-
-All of these commands disable critical Windows services, enabling full reign of the malware, as aforementioned.
-IntelSvc.exe: A quick peek at the CommandLine field reveals that the process was installed as a service:
-
-The parent process for this process was a PowerShell session, to which the parent process for that PowerShell was Start3.cmd.
-schtasks.exe: 
-Commands ran:
-
-The /Change commands disables all Windows tasks that help protect the computer automatically, relating to the purposes of sc.exe.
-netsh.exe: TCP ports 50001, 6568, & 80 were opened on the machine, and firewall rules were created to allow traffic from tv_x86.exe and TeamViewer.exe, alongside other suspicious executables already mentioned. The full list of commands:
-
-
-powershell.exe: Interesting bits:
--ExecutionPolicy: Enabled a couple of suspicious .ps1 scripts to run without any caveats.
--inputformat -outputformat -NonInteractive -Command Add-MpPreference -ExclusionPath: Excluded various directories housing the malware components from being scanned for malware.
--Command DownloadFile(): Used to download a file named recoverdv.txt from the same domain where the malware was first delivered.
--Command Get-Content: Made encoded copies of some .txt files and .cmd batch scripts (including Start3.cmd), making them harder to examine manually.
-CreateShortcut(): Creates a link file named TeamViewer_Service in the Windows Startup folder, allowing tv_x86.exe to automatically run at startup. Typing this, I realized that tv_x86.exe is actually TeamViewer.
-Set-ExecutionPolicy: Allowed all malicious scripts to run.
+- `netsh.exe`: TCP ports 50001, 6568, and 80 were opened on the test machine, and firewall rules were created to allow traffic from `tv_x86.exe` and `TeamViewer.exe`, alongside other suspicious executables already mentioned. The full list of commands:
+![](/screenshots/385.png)
+![](/screenshots/386.png)
+- `powershell.exe`: Summaries for each type of command:
+  - `-ExecutionPolicy`: Enabled a couple of suspicious `.ps1` scripts to run without any caveats.
+  - `-inputformat -outputformat -NonInteractive -Command Add-MpPreference -ExclusionPath`: Excluded various directories housing the malware components from being scanned for malware.
+  - `-Command DownloadFile()`: Used to download a file named `recoverdv.txt` from the same domain where the malware was first delivered.
+  - `-Command Get-Content`: Made encoded copies of some `.txt` files and `.cmd` batch scripts (including `Start3.cmd`), making them harder to examine manually.
+  - `CreateShortcut()`: Creates a link file named `TeamViewer_Service` in the Windows Startup folder, allowing `tv_x86.exe` to automatically run at startup. Typing this, I realized that `tv_x86.exe` is actually TeamViewer, running a different hardware component for compatibility with other computer types
+  - `Set-ExecutionPolicy`: Allowed all malicious scripts to run.
 
 
 
