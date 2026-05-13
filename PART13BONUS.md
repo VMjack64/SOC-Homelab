@@ -372,15 +372,17 @@ Throughout the analysis process for this malware, I also drew a diagram of the h
 ![](/screenshots/399.jpg)
 
 ### EventCode 3 (Network Connections)
-I want to look at all established outbound connections from the infected machine to an outsider IP, so I ran the following search to list all the destination IPs involved:
+Here, I want to focus on outbound connections from the infected machine to an unfamiliar IP. First, I ran the following search to see all the destination IPs involved:
+![](/screenshots/400.png)
+![](/screenshots/401.png)
+Afterwards, I modified the query to return everything in event format, then checked the Image field. There were 7 images that made a successful network connection. Most of the images are ones I already deemed malicious, but two of them were seemingly legitimate:
+- `C:\ProgramData\Microsoft\Windows Defender\Platform\4.18.25080.5-0\MpDefenderCoreService.exe`
+- `C:\Windows\System32\svchost.exe`
 
+I looked into the `MpDefenderCoreService.exe` events first. Checking the `dest` field reveals the following IPs associated with this executable:
+![](/screenshots/402.png)
 
-Then, after modifying the query to remove everything to the right of the pipe character (|) & the pipe itself, I checked the Image field. There were 7 images that made a network connection of some sort. Most I already know were malicious, but two of them were seemingly legitimate:
-C:\ProgramData\Microsoft\Windows Defender\Platform\4.18.25080.5-0\MpDefenderCoreService.exe.
-C:\Windows\System32\svchost.exe.
-I took a look at the events involving the first executable. Checking the dest field, I find the following IPs involved:
-
-Running the IPs through AbuseIPDB, VirusTotal, and GreyNoise reveals that they’re all legitimate IPs used by Microsoft, hence MpDefenderCoreService.exe is legitimate. So, I modified the query again to exclude the process from the search, as well as focusing only on established connections:
+Running them all through AbuseIPDB, VirusTotal, and GreyNoise reveals that they’re legitimate IPs used by Microsoft, hence `MpDefenderCoreService.exe` is legitimate. So, I modified the query again to exclude the process from the search, as well as focusing only on established connections:
 
 Now, these are the images involved:
 
@@ -409,7 +411,7 @@ As for the other IPs in this screenshot:
 
 Those were associated with DNS queries uncovered in the EventCode 22 analysis. For example, 57.129.37.28 is associated with the DNS query boot.net.anydesk.com triggered by the AnyDesk.exe process. The IPv4 address even matches the IP address appended to ::ffff: exactly:
 
-EventCode 17 & 18 (PipeEvent; Pipe Created & Pipe Connected)
+### EventCode 17 & 18 (PipeEvent; Pipe Created & Pipe Connected)
 Searching for event code 18 returned 12 events:
 
 All events involved the image C:\Windows\System32\svchost.exe, the same one I tried examining for suspicious activity in the EventCode 3 analysis. in the screenshot above, I noticed that the PipeName in both events starts with TSVCPIPE. I searched this name up on Google to see if I can find anything noteworthy, and I came across this article, particularly this section:
