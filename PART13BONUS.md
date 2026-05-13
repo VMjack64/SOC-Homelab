@@ -372,10 +372,10 @@ Throughout the analysis process for this malware, I also drew a diagram of the h
 ![](/screenshots/399.jpg)
 
 ### EventCode 3 (Network Connections)
-Here, I want to focus on outbound connections from the infected machine to an unfamiliar IP. First, I ran the following search to see all the destination IPs involved:
+Here, I want to focus on outbound connections to an unfamiliar IP. First, I ran the following search to see all the destination IPs involved:
 ![](/screenshots/400.png)
 ![](/screenshots/401.png)
-Afterwards, I modified the query to return everything in event format, then checked the Image field. There were 7 images that made a successful network connection. Most of the images are ones I already deemed malicious, but two of them were seemingly legitimate:
+Afterwards, I modified the query to return everything in event format, then checked the Image field. There were 7 images that made a network connection. Most of the images are ones I already deemed malicious, but two of them were seemingly legitimate:
 - `C:\ProgramData\Microsoft\Windows Defender\Platform\4.18.25080.5-0\MpDefenderCoreService.exe`
 - `C:\Windows\System32\svchost.exe`
 
@@ -385,18 +385,21 @@ I looked into the `MpDefenderCoreService.exe` events first. Checking the `dest` 
 Running them all through AbuseIPDB, VirusTotal, and GreyNoise reveals that they’re legitimate IPs used by Microsoft, therefore `MpDefenderCoreService.exe` is legitimate. Hence, I modified the query again to exclude the process from search, as well as focusing only on established connections:
 ![](/screenshots/403.png)
 
-Now, these are the images involved:
+Which leaves the following images:
 
-Next, I looked into the `svchost.exe` events, and took a look at the IPs, both source and destination:
+![](/screenshots/404.png)
 
+Then, I looked into the `svchost.exe` events next. I checked both the source and destination IPs in this case:
+![](/screenshots/405.png)
+![](/screenshots/406.png)
 
-I ran these IPs (excluding 172.20.0.248 since that’s the machine itself) through AbuseIPDB and GreyNoise, as well as Google. This is what I found:
+I ran these IPs (excluding 172.20.0.248 since that’s the test machine itself) through AbuseIPDB and GreyNoise, as well as Google. This is what I found:
 224.0.0.251 is the IP used for mDNS
 0:0:0:0:0:0:0:1 is the IPv6 localhost address
 fe80:0:0:0:c3a3:6a8:aaff:38e is a private IP address, according to AbuseIPDB
 ff02:0:0:0:0:0:0:fb didn’t return anything in AbuseIPDB, but according to GreyNoise, this is a private IP address:
 
-While none of these IPs were labeled as suspicious, I wasn’t willing to accept this conclusion yet, after what I uncovered with ping.exe. I continued digging deeper; I checked the event codes for each IP, but nothing out of the ordinary came up, so I checked the destination ports:
+While none of these IPs were labeled as suspicious, I wasn’t willing to accept this conclusion yet, after what I uncovered with ping.exe. I continued digging deeper; I checked the event codes for each IP, but nothing out of the ordinary came up, so I checked the destination ports involved with `svchost.exe`:
 
 According to this documentation, (UDP) port 5353 is used for mDNS, which svchost.exe typically connects to, and is less likely to be used by malware since it can be easily detected through this route. Because of that, I figured it’s safe to exclude events containing this port, which leaves port 5985. After some searching on Google, I discovered that this port is used for WinRM (Microsoft Windows Remote Management), with 5985 used for HTTP and 5986 for HTTPS. Looking up WinRM, I came across this article, which has a section describing the advantages of WinRM. In this section, something caught my attention:
 
