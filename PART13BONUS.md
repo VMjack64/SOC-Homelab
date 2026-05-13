@@ -401,8 +401,9 @@ I ran these IPs (excluding 172.20.0.248 since that’s the test machine itself) 
 ![](/screenshots/407.png)
 
 While none of these IPs were labeled as suspicious, I wasn’t jumping to conclusions yet, coming off of my findings with `ping.exe`. I continued digging deeper, first checking the event codes for each IP to no avail, then checking the destination ports involved with `svchost.exe`:
+![](/screenshots/408.png)
 
-According to this documentation, (UDP) port 5353 is used for mDNS, which svchost.exe typically connects to, and is less likely to be used by malware since it can be easily detected through this route. Because of that, I figured it’s safe to exclude events containing this port, which leaves port 5985. After some searching on Google, I discovered that this port is used for WinRM (Microsoft Windows Remote Management), with 5985 used for HTTP and 5986 for HTTPS. Looking up WinRM, I came across this article, which has a section describing the advantages of WinRM. In this section, something caught my attention:
+I honestly forgot what these ports are used for, so I looked them up on Google for a refresher. From what I've read, (UDP) port 5353 is for mDNS (multicast DNS), which enables communication between devices on a network. Particularly, according to [this Q&A](https://learn.microsoft.com/en-us/answers/questions/2406081/mdns-port-5353), this port is less likely to be used by malware since it can be easily detected through this route. So at this point, I figured it should be safe to exclude events containing this port. This leaves port 5985, which turns out to be for WinRM (Microsoft Windows Remote Management), with 5985 used for HTTP and 5986 for HTTPS. Searching up WinRM, I found [this article](https://www.websentra.com/what-is-winrm/) that goes into what the protocol is about. Reading through it, this snippet caught my attention:
 
 Realizing that there might be a script executed by this process that I haven’t caught, I immediately went on the hunt for this event. I filtered for the port to determine the timestamp I would need to base my search around. Despite returning two events, both share the exact timestamp:
 
