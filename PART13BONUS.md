@@ -393,13 +393,14 @@ Then, I looked into the `svchost.exe` events next. I checked both the source and
 ![](/screenshots/405.png)
 ![](/screenshots/406.png)
 
-I ran these IPs (excluding 172.20.0.248 since that’s the test machine itself) through AbuseIPDB and GreyNoise, as well as Google. This is what I found:
-224.0.0.251 is the IP used for mDNS
-0:0:0:0:0:0:0:1 is the IPv6 localhost address
-fe80:0:0:0:c3a3:6a8:aaff:38e is a private IP address, according to AbuseIPDB
-ff02:0:0:0:0:0:0:fb didn’t return anything in AbuseIPDB, but according to GreyNoise, this is a private IP address:
+I ran these IPs (excluding 172.20.0.248 since that’s the test machine itself) through AbuseIPDB and GreyNoise, as well as Google search. These are the results:
+- 224.0.0.251 is the IP used for mDNS
+- 0\:0\:0\:0\:0\:0\:0:1 is the IPv6 localhost address
+- fe80\:0\:0\:0\:c3a3\:6a8\:aaff:38e is a private IP address, according to AbuseIPDB
+- ff02\:0\:0\:0\:0\:0\:0:fb didn’t return anything in AbuseIPDB, but according to GreyNoise, this is a private IP address:
+![](/screenshots/407.png)
 
-While none of these IPs were labeled as suspicious, I wasn’t willing to accept this conclusion yet, after what I uncovered with ping.exe. I continued digging deeper; I checked the event codes for each IP, but nothing out of the ordinary came up, so I checked the destination ports involved with `svchost.exe`:
+While none of these IPs were labeled as suspicious, I wasn’t jumping to conclusions yet, coming off of my findings with `ping.exe`. I continued digging deeper, first checking the event codes for each IP to no avail, then checking the destination ports involved with `svchost.exe`:
 
 According to this documentation, (UDP) port 5353 is used for mDNS, which svchost.exe typically connects to, and is less likely to be used by malware since it can be easily detected through this route. Because of that, I figured it’s safe to exclude events containing this port, which leaves port 5985. After some searching on Google, I discovered that this port is used for WinRM (Microsoft Windows Remote Management), with 5985 used for HTTP and 5986 for HTTPS. Looking up WinRM, I came across this article, which has a section describing the advantages of WinRM. In this section, something caught my attention:
 
