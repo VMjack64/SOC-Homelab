@@ -382,11 +382,12 @@ Afterwards, I modified the query to return everything in event format, then chec
 I looked into the `MpDefenderCoreService.exe` events first. Checking the `dest` field reveals the following IPs associated with this executable:
 ![](/screenshots/402.png)
 
-Running them all through AbuseIPDB, VirusTotal, and GreyNoise reveals that they’re legitimate IPs used by Microsoft, hence `MpDefenderCoreService.exe` is legitimate. So, I modified the query again to exclude the process from the search, as well as focusing only on established connections:
+Running them all through AbuseIPDB, VirusTotal, and GreyNoise reveals that they’re legitimate IPs used by Microsoft, therefore `MpDefenderCoreService.exe` is legitimate. Hence, I modified the query again to exclude the process from search, as well as focusing only on established connections:
+![](/screenshots/403.png)
 
 Now, these are the images involved:
 
-I narrowed down the query further to return only the events involving svchost.exe, and took a look at the IPs, both source and destination:
+Next, I looked into the `svchost.exe` events, and took a look at the IPs, both source and destination:
 
 
 I ran these IPs (excluding 172.20.0.248 since that’s the machine itself) through AbuseIPDB and GreyNoise, as well as Google. This is what I found:
