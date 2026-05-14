@@ -409,15 +409,17 @@ I honestly forgot what these ports are used for, so I looked them up on Google f
 Seeing this, my first thought was that I somehow missed an executed script, so I immediately went on the hunt for the event(s). To find them, I filtered for the port to determine the timestamp I need to base my search around. Despite returning two events, both conveniently share the exact same timestamp:
 ![](/screenshots/410.png)
 
-Then I ran another search on the Sysmon index for all Compromised Windows Server 2022 events that occurred 1 minute before & after 12:39:34.444 AM UTC. This brought up a lot of events, so I did some filtering to bring this number down into something manageable. First, I tried searching for events where the Image field is System, but got a set akin to the previous screenshot:
+Afterwards, I searched the Sysmon index for all **Compromised Windows Server 2022** events that occurred 1 minute before & after 12\:39:34.444 AM. This brought up a lot of events, so I did some filtering to bring this number down into something manageable. I tried filtering for events where the Image field is `System`, but got a set of events akin to the previous screenshot:
+![](/screenshots/411.png)
 
-A little more filtering later, I came across the echo “svchost#24” command again, which I already found in the EventCode 1 analysis:
+Then, after some more filtering, I came across the `echo “svchost#24”` command again, from the EventCode 1 analysis:
+![](/screenshots/412.png)
+![](/screenshots/413.png)
 
+However, seeing this command again gave me an idea: I decided to try querying for events with both “svchost” and “24”, hoping that I could find a `svchost.exe` event with the 24 pointing to a process ID number, in turn uncovering some unknown scripts. 27 events came back, but none had a ProcessId value of 24. All other filters I’ve tried struck no interesting events either, meaning I can only conclude at the moment that `svchost.exe` hasn't done anything wrong. Though, given what I've learnt about port 5985, I'm assuming the event involves AnyDesk and/or TeamViewer, or the previous batch scripts.
 
-Here, I had an idea: I decided to try running a query for events with both “svchost” and “24”, hoping that I could find a svchost.exe event with the 24 pointing to a process ID number. 27 events came back, but none had a ProcessId value of 24. All other filters I’ve tried hit a dead end; I can only assume at the moment that this port 5985 event is for AnyDesk and/or TeamViewer.
-As for the other IPs in this screenshot:
-
-Those were associated with DNS queries uncovered in the EventCode 22 analysis. For example, 57.129.37.28 is associated with the DNS query boot.net.anydesk.com triggered by the AnyDesk.exe process. The IPv4 address even matches the IP address appended to ::ffff: exactly:
+As for the other IPs I haven't gone through yet, those were associated with DNS queries I uncovered back in the EventCode 22 analysis. For instance, 57.129.37.28 is associated with the DNS query `boot.net.anydesk.com` triggered by the `AnyDesk.exe` process. The IPv4 address even matches the one appended to `::ffff:` verbatim:
+![](/screenshots/414.png)
 
 ### EventCode 17 & 18 (PipeEvent; Pipe Created & Pipe Connected)
 Searching for event code 18 returned 12 events:
