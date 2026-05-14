@@ -303,7 +303,7 @@ With this newfound evidence, I performed event correlation for the executable, a
   - `C:\Windows\System32\net.exe start "Service Network"` a few seconds after the previous command. The last two commands stopped, then restarted a Windows service named `Service Network`. Searching the command on Google didn’t turn up any information for `Service Network` exactly, but rather for a similar service, `Network Service`. On the other hand, searching the service name (with it enclosed in quotation marks for an exact search) led me to this [documentation on AWS](https://docs.aws.amazon.com/vpc-lattice/latest/ug/service-networks.html). Despite it all, I have no clue as to what the intention is behind these two commands; the `start` action, in particular, is what's throwing me off here.<!-- Any theories I had like crippling VPC functionalities, malware-beneficial changes, etc. are thrown out the window by this action. -->
 - `screen.exe`: Executed by `Start3.cmd` at 12\:41:33.879 AM. The original name of this executable was `NirCmd.exe`, and the command ran was `"C:\Users\Administrator\AppData\Local\Temp\2\screen.exe" win hide ititle "RtkAudio"`, which hides the process window for the cryptomining software from earlier. There's also a different one located in `C:\Users\Public`, which was executed on 12\:42:53.837 AM by `taskmgr.cmd`, with the command `win hide ititle "kmgtas"`, hiding the window of the process named `kmgtas`.
 - `AnyDesk.exe`:
-  - 12\:40:40.834 AM: Executed by `Start3.cmd`; installed via the command line. A couple of options were specified during the installation process. The first option, `--silent`, ensured a covert installation, while the second option, `--start-with-win`, enabled the application to boot automatically.
+  - 12\:40:40.834 AM: Executed by `Start3.cmd`; installed via the command line. A couple of options were specified during the installation process. The first option, `--silent`, ensured a covert installation, while the second option, `--start-with-win`, enabled the application to boot automatically.<a name="anydesk-remote-service"></a>
   - 12\:40:41.333 AM: Another command was run, this time with the `--local-service` option specified. This tells AnyDesk to use the client app to start up with limited functionality if it can’t connect to the service that the software uses. This was likely done for persistence purposes.
 - `fontdrvhots.exe`: Originally named IntelSvc, I ran its SHA256 hash through VirusTotal. It turns out that this process is flagged as malicious:
 ![](/screenshots/374.png)
@@ -434,15 +434,24 @@ To summarize, when it comes to virtual channels, in a remote desktop session, mu
 Contextualizing this diagram with my test machine setup, the remote machine represents my test instance, while the client machine represents the attacker's machine. Given what I've just learned, the existence of a connected `TSVCPIPE` pipe indicates the prevalence of remote activity. However, the timestamps of all the events closely match the timeframe I reconnected to the instance to stop the packet capture. As such, these events are legitimate and shouldn’t be of concern.
 
 With event code 18 turning up nothing suspicious, I analyzed the events for event code 17 next. 64 events in total were returned, with the following images involved:
+
 ![](/screenshots/418.png)
 
-Coincidentally, `C:\Windows\System32\svchost.exe` here has the same number of events as from event code 18, and the exact same timestamps as well:
+`C:\Windows\System32\svchost.exe` here has the same number of events as from event code 18, and the exact same timestamps as well:
+![](/screenshots/419.png)
 
-Since the pipes from the other processes didn't appear in the event code 18 results, this means those pipes weren’t utilized in some capacity. The Wireshark.exe event came from me, as the timeframe matches the time I started another capturing session:
+The `Wireshark.exe` event came from me, as the timeframe matches the time I started another capturing session:
+![](/screenshots/420.png)
 
-As for AnyDesk.exe, I read through the AnyDesk documentation, and realized that the software uses modules that can initiate and/or receive connections, depending on the type:
+Regarding `AnyDesk.exe`, I read through the AnyDesk documentation for more information, and found out that the software uses modules that can initiate and/or receive connections, depending on the type:
+![](/screenshots/421.png)
 
-In this case, then theoretically speaking, if a successful connection was made, an event ID 18 should’ve been generated for the AnyDesk pipe. But since no such event exists, it’s likely the attacker hadn’t connected to the instance through the software yet. This brings up a point of contention: The successful event code 3 events for AnyDesk.exe. These events are likely referring to the aforementioned service that the software connects to.
+Since the software uses these modules, then theoretically speaking, if a successful remote connection was made, an event ID 18 should’ve been generated for the AnyDesk pipe. But since no such event exists, it’s likely the attacker hadn’t connected to the instance through the software yet. This brings up a point of contention: The successful event code 3 events for AnyDesk.exe. These events are likely referring to the [aforementioned service that the software connects to](#anydesk-remote-service).
+
+The rest of the pipes weren't utilized in some capacity, as they didn't appear in the event code 18 results.
+
+Since the pipes from the other processes didn't appear in the event code 18 results, this means those pipes weren’t utilized in some capacity.
+
 EventCode 10 (ProcessAccess)
 AnyDesk.exe happened to be the process responsible for a majority of these events:
 
