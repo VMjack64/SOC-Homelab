@@ -451,14 +451,20 @@ Since the software uses these modules, then theoretically speaking, an event ID 
 The rest of the pipes weren't utilized in some capacity, as they didn't appear in the event code 18 results.
 
 ### EventCode 10 (ProcessAccess)
-AnyDesk.exe happened to be the process responsible for a majority of these events:
+`AnyDesk.exe` is the process responsible for a majority of these events:
+![](/screenshots/422.png)
+![](/screenshots/423.png)
 
+Looking into the `Explorer.EXE` events first, both events targeted `AnyDesk.exe`, and have the same call stack. This call stack shows some of the DLLs that were loaded for this process:
+![](/screenshots/424.png)
 
-Filtering for Explorer.EXE events, I find that both target AnyDesk.exe, with the same call stack. This call stack shows some of the DLLs involved:
+Looking into the `AnyDesk.exe` events next, these are the images that this executable targeted:
+![](/screenshots/425.png)
 
-Next, I filtered for the AnyDesk.exe events. These are the images that this executable targeted:
+When filtering for events containing `Explorer.EXE`, each event had a unique, extensive call stack. This made it pretty much impossible for me to efficiently see all the DLLs that were loaded, so I honestly didn't bother continuing at this point.
 
-Others
+### Others
+Other events I've also looked into include
 In addition to everything above, I’ve also looked into event code 7, as well as the reg.exe process. However, when re-examining my analyses for both, it turned out that everything I uncovered I’ve already uncovered elsewhere, such as the suspicious images for event code 7. As such, I don’t have any intention of going in-depth for both. These were all the suspicious images in event code 7 (the ones with no signature):
 
 And the processes that loaded them:
