@@ -406,14 +406,15 @@ While none of these IPs were labeled as suspicious, I wasn’t jumping to conclu
 I honestly forgot what these ports are used for, so I looked them up on Google for a refresher. From what I've read, (UDP) port 5353 is for mDNS (multicast DNS), which enables communication between devices on a network. Particularly, according to [this Q&A](https://learn.microsoft.com/en-us/answers/questions/2406081/mdns-port-5353), this port is less likely to be used by malware since it can be easily detected through this route. So at this point, I figured it should be safe to exclude events containing this port. This leaves port 5985, which turns out to be for WinRM (Microsoft Windows Remote Management), with 5985 used for HTTP and 5986 for HTTPS. Wanting to know more, I looked up on WinRM, and found [this article](https://www.websentra.com/what-is-winrm/). Reading through it, this snippet caught my attention:
 ![](/screenshots/409.png)
 
-Realizing that there might be a script executed by this process that I haven’t caught, I immediately went on the hunt for this event. I filtered for the port to determine the timestamp I would need to base my search around. Despite returning two events, both share the exact timestamp:
+Seeing this, my first thought was that I somehow missed an executed script, so I immediately went on the hunt for the event(s). To find them, I filtered for the port to determine the timestamp I need to base my search around. Despite returning two events, both conveniently share the exact same timestamp:
+![](/screenshots/410.png)
 
 Then I ran another search on the Sysmon index for all Compromised Windows Server 2022 events that occurred 1 minute before & after 12:39:34.444 AM UTC. This brought up a lot of events, so I did some filtering to bring this number down into something manageable. First, I tried searching for events where the Image field is System, but got a set akin to the previous screenshot:
 
 A little more filtering later, I came across the echo “svchost#24” command again, which I already found in the EventCode 1 analysis:
 
 
-Here, I decided to try running a query for events with both “svchost” and “24”, hoping that I could find a svchost.exe event with the 24 pointing to a process ID number. 27 events came back, but none had a ProcessId value of 24. All other filters I’ve tried hit a dead end; I can only assume at the moment that this port 5985 event is for AnyDesk and/or TeamViewer.
+Here, I had an idea: I decided to try running a query for events with both “svchost” and “24”, hoping that I could find a svchost.exe event with the 24 pointing to a process ID number. 27 events came back, but none had a ProcessId value of 24. All other filters I’ve tried hit a dead end; I can only assume at the moment that this port 5985 event is for AnyDesk and/or TeamViewer.
 As for the other IPs in this screenshot:
 
 Those were associated with DNS queries uncovered in the EventCode 22 analysis. For example, 57.129.37.28 is associated with the DNS query boot.net.anydesk.com triggered by the AnyDesk.exe process. The IPv4 address even matches the IP address appended to ::ffff: exactly:
