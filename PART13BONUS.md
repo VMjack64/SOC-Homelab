@@ -451,7 +451,7 @@ Since the software uses these modules, then theoretically speaking, an event ID 
 The rest of the pipes weren't utilized in some capacity, as they didn't appear in the event code 18 results.
 
 ### EventCode 10 (ProcessAccess)
-`AnyDesk.exe` is the process responsible for a majority of these events:
+`AnyDesk.exe` is the process that makes up the majority of these events:
 ![](/screenshots/422.png)
 ![](/screenshots/423.png)
 
@@ -461,19 +461,20 @@ Looking into the `Explorer.EXE` events first, both events targeted `AnyDesk.exe`
 Looking into the `AnyDesk.exe` events next, these are the images that this executable targeted:
 ![](/screenshots/425.png)
 
-When filtering for events containing `Explorer.EXE`, each event had a unique, extensive call stack. This made it pretty much impossible for me to efficiently see all the DLLs that were loaded, so I honestly didn't bother continuing at this point.
+When filtering for events containing `Explorer.EXE`, each event had a unique, extensive call stack. This made it pretty much impossible for me to efficiently see all the DLLs that were loaded, so I didn't bother continuing the analysis at this point.
 
 ### Others
-Other events I've also looked into include
-In addition to everything above, I’ve also looked into event code 7, as well as the reg.exe process. However, when re-examining my analyses for both, it turned out that everything I uncovered I’ve already uncovered elsewhere, such as the suspicious images for event code 7. As such, I don’t have any intention of going in-depth for both. These were all the suspicious images in event code 7 (the ones with no signature):
-
+Additional events I've also looked into, but for reasons, have opted to not writeup on:
+- EventCode 7 (Image Loaded): When re-examining my analysis for this one, I realized that every image and process uncovered here I already found elsewhere. These were the suspicious images loaded:
+![](/screenshots/426.png)  
 And the processes that loaded them:
+![](/screenshots/427.png)
+- `reg.exe`: There were simply too many commands for me to analyze in an efficient manner:
+![](/screenshots/428.png)
+![](/screenshots/429.png)
+![](/screenshots/430.png)
 
-For reg.exe, there were so many commands to go through in a timely manner:
-
-
-
-Using Wireshark to find more Information
+### Using Wireshark to find more Information
 Now that I’ve gone through every interesting event code to the best of my ability, I delved into the packet capture to see if I can find any additional information that wasn’t captured by Splunk, mainly any potential C2 activity. Unfortunately, without a decryption key in hand, making sense of the encrypted packets proved to be extremely difficult with my current skill level (as of writing this). Though, I did find some unencrypted information:
 
 
