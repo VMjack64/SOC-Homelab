@@ -1,3 +1,13 @@
+Previous Part                           | Return to Introduction                  | Next Part
+--------------------------------------- | --------------------------------------- | ---------
+[Part 12: What EDR to Use?](/PART12.md) | [Introduction](/README.md#introduction) | [Conclusion](/END.md)
+
+[Part 13: The Bonus Challenge](#part-12-what-edr-to-use-day-29)
+- [Installing Aurora Lite](#installing-aurora-lite)
+- [Testing Aurora Lite](#testing-aurora-lite)
+    - [Building Custom Sigma Rules & Responses](#building-custom-sigma-rules--responses)
+    - [Making Changes to the Installation](#making-changes-to-the-installation)
+
 # Part 13 (The Bonus Challenge): Running a Real Malware and Analyzing its Activity Using Splunk
 It has been 12 excruciatingly long parts, but I’ve finally finished MyDFIR’s challenge. This is a journey that's given me a better understanding of core SOC analyst & cybersecurity knowledge, from networking fundamentals to effective threat hunting with the use of a SIEM tool like Splunk. Now, to put everything I've learned from this lab to the test, I’ve thought of one more challenge to try. As I’ve alluded in the beginning of this writeup (and in this part's title), I want to execute an actual piece of malware from the internet in a controlled environment, then analyze its activity using Splunk to try and determine its purpose.
 
@@ -485,3 +495,6 @@ Then, I tried searching the packet capture for the IP addresses and DNS queries 
 ![](/screenshots/434.png)
 - I searched up the `aeroadmin.com` domain on Google here, and found out that Aeroadmin is also a remote desktop application, designed for streamlining the connection process to a remote computer.
 
+Previous Part                           | Return to Introduction                  | Next Part
+--------------------------------------- | --------------------------------------- | ---------
+[Part 12: What EDR to Use?](/PART12.md) | [Introduction](/README.md#introduction) | [Conclusion](/END.md)
