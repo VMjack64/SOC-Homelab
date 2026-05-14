@@ -429,8 +429,10 @@ All events here involved the image `C:\Windows\System32\svchost.exe`, the same o
 ![](/screenshots/416.png)
 Additional context on virtual channels from a previous section of the article:
 ![](/screenshots/417.png)
-For better understanding/contextualization, I mapping the diagram to my test machine setup,
-In the diagram, the remote machine represents my infected Windows server, while the client machine represents the attacker’s machine. Based on the information provided, the existence of a connected pipe beginning with the name TSVCPIPE indicates the prevalence of some remote activity. However, the timestamps of the events closely match the timeframe I connected to the instance to stop the Wireshark packet capture. As such, these events appear to be legitimate and shouldn’t be concerning.
+For a summation: In an RDP connection, multiple virtual channels exist to handle the functionalities of RDP. If a function isn't handled by Remote Desktop Services (RDS), then another process, like the one in the diagram, would be involved to handle said function. On the other hand, if a function is handled by RDS, then another process wouldn't be involved. 
+
+Contextualizing this diagram with my test machine setup, the remote machine represents my test instance, while the client machine represents the attacker's machine.
+ Based on the information provided, the existence of a connected pipe beginning with the name TSVCPIPE indicates the prevalence of some remote activity. However, the timestamps of the events closely match the timeframe I connected to the instance to stop the Wireshark packet capture. As such, these events appear to be legitimate and shouldn’t be concerning.
 With event code 18 turning up nothing suspicious, I searched the event code 17 logs. 64 events in total were returned, with the following images involved:
 
 Coincidentally, C:\Windows\System32\svchost.exe here has the same number of events as event code 18, and the exact same timestamps as well:
