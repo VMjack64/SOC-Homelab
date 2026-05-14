@@ -429,17 +429,16 @@ All events here involved the image `C:\Windows\System32\svchost.exe`, the same o
 ![](/screenshots/416.png)
 Background information on virtual channels from a previous section of the article:
 ![](/screenshots/417.png)
-Basically, when it comes to virtual channels, in an RDP connection, multiple virtual channels exist to handle the functionalities of RDP. If a function isn't handled by Remote Desktop Services (RDS), then another process, like the one in the diagram, would be involved to handle said function. This process would be linked to RDS via the `TSVCPIPE`. On the other hand, if a function is handled by RDS, then such a process & pipe wouldn't be involved. 
+To summarize, when it comes to virtual channels, in a remote desktop session, multiple connections are made to various processes to handle the functionalities of RDP. If a function isn't handled by Remote Desktop Services (RDS), then a connection to another process, like `rdpclip.exe` in the diagram, is made to handle said function. This process would be linked to RDS via the `TSVCPIPE`. On the other hand, if a function is handled by RDS, then such a process & pipe connection wouldn't be involved. 
 
-Contextualizing this diagram with my test machine setup, the remote machine represents my test instance, while the client machine represents the attacker's machine.
+Contextualizing this diagram with my test machine setup, the remote machine represents my test instance, while the client machine represents the attacker's machine. Given what I've just learned, the existence of a connected `TSVCPIPE` pipe indicates the prevalence of remote activity. However, the timestamps of all the events closely match the timeframe I reconnected to the instance to stop the packet capture. As such, these events are legitimate and shouldn’t be of concern.
 
-Given what I've just learned, the existence of a connected `TSVCPIPE` pipe indicates the prevalence of some remote activity. However, the timestamps of all the events closely match the timeframe I reconnected to the instance to stop the packet capture. As such, these events appear to be legitimate and shouldn’t be concerning.
+With event code 18 turning up nothing suspicious, I analyzed the events for event code 17 next. 64 events in total were returned, with the following images involved:
+![](/screenshots/418.png)
 
-With event code 18 turning up nothing suspicious, I searched the event code 17 logs. 64 events in total were returned, with the following images involved:
+Coincidentally, `C:\Windows\System32\svchost.exe` here has the same number of events as from event code 18, and the exact same timestamps as well:
 
-Coincidentally, C:\Windows\System32\svchost.exe here has the same number of events as event code 18, and the exact same timestamps as well:
-
-Which means the other processes didn’t have their pipes utilized in some capacity. The Wireshark.exe event came from me, as the timeframe matches the time I started another capturing session:
+Since the pipes from the other processes didn't appear in the event code 18 results, this means those pipes weren’t utilized in some capacity. The Wireshark.exe event came from me, as the timeframe matches the time I started another capturing session:
 
 As for AnyDesk.exe, I read through the AnyDesk documentation, and realized that the software uses modules that can initiate and/or receive connections, depending on the type:
 
