@@ -422,12 +422,14 @@ As for the other IPs I haven't gone through yet, those were associated with DNS 
 ![](/screenshots/414.png)
 
 ### EventCode 17 & 18 (PipeEvent; Pipe Created & Pipe Connected)
-Searching for event code 18 returned 12 events:
+First, I analyzed the events for event code 18:
+![](/screenshots/415.png)
 
-All events involved the image C:\Windows\System32\svchost.exe, the same one I tried examining for suspicious activity in the EventCode 3 analysis. in the screenshot above, I noticed that the PipeName in both events starts with TSVCPIPE. I searched this name up on Google to see if I can find anything noteworthy, and I came across this article, particularly this section:
+All events here involved the image `C:\Windows\System32\svchost.exe`, the same one I tried examining for suspicious activity from the EventCode 3 analysis. In the screenshot above, I noticed that the PipeName in both events starts with `TSVCPIPE`. I searched this name up on Google to see if I can find anything noteworthy, which is where I came across this article, particularly this section:
 
 Additional context on virtual channels from a previous section of the article:
 
+mapping the diagram to my test machine setup,
 In the diagram, the remote machine represents my infected Windows server, while the client machine represents the attacker’s machine. Based on the information provided, the existence of a connected pipe beginning with the name TSVCPIPE indicates the prevalence of some remote activity. However, the timestamps of the events closely match the timeframe I connected to the instance to stop the Wireshark packet capture. As such, these events appear to be legitimate and shouldn’t be concerning.
 With event code 18 turning up nothing suspicious, I searched the event code 17 logs. 64 events in total were returned, with the following images involved:
 
