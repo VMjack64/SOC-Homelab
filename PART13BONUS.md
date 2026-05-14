@@ -446,13 +446,11 @@ The `Wireshark.exe` event came from me, as the timeframe matches the time I star
 Regarding `AnyDesk.exe`, I read through the AnyDesk documentation for more information, and found out that the software uses modules that can initiate and/or receive connections, depending on the type:
 ![](/screenshots/421.png)
 
-Since the software uses these modules, then theoretically speaking, if a successful remote connection was made, an event ID 18 should’ve been generated for the AnyDesk pipe. But since no such event exists, it’s likely the attacker hadn’t connected to the instance through the software yet. This brings up a point of contention: The successful event code 3 events for AnyDesk.exe. These events are likely referring to the [aforementioned service that the software connects to](#anydesk-remote-service).
+Since the software uses these modules, then theoretically speaking, an event ID of 18 would’ve been generated for the AnyDesk pipe per successful remote connection. But as no such event exists, the attacker hasn’t connected to the instance remotely. However, this brings up a point of contention: The successful connection events for `AnyDesk.exe` from the EventCode 3 analysis. Those events are likely referring to the [aforementioned service that the software connects to](#anydesk-remote-service).
 
 The rest of the pipes weren't utilized in some capacity, as they didn't appear in the event code 18 results.
 
-Since the pipes from the other processes didn't appear in the event code 18 results, this means those pipes weren’t utilized in some capacity.
-
-EventCode 10 (ProcessAccess)
+### EventCode 10 (ProcessAccess)
 AnyDesk.exe happened to be the process responsible for a majority of these events:
 
 
