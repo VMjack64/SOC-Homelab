@@ -427,12 +427,14 @@ First, I analyzed the events for event code 18:
 
 All events here involved the image `C:\Windows\System32\svchost.exe`, the same one I tried examining for suspicious activity from the EventCode 3 analysis. In the screenshot above, I noticed that the PipeName in both events starts with `TSVCPIPE`. I searched this name up on Google to find any additional leads. [This article](https://www.cyberark.com/resources/threat-research-blog/attacking-rdp-from-inside) proved to be of great help in that regard, particularly this section:
 ![](/screenshots/416.png)
-Additional context on virtual channels from a previous section of the article:
+Background information on virtual channels from a previous section of the article:
 ![](/screenshots/417.png)
-For a summation: In an RDP connection, multiple virtual channels exist to handle the functionalities of RDP. If a function isn't handled by Remote Desktop Services (RDS), then another process, like the one in the diagram, would be involved to handle said function. On the other hand, if a function is handled by RDS, then another process wouldn't be involved. 
+Basically, when it comes to virtual channels, in an RDP connection, multiple virtual channels exist to handle the functionalities of RDP. If a function isn't handled by Remote Desktop Services (RDS), then another process, like the one in the diagram, would be involved to handle said function. This process would be linked to RDS via the `TSVCPIPE`. On the other hand, if a function is handled by RDS, then such a process & pipe wouldn't be involved. 
 
 Contextualizing this diagram with my test machine setup, the remote machine represents my test instance, while the client machine represents the attacker's machine.
- Based on the information provided, the existence of a connected pipe beginning with the name TSVCPIPE indicates the prevalence of some remote activity. However, the timestamps of the events closely match the timeframe I connected to the instance to stop the Wireshark packet capture. As such, these events appear to be legitimate and shouldn’t be concerning.
+
+Given what I've just learned, the existence of a connected `TSVCPIPE` pipe indicates the prevalence of some remote activity. However, the timestamps of all the events closely match the timeframe I reconnected to the instance to stop the packet capture. As such, these events appear to be legitimate and shouldn’t be concerning.
+
 With event code 18 turning up nothing suspicious, I searched the event code 17 logs. 64 events in total were returned, with the following images involved:
 
 Coincidentally, C:\Windows\System32\svchost.exe here has the same number of events as event code 18, and the exact same timestamps as well:
