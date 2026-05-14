@@ -474,13 +474,14 @@ And the processes that loaded them:
 ![](/screenshots/429.png)
 ![](/screenshots/430.png)
 
-### Using Wireshark to find more Information
-Now that I’ve gone through every interesting event code to the best of my ability, I delved into the packet capture to see if I can find any additional information that wasn’t captured by Splunk, mainly any potential C2 activity. Unfortunately, without a decryption key in hand, making sense of the encrypted packets proved to be extremely difficult with my current skill level (as of writing this). Though, I did find some unencrypted information:
+## Attempting to use Wireshark to find more Information
+Having inspected much of the interesting event codes and processes to the best of my ability, I've figured out the intentions of this malware and its capabilities. Even then, the malware probably has some hidden ideations that Splunk wasn't able to capture. So, for my last task, I delved into the packet capture to try and find any additional information, particularly any potential C2 activity. Unfortunately, without a decryption key in hand, making sense of the encrypted packets proved to be extremely difficult with my current skill level (as of writing). Despite that, I tried my best, first following the TCP streams of some interesting packets, and found some unencrypted information:
+![](/screenshots/431.png)
+![](/screenshots/432.png)
+![](/screenshots/433.png)
 
-
-
-I decided to try searching the packet capture for the IP addresses and DNS queries I uncovered from looking at the event codes, in an attempt to uncover additional information that the Splunk logs missed. For the most part, the results were similar to what I’ve found from looking at the event codes, but I found a couple interesting points:
-When searching the IP 154.12.244.206, I may have stumbled across an unencrypted password for XMRig:
-
-I searched up the aeroadmin.com domain, and found out that Aeroadmin is also a remote desktop application, designed for streamlining the connection process to a remote computer.
+Then, I tried searching the packet capture for the IP addresses and DNS queries I uncovered from analyzing the event codes. For the most part, the results I found were similar to what the Splunk logs captured, but I found a couple points of interest:
+- Searching the IP 154.12.244.206, I may have stumbled upon an unencrypted password for XMRig:
+![](/screenshots/434.png)
+- I searched up the `aeroadmin.com` domain on Google here, and found out that Aeroadmin is also a remote desktop application, designed for streamlining the connection process to a remote computer.
 
