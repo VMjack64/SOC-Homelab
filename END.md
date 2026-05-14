@@ -1,6 +1,6 @@
-Previous Part                                   | Return to Introduction                  |
------------------------------------------------ | --------------------------------------- |
-[Part 13: The Bonus Challenge](/PART13BONUS.md) | [Introduction](/README.md#introduction) |
+Previous Part                                   | Return to Introduction                 
+----------------------------------------------- | ---------------------------------------
+[Part 13: The Bonus Challenge](/PART13BONUS.md) | [Introduction](/README.md#introduction)
 
 # Conclusion / Closing Thoughts
 Whew, this was quite the writeup.
@@ -29,7 +29,10 @@ Jack
 - Pipes
   - https://www.splunk.com/en_us/blog/security/named-pipe-threats.html
   - https://versprite.com/vs-labs/microsoft-windows-pipes-intro/
-  - https://learn.microsoft.com/en-us/windows/win32/ipc/pipes
 - CIDR Blocks
   - https://wiki.teltonika-networks.com/view/What_is_a_Netmask%3F
   - https://dnsmadeeasy.com/resources/subnet-mask-cheat-sheet
+
+Previous Part                                   | Return to Introduction                 
+----------------------------------------------- | ---------------------------------------
+[Part 13: The Bonus Challenge](/PART13BONUS.md) | [Introduction](/README.md#introduction)
