@@ -25,11 +25,12 @@ To cap off this writeup, I’d like to share my next steps going forward. I plan
 - **Learn AI**. I've heard so many stories about AI that at this point, it's abundantly clear to me that having proficiency with this tool should be my highest priority. As such, this will be my next goal. Knowledge of this tool would enable efficient SOC analysis workflows by taking care of repetitive tasks, letting me direct my focus onto more interesting ones.
 - **Expand knowledge on networks**. While this lab helped me learn the fundamentals of networking, I want to continue expanding this knowledge, getting a grasp on things like the TCP/IP model, OSI model, and TLS.
 - **Get proficient with Wireshark**. Because of my lackluster experience with Wireshark, I was not able to make good work of the packet capture for `view.exe` like I hoped. [MyDFIR said this is a tool that a SOC analyst should be familiar with](https://www.youtube.com/shorts/BzRXa4IGOy8), so I want to get a grasp on it as soon as possible. I plan on taking advantage of [this site](http://malware-traffic-analysis.net) to help accomplish this goal with ease.
+- **Learn more about cloud service providers (AWS, Microsoft Azure, etc.)**. I'd also like to get a handle on cloud stuff as soon as possible so that I have a better understanding on how to monitor them for suspicious/malicious activity as a SOC analyst.
 - **Learn more about EDRs**. I don't consider this as urgent of a goal compared to the others, but it's still something worthwhile for the future. For the full experience, I'd like to get my hands on a fully-fledged EDR to fiddle around with, if possible. LimaCharlie is one that I'm eyeing in this regard.
 
-As I continue accomplishing more goals on my roadmap, I'm betting on my SOC analysis workflow improving as well, becoming a better SOC analyst in the process.
+As I continue accomplishing more goals on my roadmap, I'm betting on my SOC analysis workflow improving in the process and therefore me becoming a better SOC analyst.
 
-With that, it’s finally time for me to wrap things up. For those who took the time to read all of this from beginning to end, I want to extend my sincerest thanks to you all. I hope you came out of this with something that you can apply to your own projects.
+With that, it’s finally time for me to wrap things up. For those who took the time to read everything from beginning to end, I want to extend my deepest gratitudes to you all. I hope you came out of this with something that you can apply to your own projects.
 
 Until then, keep on Splunking.  
 Jack
