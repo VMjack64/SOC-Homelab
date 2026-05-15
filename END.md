@@ -16,8 +16,8 @@ In doing this home lab, I also got a couple of takeaways:
 - Whether it's using a different SIEM tool from the one specified, or a different CIDR block notation, even small deviations can be very effective in grasping new concepts compared to following step-by-step (if applicable).
 
 Something I want to add is that as my very first time attempting a SOC analyst project, good chances are I made some misjudgements along the way. Some examples that come to mind include:
-- Not having my deployment server & search head functionalities in the same Ubuntu instance, with the other Ubuntu instance acting as a heavy forwarder (indexer). This would've made the Linux log ingestion process & analysis straightforward
-- Not using my malware dashboard for the bonus challenge
+- Not having my deployment server & search head functionalities in the same Ubuntu instance, with the other Ubuntu instance acting as a heavy forwarder (indexer). This would've made the Linux log ingestion process & analysis straightforward.
+- Not using my malware dashboard for the bonus challenge.
 
 There's probably more out there, especially in the real malware analysis part. If you find anything or have some feedback to offer, by all means let me know. I can apply this knowledge and continue improving my skills in future SOC analyst projects.
 
