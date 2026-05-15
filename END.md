@@ -28,7 +28,7 @@ To cap off this writeup, I’d like to share my next steps going forward. I plan
 - **Learn more about cloud service providers (AWS, Microsoft Azure, etc.)**. I'd also like to get a handle on cloud stuff as soon as possible so that I have a better understanding on how to monitor them for suspicious/malicious activity as a SOC analyst.
 - **Learn more about EDRs**. I don't consider this as urgent of a goal compared to the others, but it's still something worthwhile for the future. For the full experience, I'd like to get my hands on a fully-fledged EDR to fiddle around with, if possible. LimaCharlie is one that I'm eyeing in this regard.
 
-As I continue accomplishing more goals on my roadmap, I'm betting on my SOC analysis workflow improving in the process and therefore me becoming a better SOC analyst.
+As I continue accomplishing more goals on my roadmap, I'm also going to keep on improving my SOC analysis skills through various tasks like becoming familiar with the MITRE ATT&CK framework, hoping that I can become a better SOC analyst.
 
 With that, it’s finally time for me to wrap things up. For those who took the time to read everything from beginning to end, I want to extend my deepest gratitudes to you all. I hope you came out of this with something that you can apply to your own projects.
 
