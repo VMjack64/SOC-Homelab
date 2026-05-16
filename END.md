@@ -19,7 +19,7 @@ Something I want to add is that as my very first time attempting a SOC analyst p
 - Not having my deployment server & search head functionalities in the same Ubuntu instance, with the other Ubuntu instance acting as a heavy forwarder (indexer). This would've made the Linux log ingestion process & analysis straightforward.
 - Not using my malware dashboard for the bonus challenge.
 
-There's probably more out there, especially in the real malware analysis part. If you find anything or have some feedback to offer, by all means let me know. I can apply this knowledge and continue improving my skills in future SOC analyst projects.
+There's probably more out there, especially in the real malware analysis part. If you find anything or have some feedback to offer, do let me know, preferably through the discussions page [here](../../discussions) or [LinkedIn](https://www.linkedin.com/in/jack-muzones-7b6203259). I can apply this knowledge and continue improving my skills in future SOC analyst projects.
 
 To cap off this writeup, I’d like to share my next steps going forward. I plan to do the following, from highest priority to lowest:
 - **Learn AI**. I've heard so many stories about AI that at this point, it's abundantly clear to me that having proficiency with this tool should be my highest priority. As such, this will be my next goal. Knowledge of this tool would enable efficient SOC analysis workflows by taking care of repetitive tasks, letting me direct my focus onto more interesting ones.
